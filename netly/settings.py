@@ -37,7 +37,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'evan-haryo-netly.pbp.cs.ui.ac.id'
+    'evan-haryo-netly.pbp.cs.ui.ac.id',
+    'https://evan-haryo-netly.pbp.cs.ui.ac.id'
 ]
 
 
