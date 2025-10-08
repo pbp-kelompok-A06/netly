@@ -37,7 +37,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'evan-haryo-netly.pbp.cs.ui.ac.id'
+    'evan-haryo-netly.pbp.cs.ui.ac.id',
+    'https://evan-haryo-netly.pbp.cs.ui.ac.id'
 ]
 
 
@@ -127,6 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# tes push
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
