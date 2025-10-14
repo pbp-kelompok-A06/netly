@@ -1,0 +1,43 @@
+<form id="bookingForm">
+  {% csrf_token %}
+  <input type="hidden" name="lapangan_id" value="{{ lapangan.id }}">
+
+  {% for jadwal in jadwals %}
+    <label>
+      <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}">
+      {{ jadwal.tanggal }} - {{ jadwal.jam_mulai }} s/d {{ jadwal.jam_selesai }}
+    </label><br>
+  {% endfor %}
+
+  <button type="submit">Booking</button>
+</form>
+
+<div id="message"></div>
+
+<script>
+document.getElementById("bookingForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    // lebih reusable dibanding document.querySelector("#bookingForm")
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const response = await fetch("{% url 'create_booking' %}", {
+        method: "POST",
+        body: formData,
+    });
+
+    const data = await response.json();
+    const messageDiv = document.getElementById("message");
+
+    // # mau pake toast aja 
+    // !!!!!!!!!!!!!!!!!!!!!
+    if (data.success) {
+        messageDiv.innerHTML = `<p style="color: green;">${data.message}</p>`;
+        // contoh redirect manual kalau mau nanti
+        // window.location.href = `/booking/${data.booking_id}/`;
+    } else {
+        messageDiv.innerHTML = `<p style="color: red;">${data.message}</p>`;
+    }
+});
+</script>
