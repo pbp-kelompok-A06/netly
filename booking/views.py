@@ -22,7 +22,11 @@ def create_booking(request):
         jadwals = Jadwal.objects.filter(id__in=jadwal_ids, isbooked=False)
 
         if not jadwals.exists():
-            return JsonResponse({'success': False, 'message': 'Selected schedules are already booked or invalid.'}, status=400)
+            return JsonResponse({'success': False, 
+                                 'message': 'Selected schedules are already booked or invalid.'}, 
+                                status=400,
+                                
+                                )
 
         
         #kalo berhasil
@@ -31,13 +35,54 @@ def create_booking(request):
             user_id=request.user,
             status_book='pending'
         )
-        booking.jadwal.set(jadwals)
+        booking.jadwal.update(jadwals)
         jadwals.update(isbooked=True)
+        #dummy
+        payment_url = reverse('booking_detail', kwargs={'booking_id': booking.id})
 
         return JsonResponse({
             'success': True,
             'message': 'Booking created successfully!',
-            'booking_id': str(booking.id)
+            'booking_id': str(booking.id),
+            'payment_url': payment_url
         })
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+def booking_detail(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
+    booking.is_expired()  # cek apakah booking sudah expired
+    return render(request, 'booking_detail.html', {'booking': booking})
+
+def show_json_by_id(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
+    booking.is_expired()  # cek apakah booking sudah expired
+    jadwal_list = list(booking.jadwal.values('id', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'isbooked'))
+    data = {
+        'id': str(booking.id),
+        'lapangan': {
+            'id': booking.lapangan_id.id,
+            'nama': booking.lapangan_id.nama,
+            'harga': booking.lapangan_id.harga,
+        },
+        'user': {
+            'id': booking.user_id.id,
+            'username': booking.user_id.username,
+        },
+        'status_book': booking.status_book,
+        'total_price': booking.total_price(),
+        'jadwal': jadwal_list,
+    }
+    return JsonResponse(data)
+
+
+def booking_detail(request, booking_id):
+    # Pastikan booking_id valid dan user berhak melihatnya
+    # Walaupun data detailnya diambil AJAX, kita tetap validasi ID dan user di sini
+    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
+
+# //dummy
+    return render(request, 'booking_detail.html', {
+        'booking_id': str(booking.id), # Kirim ID ke template agar JS bisa membacanya
+        'lapangan_nama': booking.lapangan_id.nama # Kirim data minimal untuk header
+    })

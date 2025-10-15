@@ -3,16 +3,19 @@
   <input type="hidden" name="lapangan_id" value="{{ lapangan.id }}">
 
   {% for jadwal in jadwals %}
-    <label>
-      <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}">
-      {{ jadwal.tanggal }} - {{ jadwal.jam_mulai }} s/d {{ jadwal.jam_selesai }}
-    </label><br>
+    {% if !jadwal.is_booked %}
+      <label>
+          <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}">
+          {{ jadwal.tanggal }} - {{ jadwal.jam_mulai }} s/d {{ jadwal.jam_selesai }}
+        </label><br>
+    {% endif %}
   {% endfor %}
 
-  <button type="submit">Booking</button>
+  <button type="submit">Lanjut ke Pembayaran</button>
 </form>
 
 <div id="message"></div>
+
 
 <script>
 document.getElementById("bookingForm").addEventListener("submit", async function(e) {
@@ -29,13 +32,16 @@ document.getElementById("bookingForm").addEventListener("submit", async function
 
     const data = await response.json();
     const messageDiv = document.getElementById("message");
+    
 
     // # mau pake toast aja 
     // !!!!!!!!!!!!!!!!!!!!!
     if (data.success) {
-        messageDiv.innerHTML = `<p style="color: green;">${data.message}</p>`;
+        // messageDiv.innerHTML = `<p style="color: green;">${data.message}</p>`;
         // contoh redirect manual kalau mau nanti
-        // window.location.href = `/booking/${data.booking_id}/`;
+        window.location.href = data.payment_url;
+        
+        
     } else {
         messageDiv.innerHTML = `<p style="color: red;">${data.message}</p>`;
     }
