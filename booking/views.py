@@ -49,15 +49,10 @@ def create_booking(request):
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
-def booking_detail(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
-    booking.is_expired()  # cek apakah booking sudah expired
-    return render(request, 'booking_detail.html', {'booking': booking})
-
 def show_json_by_id(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
     booking.is_expired()  # cek apakah booking sudah expired
-    jadwal_list = list(booking.jadwal.values('id', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'isbooked'))
+    jadwal_list = list(booking.jadwal.values('tanggal', 'waktu_mulai', 'waktu_selesai', 'isbooked'))
     data = {
         'id': str(booking.id),
         'lapangan': {
@@ -69,19 +64,32 @@ def show_json_by_id(request, booking_id):
             'id': booking.user_id.id,
             'username': booking.user_id.username,
         },
+        'created_at': booking.created_at,
         'status_book': booking.status_book,
         'total_price': booking.total_price(),
         'jadwal': jadwal_list,
     }
+    # headers: { 'Accept': 'application/json' },
     return JsonResponse(data)
 
+def pay_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
+    if booking.is_expired():
+        messages.error(request, 'Booking cannot be paid. Current status: {}'.format(booking.status_book))
+        return redirect('booking_detail', booking_id=booking.id)
 
+    # Simulate payment processing
+    booking.status_book = 'completed'
+    booking.save()
+    messages.success(request, 'Payment successful! Your booking is now completed.')
+    return redirect('booking_detail', booking_id=booking.id)
+
+# flownya jadi dari create_booking di redirect ke booking_detail
 def booking_detail(request, booking_id):
     # Pastikan booking_id valid dan user berhak melihatnya
     # Walaupun data detailnya diambil AJAX, kita tetap validasi ID dan user di sini
     booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
-
-# //dummy
+    booking.is_expired()
     return render(request, 'booking_detail.html', {
         'booking_id': str(booking.id), # Kirim ID ke template agar JS bisa membacanya
         'lapangan_nama': booking.lapangan_id.nama # Kirim data minimal untuk header

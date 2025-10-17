@@ -30,6 +30,7 @@ document.getElementById("bookingForm").addEventListener("submit", async function
         body: formData,
     });
 
+    
     const data = await response.json();
     const messageDiv = document.getElementById("message");
     

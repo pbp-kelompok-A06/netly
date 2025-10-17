@@ -17,7 +17,8 @@ class Booking(models.Model):
     jadwal = models.ManyToManyField(Jadwal, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     status_book = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed'), ('failed', 'Failed')], default='pending')
-    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     #hitung total_price
     def total_price(self):
