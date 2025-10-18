@@ -95,8 +95,8 @@ function showState(state) {
 // Render booking content
 function renderBooking(bookingData) {
     // Set title
-    articleTitle.textContent = bookingData.lapangan.id;
-    document.title = `${bookingData.lapangan.id} - Football News`;
+    articleTitle.textContent = bookingData.lapangan.name;
+    document.title = `${bookingData.lapangan.name} - Booking`;
 
     // Set badges
     badgesContainer.innerHTML = '';

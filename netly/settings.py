@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'booking',
     'community'
     'homepage',
+    'authentication_user'
 ]
 
 MIDDLEWARE = [
@@ -152,6 +153,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# tambahan untuk media (nyimpen profile picture)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 if DEBUG:
     STATICFILES_DIRS = [
         BASE_DIR / 'static' 
