@@ -72,17 +72,24 @@ def show_json_by_id(request, booking_id):
     # headers: { 'Accept': 'application/json' },
     return JsonResponse(data)
 
-def pay_booking(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user)
-    if booking.is_expired():
-        messages.error(request, 'Booking cannot be paid. Current status: {}'.format(booking.status_book))
-        return redirect('booking_detail', booking_id=booking.id)
+@login_required
+def complete_booking(request, booking_id):
+    # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
+    try:
+        booking = Booking.objects.get(id=booking_id, user_id=request.user)
+    except Booking.DoesNotExist:
+        return JsonResponse({'message': 'Booking not found or not authorized'}, status=404)
 
-    # Simulate payment processing
-    booking.status_book = 'completed'
-    booking.save()
-    messages.success(request, 'Payment successful! Your booking is now completed.')
-    return redirect('booking_detail', booking_id=booking.id)
+    # Cek status sebelum update
+    if booking.status_book == 'pending':
+        booking.status_book = 'Completed' # Ganti ke status yang kamu inginkan
+        booking.save()
+        return JsonResponse({'message': 'Booking status updated to Completed', 'status': 'Completed'}, status=200)
+
+    elif booking.status_book == 'failed' or booking.is_expired():
+        return JsonResponse({'message': 'Booking has expired and cannot be completed'}, status=400)
+
+    return JsonResponse({'message': f'Booking is already {booking.status_book}'}, status=200)
 
 # flownya jadi dari create_booking di redirect ke booking_detail
 def booking_detail(request, booking_id):

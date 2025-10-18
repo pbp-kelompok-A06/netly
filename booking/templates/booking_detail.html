@@ -103,8 +103,20 @@ function renderBooking(bookingData) {
     
     // Category badge
     const categoryBadge = document.createElement('span');
-    categoryBadge.className = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-600 text-white';
-    categoryBadge.textContent = bookingData.status_book || 'Uncategorized';
+// Tambahkan logika warna Tailwind berdasarkan status
+    let badgeClass = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium ';
+    if (bookingData.status_book === 'pending') { 
+        badgeClass += 'bg-red-500 text-white';
+    } else if (bookingData.status_book === 'completed') {
+        badgeClass += 'bg-green-600 text-white';
+    } else if (bookingData.status_book === 'failed') {
+        badgeClass += 'bg-gray-400 text-white';
+    } else {
+        badgeClass += 'bg-blue-500 text-white';
+    }
+
+    categoryBadge.className = badgeClass;
+    categoryBadge.textContent = bookingData.status_book_ || 'Uncategorized';
     badgesContainer.appendChild(categoryBadge);
     
     
@@ -147,11 +159,62 @@ function renderBooking(bookingData) {
     articleContentText.textContent = bookingDetailText;
     
     // ADD BUTTON CONFIRM PAYMENT YANG AKAN UBAH STATUS BOOKING JADI COMPLETED, KALO EXPIRED OR DAH BAYAR JADI GAK MUNCUL
+    if (bookingData.status_book === 'pending') { // Ganti 'Unpaid' sesuai status di model Django kamu
+        
+        const confirmButton = document.createElement('button');
+        confirmButton.id = 'confirmPaymentBtn';
+        confirmButton.textContent = 'Konfirmasi Pembayaran';
+        
+        // Tailwind CSS classes untuk tombol (contoh)
+        confirmButton.className = 'w-full md:w-auto mt-4 px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300';
+        
+        // Event Listener untuk Tombol
+        confirmButton.addEventListener('click', () => {
+            // Panggil fungsi untuk update status di backend Django
+            confirmPayment(bookingData.id); 
+        });
+
+        buttonContainer.appendChild(confirmButton);
+    }
     
 }
 
-// Fetch news detail
-async function loadNewsDetail() {
+function confirmPayment(bookingId) {
+    // Ganti URL ini dengan endpoint API Django kamu untuk update booking
+    const url = `{% url 'booking:complete_booking' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', bookingId); 
+    
+    // Mendapatkan CSRF Token untuk request POST/PUT/PATCH di Django
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
+
+    fetch(url, {
+        method: 'POST', // Atau PATCH, tergantung bagaimana kamu mengatur view di Django
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken // Penting untuk keamanan di Django
+        },
+        // body: JSON.stringify({ status_book: 'Completed' }) // Opsional, tergantung implementasi Django
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Gagal mengkonfirmasi pembayaran.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert('Pembayaran berhasil dikonfirmasi!');
+        // Setelah berhasil, panggil ulang renderBooking atau refresh halaman
+        // Untuk menampilkan status yang sudah diperbarui
+        
+        loadBookingDetail(); // Memuat ulang detail booking 
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`Konfirmasi gagal: ${error.message}`);
+    });
+}
+
+// Fetch booking detail
+async function loadBookingDetail() {
     try {
         showState('loading');
         
