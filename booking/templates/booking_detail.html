@@ -165,7 +165,7 @@ function renderBooking(bookingData) {
         confirmButton.id = 'confirmPaymentBtn';
         confirmButton.textContent = 'Konfirmasi Pembayaran';
         
-        // Tailwind CSS classes untuk tombol (contoh)
+        // Tailwind CSS classes untuk tombol 
         confirmButton.className = 'w-full md:w-auto mt-4 px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300';
         
         // Event Listener untuk Tombol
@@ -203,7 +203,7 @@ function confirmPayment(bookingId) {
     .then(data => {
         alert('Pembayaran berhasil dikonfirmasi!');
         // Setelah berhasil, panggil ulang renderBooking atau refresh halaman
-        // Untuk menampilkan status yang sudah diperbarui
+        // Untuk menampilkan statuss yang sudah diperbarui
         
         loadBookingDetail(); // Memuat ulang detail booking 
     })

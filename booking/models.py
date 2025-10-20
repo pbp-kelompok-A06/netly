@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 
 #liat app sebelah
 # dummy
-from lapangan.models import Lapangan, Jadwal
+from admin.models import Lapangan
+from admin.models import JadwalLapangan as Jadwal
 
 import uuid
 
@@ -22,7 +23,7 @@ class Booking(models.Model):
     
     #hitung total_price
     def total_price(self):
-        return self.lapangan_id.harga * self.jadwal.count()
+        return self.lapangan_id.price * self.jadwal.count()
     
     #b = Booking(lapangan=lap, user=u)
     # b.save()              # wajib dulu
