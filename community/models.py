@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 from authentication_user.models import UserProfile
 import uuid
 
@@ -8,8 +7,8 @@ class Forum(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     creator_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="forum_creator")
-    member = models.ManyToManyField(UserProfile, blank=True, related_name="forum_member")
-    title = models.CharField(max_length=200)
+    member = models.ManyToManyField(UserProfile, blank=True, related_name="forum_member", null=True)
+    title = models.CharField(max_length=200, unique=True)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,5 +40,5 @@ class Forum_Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True) 
 
     def __str__(self):
-        return self.header
+        return f"Comment.{self.user_id}"
    
