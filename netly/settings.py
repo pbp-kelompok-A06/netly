@@ -52,9 +52,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'booking',
-    'community'
+    'community',
     'homepage',
-    'authentication_user'
+    'authentication_user',
+    'admin_lapangan',
 ]
 
 MIDDLEWARE = [

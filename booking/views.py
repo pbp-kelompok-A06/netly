@@ -4,15 +4,20 @@ from django.contrib import messages
 from django.urls import reverse
 from .models import Booking
 #dummy
-from lapangan.models import Lapangan, Jadwal
+from admin_lapangan.models import Lapangan
+from admin_lapangan.models import JadwalLapangan as Jadwal
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
+def test(request):
+    
+    return render(request, 'booking_detail.html')
 @csrf_exempt  # kalau belum handle CSRF token di JS, tapi idealnya pakai token ya
-@login_required
+# diuncomment kalo dah ada login
+# @login_required
 def create_booking(request):
     if request.method == 'POST':
         lapangan_id = request.POST.get('lapangan_id')
@@ -101,3 +106,35 @@ def booking_detail(request, booking_id):
         'booking_id': str(booking.id), # Kirim ID ke template agar JS bisa membacanya
         'lapangan_nama': booking.lapangan_id.nama # Kirim data minimal untuk header
     })
+    
+# function untuk ngedirect ke booking_list
+@login_required
+def show_booking_list(request):
+    return render(request, 'booking_list.html')
+
+def show_json(request):
+    bookings = Booking.objects.filter(user_id=request.user)
+    # Pastikan setiap booking dicek apakah sudah expired
+    for booking in bookings:
+        booking.is_expired()
+
+    data = []
+    for booking in bookings:
+        jadwal_list = list(booking.jadwal.values('tanggal', 'waktu_mulai', 'waktu_selesai', 'isbooked'))
+        data.append({
+            'id': str(booking.id),
+            'lapangan': {
+                'id': booking.lapangan_id.id,
+                'nama': booking.lapangan_id.nama,
+                'harga': booking.lapangan_id.harga,
+            },
+            'user': {
+                'id': booking.user_id.id,
+                'username': booking.user_id.username,
+            },
+            'created_at': booking.created_at,
+            'status_book': booking.status_book,
+            'total_price': booking.total_price(),
+            'jadwal': jadwal_list,
+        })
+    return JsonResponse(data, safe=False)

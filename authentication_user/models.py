@@ -13,15 +13,15 @@ def configure_image_path(obj, filename):
 class UserProfile(models.Model):
 
     role_option = [
-        ('admin', 'Admin'),
-        ('user_player', 'User_Player')
+        ('admin', 'Admin'), # yang tampil ke web nanti 'Admin'
+        ('user', 'Player')  # yang tampil ke web nanti 'Player'
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile") # reference ke model user; jadi satu user punya satu profile
 
     fullname = models.CharField(max_length=200, null=False)
-    role = models.CharField(max_length=20, choices=role_option, default='user_player')
+    role = models.CharField(max_length=20, choices=role_option, default='user')
     location = models.CharField(max_length=255, null=True, blank=True)
     
     profile_picture = models.ImageField(upload_to=configure_image_path, blank=True, null=True)

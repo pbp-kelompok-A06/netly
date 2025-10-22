@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 
 #liat app sebelah
 # dummy
-from admin.models import Lapangan
-from admin.models import JadwalLapangan as Jadwal
+from admin_lapangan.models import Lapangan
+from admin_lapangan.models import JadwalLapangan as Jadwal
 
 import uuid
 
@@ -15,7 +15,7 @@ import uuid
 class Booking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lapangan_id = models.ForeignKey(Lapangan, on_delete=models.CASCADE)
-    jadwal = models.ManyToManyField(Jadwal, on_delete=models.CASCADE)
+    jadwal = models.ManyToManyField(Jadwal)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     status_book = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed'), ('failed', 'Failed')], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)

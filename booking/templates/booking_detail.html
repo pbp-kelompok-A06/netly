@@ -2,12 +2,18 @@
 {% load static %}
 
 {% block meta %}
-<title>News Detail - Football News</title>
+<title>Booking Detail</title>
 {% endblock meta %}
 
 {% block content %}
 <div class="bg-gray-50 w-full min-h-screen">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <a href="{% url 'booking:show_booking_list' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                ← Back to My Booking List
+            </a>
+        </div>
+
         
         <!-- Loading State -->
         <div id="loading-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center">
@@ -28,19 +34,23 @@
         </div>
         
         <!-- Article Content -->
-        <article id="booking-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden hidden">
+         <!-- JANLUP TAMBAHIN HIDDEN EDELLLLL!!! -->
+        <article id="booking-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden ">
             
             <!-- Header -->
             <div class="p-6 sm:p-8">
 
                 
+                <div id="badges-container" class="flex flex-wrap gap-2 mb-4">
+                    <!-- Badges will be inserted here --> badges
+                </div>
                 <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
-                    <!-- Title will be inserted here -->
+                    <!-- Title will be inserted here --> title
                 </h1>
                 
                 <div class="flex flex-wrap items-center text-sm text-gray-500 gap-4">
                     <time id="article-date">
-                        <!-- Date will be inserted here -->
+                        <!-- Date will be inserted here --> date - date
                     </time>
     \
                 </div>
@@ -58,10 +68,13 @@
             <div class="p-6 sm:p-8">
                 <div class="prose prose-lg max-w-none">
                     <div id="article-content-text" class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
-                        <!-- Content will be inserted here -->
+                        <!-- Content will be inserted here --> isiiiiiiii banyak
                     </div>
                 </div>
             </div>
+
+            
+            <div id="button-container" class="flex justify-between p-6 sm:p-8"> </div>
 
             
         </article>
@@ -81,6 +94,7 @@ const badgesContainer = document.getElementById('badges-container');
 const articleTitle = document.getElementById('article-title');
 const articleDate = document.getElementById('article-date');
 const articleContentText = document.getElementById('article-content-text');
+const buttonContainer = document.getElementById('button-container')
 
 // Show/hide page sections
 function showState(state) {
@@ -131,7 +145,7 @@ function renderBooking(bookingData) {
         minute: '2-digit'
     });
     articleDate.textContent = formattedDate;
-    let schedulesText = data.jadwal.map(jadwalItem => {
+    let schedulesText = bookingData.jadwal.map(jadwalItem => {
         // Assuming tanggal is YYYY-MM-DD and times are HH:MM:SS
         const date = new Date(jadwalItem.tanggal).toLocaleDateString('id-ID', {
             year: 'numeric', month: 'long', day: 'numeric'
@@ -218,7 +232,7 @@ async function loadBookingDetail() {
     try {
         showState('loading');
         
-        const response = await fetch(NEWS_DETAIL_ENDPOINT, {
+        const response = await fetch(BOOKING_DETAIL_ENDPOINT, {
             headers: { 'Accept': 'application/json' },
         });
 
@@ -235,5 +249,5 @@ async function loadBookingDetail() {
 }
 
 // Initialize page
-loadNewsDetail();
+loadBookingDetail();
 </script>
