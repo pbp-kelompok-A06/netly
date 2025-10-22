@@ -130,7 +130,7 @@ function renderBooking(bookingData) {
     }
 
     categoryBadge.className = badgeClass;
-    categoryBadge.textContent = bookingData.status_book_ || 'Uncategorized';
+    categoryBadge.textContent = bookingData.status_book || 'Uncategorized';
     badgesContainer.appendChild(categoryBadge);
     
     
@@ -155,9 +155,9 @@ function renderBooking(bookingData) {
         return `Tanggal: ${date} (Jam: ${startTime} - ${endTime})`;
         }).join('\n');
     const bookingDetailText = `
-        Username: ${bookingData.user.username}
-        Nama Lapangan: ${bookingData.lapangan.nama}
-        
+        Username: ${bookingData.user.fullname}
+        Nama Lapangan: ${bookingData.lapangan.name}
+        Harga Lapangan per Jam: Rp ${bookingData.lapangan.price.toLocaleString('id-ID')}
         Tanggal Sewa & Waktu:
         ${schedulesText}
         LAKUKAN PEMBAYARAN KE REKENING 123-456-789 AN. NETLY-SPOTIPE
@@ -206,7 +206,7 @@ function confirmPayment(bookingId) {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken // Penting untuk keamanan di Django
         },
-        // body: JSON.stringify({ status_book: 'Completed' }) // Opsional, tergantung implementasi Django
+        // body: JSON.stsringify({ status_book: 'Completed' }) // Opsional, tergantung implementasi Django
     })
     .then(response => {
         if (!response.ok) {

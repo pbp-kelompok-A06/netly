@@ -61,11 +61,12 @@ def show_json_by_id(request, booking_id):
         'id': str(booking.id),
         'lapangan': {
             'id': booking.lapangan_id.id,
-            'nama': booking.lapangan_id.name,
-            'harga': booking.lapangan_id.price,
+            'name': booking.lapangan_id.name,
+            'price': booking.lapangan_id.price,
         },
         'user': {
             'id': booking.user_id.profile.id,
+            'fullname': booking.user_id.profile.fullname,
         },
         'created_at': booking.created_at,
         'status_book': booking.status_book,
@@ -123,8 +124,8 @@ def show_json(request):
             'id': str(booking.id),
             'lapangan': {
                 'id': booking.lapangan_id.id,
-                'nama': booking.lapangan_id.name,
-                'harga': booking.lapangan_id.price,
+                'name': booking.lapangan_id.name,
+                'price': booking.lapangan_id.price,
             },
             'user': {
                 'id': booking.user_id.profile.id,
