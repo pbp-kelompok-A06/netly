@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('community/', include('community.urls')),
     path('homepage/', include('homepage.urls')),
+    path('event/', include('event.urls'))
     # path('', include('authentication_user.urls')) --> uncomment pas udah ada views + urls dari app ini aja yaa
 ]

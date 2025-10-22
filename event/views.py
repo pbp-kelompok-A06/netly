@@ -98,8 +98,9 @@ def join_leave_event(request, pk):
         is_participant = event.participant.filter(id=user.id).exists()
 
         if is_participant:
-            # kalau dia participant berarti pas button diclick tuh dia mau cancel join (nanti tulisan buttonnya cancel join)
+            # kalau dia participant berarti pas button diclick dia mau cancel join (nanti tulisan buttonnya cancel join)
             event.participant.remove(user)
+            messages.info(request, f'You have canceled your participation on "{event.name}".')
         else:
             # kalau belum join, cek kuota event
             if event.participant.count() >= event.max_participants:
