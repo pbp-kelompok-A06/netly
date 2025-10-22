@@ -13,8 +13,8 @@ def configure_image_path(obj, filename):
 class UserProfile(models.Model):
 
     role_option = [
-        ('admin', 'Admin'),
-        ('user_player', 'User_Player')
+        ('admin', 'Admin'), # yang tampil ke web nanti 'Admin'
+        ('user', 'Player')  # yang tampil ke web nanti 'Player'
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
