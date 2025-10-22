@@ -55,10 +55,7 @@ INSTALLED_APPS = [
     'community',
     'homepage',
     'authentication_user',
-<<<<<<< Updated upstream
     'admin_lapangan',
-=======
->>>>>>> Stashed changes
 ]
 
 MIDDLEWARE = [

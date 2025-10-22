@@ -141,7 +141,8 @@ def booking_detail(request, booking_id):
     })
     
 # function untuk ngedirect ke booking_list
-@login_required
+#EDLYNNN INI UNCOMMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# @login_required
 def show_booking_list(request):
     return render(request, 'booking_list.html')
 
