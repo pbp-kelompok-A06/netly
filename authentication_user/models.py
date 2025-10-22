@@ -21,7 +21,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile") # reference ke model user; jadi satu user punya satu profile
 
     fullname = models.CharField(max_length=200, null=False)
-    role = models.CharField(max_length=20, choices=role_option, default='user_player')
+    role = models.CharField(max_length=20, choices=role_option, default='user')
     location = models.CharField(max_length=255, null=True, blank=True)
     
     profile_picture = models.ImageField(upload_to=configure_image_path, blank=True, null=True)
