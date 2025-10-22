@@ -4,12 +4,6 @@ import uuid, os
 
 # Create your models here.
 
-def configure_image_path(obj, filename):
-    file_type = filename.split(".")[-1]
-    username = obj.user.username.strip()
-    filename = f"{obj.id}.{file_type}"
-    return os.path.join('profile_pics', username, filename)
-
 class UserProfile(models.Model):
 
     role_option = [
@@ -24,7 +18,7 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=20, choices=role_option, default='user')
     location = models.CharField(max_length=255, null=True, blank=True)
     
-    profile_picture = models.ImageField(upload_to=configure_image_path, blank=True, null=True)
+    profile_picture = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
