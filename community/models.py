@@ -7,8 +7,8 @@ import uuid
 class Forum(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    creator_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    member = models.ManyToManyField(UserProfile, blank=True)
+    creator_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="forum_creator")
+    member = models.ManyToManyField(UserProfile, blank=True, related_name="forum_member")
     title = models.CharField(max_length=200)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,7 +33,7 @@ class Forum_Post(models.Model):
 
 class Forum_Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="forum_comment_user")
     forum_id = models.ForeignKey(Forum, on_delete=models.CASCADE)
     forum_post_id = models.ForeignKey(Forum_Post, on_delete=models.CASCADE)
     comment = models.TextField()
