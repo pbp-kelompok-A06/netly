@@ -2,6 +2,7 @@ from datetime import timezone
 import datetime
 from django.db import models
 from django.contrib.auth.models import User
+from authentication_user.models import UserProfile
 
 #liat app sebelah
 # dummy
@@ -16,7 +17,7 @@ class Booking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lapangan_id = models.ForeignKey(Lapangan, on_delete=models.CASCADE)
     jadwal = models.ManyToManyField(Jadwal)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     status_book = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('completed', 'Completed'), ('failed', 'Failed')], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
