@@ -36,7 +36,8 @@ class Booking(models.Model):
     def is_expired(self):
         now = timezone.localtime()
         for j in self.jadwal.all():
-            waktu_selesai = datetime.combine(j.tanggal, j.jam_selesai)
+            waktu_selesai = datetime.combine(j.tanggal, j.end_main)
+            #maksud make aware di sini yaitu 
             waktu_selesai = timezone.make_aware(waktu_selesai)
             if waktu_selesai > now:
                 return False  # masih ada jadwal yang belum lewat

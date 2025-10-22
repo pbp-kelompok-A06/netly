@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netly - Home</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f3f4f6; /* light gray background */
+      color: #1e3a8a; /* dark blue text */
+    }
+    header {
+      background-color: #1e3a8a; /* dark blue */
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      color: #10b981; /* green accent */
+    }
+    nav a {
+      color: #10b981; /* green links */
+      text-decoration: none;
+      margin-left: 1rem;
+      font-weight: bold;
+    }
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .carousel img {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 10px;
+      scroll-snap-align: start;
+    }
+    .search-bar {
+      display: flex;
+      justify-content: center;
+      margin: 1rem;
+    }
+    .search-bar input, .search-bar select {
+      padding: 0.5rem;
+      margin-right: 0.5rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 2rem;
+      justify-content: center;
+    }
+    .card {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 250px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    .card img {
+      width: 100%;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+    .card-content {
+      padding: 1rem;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      color: #1e3a8a;
+    }
+    .close-btn {
+      background-color: #10b981;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: bold;
+    }
+    button {
+      background-color: #1e3a8a;
+      color: #10b981;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #10b981;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Netly</h1>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Community</a>
+    <a href="#">Booking</a>
+    <a href="#">Events</a>
+  </nav>
+</header>
+
+<div class="search-bar">
+  <input type="text" placeholder="Search for courts...">
+  <select>
+    <option value="">All Cities</option>
+    <option value="jakarta">Jakarta</option>
+    <option value="bandung">Bandung</option>
+  </select>
+  <button>Search</button>
+</div>
+
+<div class="carousel">
+  {% for event in event_list %}
+  <img src="{{ event.image }}" alt="{{ event.title }}">
+  {% endfor %}
+</div>
+
+<div class="cards">
+  {% for court in court_list %}
+  <div class="card" onclick="openModal('{{ court.name }}')">
+    <img src="{{ court.image }}" alt="{{ court.name }}">
+    <div class="card-content">
+      <h3>{{ court.name }}</h3>
+      <p>Price: Rp{{ court.price }}/hour</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2 id="modal-title">Court</h2>
+    <p>Court description will appear here.</p>
+    <button class="close-btn" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+  function openModal(name) {
+    document.getElementById('modal-title').innerText = name;
+    document.getElementById('modal').style.display = 'flex';
+  }
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>

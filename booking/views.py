@@ -30,7 +30,6 @@ def create_booking(request):
             return JsonResponse({'success': False, 
                                  'message': 'Selected schedules are already booked or invalid.'}, 
                                 status=400,
-                                
                                 )
         
         #kalo berhasil
@@ -76,6 +75,41 @@ def show_json_by_id(request, booking_id):
     # headers: { 'Accept': 'application/json' },
     return JsonResponse(data)
 
+
+@login_required
+def show_json(request):
+    """
+    Mengambil SEMUA booking untuk user yang sedang login dan mengembalikannya sebagai list JSON.
+    Ini adalah view yang dibutuhkan oleh booking_list.html.
+    """
+    # Ambil semua booking milik user yang sedang login
+    all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
+
+    data = []
+    for booking in all_bookings:
+        # Cek dan update status expired sebelum disajikan
+        booking.is_expired() 
+
+        # Ambil jadwal
+        jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main'))
+
+        # 2. Susun data untuk setiap booking
+        data.append({
+            'id': str(booking.id),
+            'lapangan': {
+                'id': str(booking.lapangan_id.id),
+                'name': booking.lapangan_id.name, # Gunakan 'name' agar sesuai dengan JS di list page
+                'harga': booking.lapangan_id.price,
+            },
+            
+            'status_book': booking.status_book,
+            'total_price': booking.total_price(),
+            'jadwal': jadwal_list,
+        })
+        
+    # 3. Kembalikan list JSON. safe=False diperlukan karena objek teratas adalah list.
+    return JsonResponse(data, safe=False)
+
 @login_required
 def complete_booking(request, booking_id):
     # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
@@ -119,7 +153,7 @@ def show_json(request):
 
     data = []
     for booking in bookings:
-        jadwal_list = list(booking.jadwal.values('tanggal', 'waktu_mulai', 'waktu_selesai', 'is_available'))
+        jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main', 'is_available'))
         data.append({
             'id': str(booking.id),
             'lapangan': {

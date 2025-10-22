@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block meta %}
-<title>Booking Detail</title>
+<title>Booking Detail </title>
 {% endblock meta %}
 
 {% block content %}
@@ -39,7 +39,9 @@
             
             <!-- Header -->
             <div class="p-6 sm:p-8">
-
+                <div id="badges-container" class="flex flex-wrap items-center gap-2 mb-4">
+                    <!-- Dynamic badges will be inserted here -->
+                </div>
                 
                 <div id="badges-container" class="flex flex-wrap gap-2 mb-4">
                     <!-- Badges will be inserted here --> badges
@@ -71,6 +73,7 @@
                         <!-- Content will be inserted here --> isiiiiiiii banyak
                     </div>
                 </div>
+                <div id="button-container" class="mt-6"></div>
             </div>
 
             
@@ -94,7 +97,7 @@ const badgesContainer = document.getElementById('badges-container');
 const articleTitle = document.getElementById('article-title');
 const articleDate = document.getElementById('article-date');
 const articleContentText = document.getElementById('article-content-text');
-const buttonContainer = document.getElementById('button-container')
+const buttonContainer = document.getElementById('button-container');
 
 // Show/hide page sections
 function showState(state) {
@@ -150,8 +153,8 @@ function renderBooking(bookingData) {
         const date = new Date(jadwalItem.tanggal).toLocaleDateString('id-ID', {
             year: 'numeric', month: 'long', day: 'numeric'
         });
-        const startTime = jadwalItem.waktu_mulai.substring(0, 5); // Take HH:MM
-        const endTime = jadwalItem.waktu_selesai.substring(0, 5); // Take HH:MM
+        const startTime = jadwalItem.start_main.substring(0, 5); // Take HH:MM
+        const endTime = jadwalItem.end_main.substring(0, 5); // Take HH:MM
         return `Tanggal: ${date} (Jam: ${startTime} - ${endTime})`;
         }).join('\n');
     const bookingDetailText = `
@@ -192,7 +195,6 @@ function renderBooking(bookingData) {
     }
     
 }
-
 function confirmPayment(bookingId) {
     // Ganti URL ini dengan endpoint API Django kamu untuk update booking
     const url = `{% url 'booking:complete_booking' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', bookingId); 
@@ -226,12 +228,10 @@ function confirmPayment(bookingId) {
         alert(`Konfirmasi gagal: ${error.message}`);
     });
 }
-
 // Fetch booking detail
 async function loadBookingDetail() {
     try {
         showState('loading');
-        
         const response = await fetch(BOOKING_DETAIL_ENDPOINT, {
             headers: { 'Accept': 'application/json' },
         });
