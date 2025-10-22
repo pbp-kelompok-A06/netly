@@ -24,7 +24,7 @@ def create_booking(request):
         jadwal_ids = request.POST.getlist('jadwal_id')
 
         lapangan = get_object_or_404(Lapangan, id=lapangan_id)
-        jadwals = Jadwal.objects.filter(id__in=jadwal_ids, isbooked=False)
+        jadwals = Jadwal.objects.filter(id__in=jadwal_ids, is_available=True)
 
         if not jadwals.exists():
             return JsonResponse({'success': False, 
@@ -40,7 +40,7 @@ def create_booking(request):
             status_book='pending'
         )
         booking.jadwal.update(jadwals)
-        jadwals.update(isbooked=True)
+        jadwals.update(is_available=False)
         #dummy
         payment_url = reverse('booking_detail', kwargs={'booking_id': booking.id})
 
@@ -56,13 +56,13 @@ def create_booking(request):
 def show_json_by_id(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, user_id=request.user.profile.id)
     booking.is_expired()  # cek apakah booking sudah expired
-    jadwal_list = list(booking.jadwal.values('tanggal', 'waktu_mulai', 'waktu_selesai', 'isbooked'))
+    jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main', 'is_available'))
     data = {
         'id': str(booking.id),
         'lapangan': {
             'id': booking.lapangan_id.id,
-            'nama': booking.lapangan_id.nama,
-            'harga': booking.lapangan_id.harga,
+            'nama': booking.lapangan_id.name,
+            'harga': booking.lapangan_id.price,
         },
         'user': {
             'id': booking.user_id.profile.id,
@@ -102,7 +102,7 @@ def booking_detail(request, booking_id):
     booking.is_expired()
     return render(request, 'booking_detail.html', {
         'booking_id': str(booking.id), # Kirim ID ke template agar JS bisa membacanya
-        'lapangan_nama': booking.lapangan_id.nama # Kirim data minimal untuk header
+        'lapangan_nama': booking.lapangan_id.name # Kirim data minimal untuk header
     })
     
 # function untuk ngedirect ke booking_list
@@ -123,12 +123,12 @@ def show_json(request):
             'id': str(booking.id),
             'lapangan': {
                 'id': booking.lapangan_id.id,
-                'nama': booking.lapangan_id.nama,
-                'harga': booking.lapangan_id.harga,
+                'nama': booking.lapangan_id.name,
+                'harga': booking.lapangan_id.price,
             },
             'user': {
-                'id': booking.user_id.id,
-                'username': booking.user_id.username,
+                'id': booking.user_id.profile.id,
+
             },
             'created_at': booking.created_at,
             'status_book': booking.status_book,
