@@ -11,7 +11,11 @@
     {% block meta %} 
     {% endblock %}
 </head>
-<body class="bg-gray-100"> {% block content %}
+<body class="bg-gray-100">
+
+    {% include 'navbar.html' %}
+
+    {% block content %}
     {% endblock %}
     
     {% include 'toast.html' %}
