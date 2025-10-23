@@ -36,7 +36,6 @@
 
 {% block javascript %}
 <script>
-    // --- 1. Helper & CSRF ---
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -151,7 +150,7 @@
 
         } catch (error) {
             console.error('Error in showEditModal:', error);
-            alert('Error: ' + error.message);
+            showToast('Error: ' + error.message);
         }
     }
 
@@ -183,7 +182,7 @@
 
             if (data.status === 'success') {
                 hideEventModal();
-                alert(data.message); 
+                showToast(data.message); 
                 
                 // refresh halaman untuk lihat perubahan
                 setTimeout(() => {
@@ -191,11 +190,11 @@
                 }, 1000); 
             } else {
                 const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
-                alert('Error: ' + errorMsg);
+                showToast('Error: ' + errorMsg);
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('An unexpected error occurred.');
+            showToast('An unexpected error occurred.');
         }
     });
 
@@ -219,17 +218,17 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                alert(result.message);
+                showToast(result.message);
                 // automatically reload kalau berhasil
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
             } else {
-                alert(result.message || 'Failed to delete event.');
+                showToast(result.message || 'Failed to delete event.');
             }
         } catch (error) {
             console.error('Delete error:', error);
-            alert('An error occurred. Please try again.');
+            showToast('An error occurred. Please try again.');
         } finally {
             hideDeleteModal();
         }

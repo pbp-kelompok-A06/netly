@@ -53,7 +53,7 @@ def event_detail(request, pk):
     # cek dulu user sudah join event ini atau belum
     is_participant = False
     if request.user.profile.is_authenticated:
-        is_participant = event.participant.filter(id=request.user.profile.profile.id).exists()
+        is_participant = event.participant.filter(id=request.user.profile.id).exists()
 
     now = timezone.now()
     # cek apakah event sudah lewat atau belum
@@ -128,21 +128,21 @@ def delete_event_ajax(request, pk):
 def join_leave_event(request, pk):
     if request.method == 'POST':
         event = get_object_or_404(Event, pk=pk)
-        user = request.user.profile
+        user_profile = request.user.profile
 
         # cek apakah dia participat (sudah join) dari eventnya atau bukan
-        is_participant = event.participant.filter(id=user.id).exists()
+        is_participant = event.participant.filter(id=user_profile.id).exists()
 
         if is_participant:
             # kalau dia participant berarti pas button diclick dia mau cancel join (nanti tulisan buttonnya cancel join)
-            event.participant.remove(user)
+            event.participant.remove(user_profile)
             messages.info(request, f'You have canceled your participation on "{event.name}".')
         else:
             # kalau belum join, cek kuota event
             if event.participant.count() >= event.max_participants:
                 messages.error(request, f'Sorry, Event "{event.name}" is full and no longer accepting participant')
             else:
-                event.participant.add(user)
+                event.participant.add(user_profile)
                 messages.success(request, f'You have joined this event!')
     
     return redirect('event:event_detail', pk=pk)
@@ -154,14 +154,14 @@ def join_event_ajax(request, pk):
     # fungsi ini mirip join_leave_event, tapi balasannya dalam bentuk JSON
     try:
         event = get_object_or_404(Event, pk=pk)
-        user = request.user.profile
+        user_profile = request.user.profile
 
         # cek apakah user sudah jadi participant atau udah join
-        is_participant = event.participant.filter(id=user.id).exists()
+        is_participant = event.participant.filter(id=user_profile.id).exists()
 
         if is_participant:
             # jika sudah maka user ingin keluar
-            event.participant.remove(user)
+            event.participant.remove(user_profile)
             return JsonResponse({
                 'status': 'success',
                 'action': 'leave', # kita kasih info aksinya apa
@@ -174,7 +174,7 @@ def join_event_ajax(request, pk):
                 return JsonResponse({'status': 'fail', 'message': 'Maaf, event sudah penuh.'}, status=400)
             
             # jika aman tambahkan user
-            event.participant.add(user)
+            event.participant.add(user_profile)
             return JsonResponse({
                 'status': 'success',
                 'action': 'join', # aksinya adalah join
