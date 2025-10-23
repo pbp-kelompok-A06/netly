@@ -3,12 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from .models import Booking
-from django.utils import timezone  # <-- TAMBAHKAN INI
+from django.utils import timezone  
 from datetime import timedelta
-#dummy
 from admin_lapangan.models import Lapangan
 from admin_lapangan.models import JadwalLapangan as Jadwal
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -40,7 +38,7 @@ def show_create_booking(request, lapangan_id):
 
 @csrf_exempt  # kalau belum handle CSRF token di JS, tapi idealnya pakai token ya
 # diuncomment kalo dah ada login
-# @login_required
+@login_required
 def create_booking(request):
     if request.method == 'POST':
         lapangan_id = request.POST.get('lapangan_id')
@@ -58,13 +56,12 @@ def create_booking(request):
         #kalo berhasil
         booking = Booking.objects.create(
             lapangan_id=lapangan,
-            user_id=request.user.profile.id,  # Asumsi ada relasi OneToOne antara User dan UserProfile
+            user_id=request.user.profile,  # Asumsi ada relasi OneToOne antara User dan UserProfile
             status_book='pending'
         )
-        booking.jadwal.update(jadwals)
+        booking.jadwal.set(jadwals)
         jadwals.update(is_available=False)
-        #dummy
-        payment_url = reverse('booking_detail', kwargs={'booking_id': booking.id})
+        payment_url = reverse('booking:booking_detail', kwargs={'booking_id': booking.id})
 
         return JsonResponse({
             'success': True,
@@ -101,10 +98,7 @@ def show_json_by_id(request, booking_id):
 
 @login_required(login_url='/login/')
 def show_json(request):
-    """
-    Mengambil SEMUA booking untuk user yang sedang login dan mengembalikannya sebagai list JSON.
-    Ini adalah view yang dibutuhkan oleh booking_list.html.
-    """
+
     # Ambil semua booking milik user yang sedang login
     all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
 

@@ -70,7 +70,7 @@ class ShowJsonViewTest(TestCase):
         self.client = Client()
         # Pastikan app_name='booking' dan name='show_json' di urls.py
         self.url = reverse('booking:show_json') 
-
+        self.url_create_booking = reverse('booking:create_booking')
     def test_show_json_unauthenticated(self):
         """
         TES 1: Pastikan user yang belum login di-redirect ke halaman login.
@@ -134,3 +134,312 @@ class ShowJsonViewTest(TestCase):
         # Cek data
         data = response.json()
         self.assertEqual(data, []) # List harus kosong
+    
+    # Tambahkan ini di dalam class ShowJsonViewTest di booking/tests.py
+
+    def test_complete_booking_success(self):
+        """
+        TES 1: (Happy Path) Pastikan user1 bisa complete booking miliknya
+        yang statusnya 'pending'.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+        
+        # 2. Tentukan URL (harus pakai reverse() untuk booking spesifik)
+        url = reverse('booking:complete_booking', kwargs={'booking_id': self.booking1.id})
+        
+        # 3. Kirim request POST (sesuai 'fetch' di JS)
+        response = self.client.post(url)
+        
+        # 4. Cek respons JSON
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'Completed')
+        
+        # 5. Cek database (PALING PENTING)
+        # Ambil data booking1 terbaru dari database
+        self.booking1.refresh_from_db() 
+        self.assertEqual(self.booking1.status_book, 'completed')
+
+    def test_complete_booking_not_authorized(self):
+        """
+        TES 2: (Security) Pastikan user1 GAGAL complete booking milik user2.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+        
+        # 2. Tentukan URL, tapi pakai ID booking2 (milik user2)
+        url = reverse('booking:complete_booking', kwargs={'booking_id': self.booking2.id})
+        
+        # 3. Kirim request POST
+        response = self.client.post(url)
+        
+        # 4. Cek respons (Harus 404, sesuai 'Booking.DoesNotExist')
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['message'], 'Booking not found or not authorized')
+
+    def test_complete_booking_not_logged_in(self):
+        """
+        TES 3: (Security) Pastikan user yang belum login di-redirect.
+        """
+        # 1. (Jangan login)
+        
+        # 2. Tentukan URL
+        url = reverse('booking:complete_booking', kwargs={'booking_id': self.booking1.id})
+        
+        # 3. Kirim request POST
+        response = self.client.post(url)
+        
+        # 4. Cek respons (Harus 302 Redirect ke login)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url) # (Sesuaikan jika URL login-mu beda)
+
+    def test_complete_booking_already_completed(self):
+        """
+        TES 4: (Logic) Pastikan user GAGAL complete booking yang
+        statusnya sudah 'completed'.
+        """
+        # 1. Login sebagai user2 (pemilik booking2)
+        self.client.login(username='user2', password='password123')
+        
+        # 2. Tentukan URL (pakai booking2, yang statusnya 'completed')
+        url = reverse('booking:complete_booking', kwargs={'booking_id': self.booking2.id})
+        
+        # 3. Kirim request POST
+        response = self.client.post(url)
+        
+        # 4. Cek respons
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Booking is already completed', response.json()['message'])
+
+    def test_complete_booking_failed_status(self):
+        """
+        TES 5: (Logic) Pastikan user GAGAL complete booking yang
+        statusnya 'failed'.
+        """
+        # 1. Ubah dulu status booking1 jadi 'failed'
+        self.booking1.status_book = 'failed'
+        self.booking1.save()
+        
+        # 2. Login sebagai user1 (pemilik booking1)
+        self.client.login(username='user1', password='password123')
+        
+        # 3. Tentukan URL
+        url = reverse('booking:complete_booking', kwargs={'booking_id': self.booking1.id})
+        
+        # 4. Kirim request POST
+        response = self.client.post(url)
+        
+        # 5. Cek respons
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['message'], 'Booking has expired and cannot be completed')
+    
+    # -----------------------------------------------
+    # TES UNTUK VIEW CREATE_BOOKING
+    # -----------------------------------------------
+
+    def test_create_booking_success(self):
+        """
+        TES 1: (Happy Path) Pastikan user1 bisa create booking baru.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+        
+        # 2. Siapkan data POST
+        # Pastikan kita booking jadwal yang 'is_available=True' (jadwal_senin)
+        self.assertTrue(self.jadwal_senin.is_available)
+        post_data = {
+            'lapangan_id': self.lapangan_a.id,
+            'jadwal_id': [self.jadwal_senin.id] # 'getlist' butuh format list
+        }
+
+        # 3. Kirim request POST
+        response = self.client.post(self.url_create_booking, data=post_data)
+        
+        # 4. Cek respons JSON
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertIn('payment_url', data) # Pastikan payment_url dikirim
+        
+        # 5. Cek Database (PALING PENTING)
+        # Pastikan booking baru dibuat (total jadi 3)
+        self.assertEqual(Booking.objects.count(), 3) 
+        new_booking = Booking.objects.get(id=data['booking_id'])
+        self.assertEqual(new_booking.user_id, self.profile1)
+        self.assertEqual(new_booking.lapangan_id, self.lapangan_a)
+        
+        # 6. Cek M2M relation (jadwal)
+        self.assertEqual(new_booking.jadwal.count(), 1)
+        self.assertEqual(new_booking.jadwal.first(), self.jadwal_senin)
+
+        # 7. Cek side-effect (jadwal jadi not available)
+        self.jadwal_senin.refresh_from_db()
+        self.assertFalse(self.jadwal_senin.is_available)
+
+    def test_create_booking_jadwal_not_available(self):
+        """
+        TES 2: (Validation) Pastikan GAGAL jika jadwal.is_available=False.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+
+        # 2. Siapkan data POST, tapi pakai jadwal_selasa
+        #    Lalu, kita set jadwal_selasa jadi 'not available'
+        self.jadwal_selasa.is_available = False
+        self.jadwal_selasa.save()
+        
+        post_data = {
+            'lapangan_id': self.lapangan_a.id,
+            'jadwal_id': [self.jadwal_selasa.id]
+        }
+
+        # 3. Kirim request POST
+        response = self.client.post(self.url_create_booking, data=post_data)
+        
+        # 4. Cek respons JSON
+        self.assertEqual(response.status_code, 400) # Sesuai view kamu
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('already booked or invalid', data['message'])
+        
+        # 5. Cek Database (Pastikan tidak ada booking baru yang dibuat)
+        self.assertEqual(Booking.objects.count(), 2) # Harus tetap 2
+
+    def test_create_booking_not_logged_in(self):
+        """
+        TES 3: (Security) Pastikan user yang belum login di-redirect.
+        """
+        # 1. (Jangan login)
+        post_data = {
+            'lapangan_id': self.lapangan_a.id,
+            'jadwal_id': [self.jadwal_senin.id]
+        }
+        
+        # 2. Kirim request POST
+        response = self.client.post(self.url_create_booking, data=post_data)
+        
+        # 3. Cek respons (Harus 302 Redirect ke login)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url) # (Sesuaikan jika URL login-mu beda)
+
+    def test_create_booking_wrong_method(self):
+        """
+        TES 4: (Logic) Pastikan GAGAL jika pakai method GET.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+        
+        # 2. Kirim request GET
+        response = self.client.get(self.url_create_booking)
+        
+        # 3. Cek respons JSON
+        self.assertEqual(response.status_code, 405) # Sesuai view kamu
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertEqual(data['message'], 'Invalid request method.')
+    
+    # -----------------------------------------------
+    # TES UNTUK VIEW CREATE_BOOKING
+    # -----------------------------------------------
+
+    def test_create_booking_success(self):
+        """
+        TES 1: (Happy Path) Pastikan user1 bisa create booking baru.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+        
+        # 2. Siapkan data POST
+        # Pastikan kita booking jadwal yang 'is_available=True' (jadwal_senin)
+        self.assertTrue(self.jadwal_senin.is_available)
+        post_data = {
+            'lapangan_id': self.lapangan_a.id,
+            'jadwal_id': [self.jadwal_senin.id] # 'getlist' butuh format list
+        }
+
+        # 3. Kirim request POST
+        response = self.client.post(self.url_create_booking, data=post_data)
+        
+        # 4. Cek respons JSON
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertIn('payment_url', data) # Pastikan payment_url dikirim
+        
+        # 5. Cek Database (PALING PENTING)
+        # Pastikan booking baru dibuat (total jadi 3)
+        self.assertEqual(Booking.objects.count(), 3) 
+        new_booking = Booking.objects.get(id=data['booking_id'])
+        self.assertEqual(new_booking.user_id, self.profile1)
+        self.assertEqual(new_booking.lapangan_id, self.lapangan_a)
+        
+        # 6. Cek M2M relation (jadwal)
+        self.assertEqual(new_booking.jadwal.count(), 1)
+        self.assertEqual(new_booking.jadwal.first(), self.jadwal_senin)
+
+        # 7. Cek side-effect (jadwal jadi not available)
+        self.jadwal_senin.refresh_from_db()
+        self.assertFalse(self.jadwal_senin.is_available)
+
+    def test_create_booking_jadwal_not_available(self):
+        """
+        TES 2: (Validation) Pastikan GAGAL jika jadwal.is_available=False.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+
+        # 2. Siapkan data POST, tapi pakai jadwal_selasa
+        #    Lalu, kita set jadwal_selasa jadi 'not available'
+        self.jadwal_selasa.is_available = False
+        self.jadwal_selasa.save()
+        
+        post_data = {
+            'lapangan_id': self.lapangan_a.id,
+            'jadwal_id': [self.jadwal_selasa.id]
+        }
+
+        # 3. Kirim request POST
+        response = self.client.post(self.url_create_booking, data=post_data)
+        
+        # 4. Cek respons JSON
+        self.assertEqual(response.status_code, 400) # Sesuai view kamu
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('already booked or invalid', data['message'])
+        
+        # 5. Cek Database (Pastikan tidak ada booking baru yang dibuat)
+        self.assertEqual(Booking.objects.count(), 2) # Harus tetap 2
+
+    def test_create_booking_not_logged_in(self):
+        """
+        TES 3: (Security) Pastikan user yang belum login di-redirect.
+        """
+        # 1. (Jangan login)
+        post_data = {
+            'lapangan_id': self.lapangan_a.id,
+            'jadwal_id': [self.jadwal_senin.id]
+        }
+        
+        # 2. Kirim request POST
+        response = self.client.post(self.url_create_booking, data=post_data)
+        
+        # 3. Cek respons (Harus 302 Redirect ke login)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url) # (Sesuaikan jika URL login-mu beda)
+
+    def test_create_booking_wrong_method(self):
+        """
+        TES 4: (Logic) Pastikan GAGAL jika pakai method GET.
+        """
+        # 1. Login sebagai user1
+        self.client.login(username='user1', password='password123')
+        
+        # 2. Kirim request GET
+        response = self.client.get(self.url_create_booking)
+        
+        # 3. Cek respons JSON
+        self.assertEqual(response.status_code, 405) # Sesuai view kamu
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertEqual(data['message'], 'Invalid request method.')
