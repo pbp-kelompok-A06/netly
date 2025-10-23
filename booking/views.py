@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from .models import Booking
+from django.utils import timezone  # <-- TAMBAHKAN INI
+from datetime import timedelta
 #dummy
 from admin_lapangan.models import Lapangan
 from admin_lapangan.models import JadwalLapangan as Jadwal
@@ -14,7 +16,28 @@ from django.utils.decorators import method_decorator
 
 def test(request):
     
-    return render(request, 'booking_list.html')
+    return render(request, 'create_book.html')
+
+def show_create_booking(request, lapangan_id):
+    
+    today = timezone.now().date() 
+    # Tentukan batas akhir (hari ini + 2 hari)
+    limit_date = today + timedelta(days=2)
+    # -----------------------------
+
+    
+    jadwals = Jadwal.objects.filter(
+        lapangan_id=lapangan_id, 
+        is_available=True,
+        tanggal__gte=today,       # Filter 1: Tanggal >= hari ini
+        tanggal__lte=limit_date     # Filter 2: Tanggal <= hari ini + 2 hari
+    ).order_by('tanggal', 'start_main')
+    context = {
+        'lapangan': get_object_or_404(Lapangan, id=lapangan_id),
+        'jadwals': jadwals
+    }
+    return render(request, 'create_book.html', context)
+
 @csrf_exempt  # kalau belum handle CSRF token di JS, tapi idealnya pakai token ya
 # diuncomment kalo dah ada login
 # @login_required
