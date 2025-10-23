@@ -1,5 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+<<<<<<< Updated upstream
+=======
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <form id="bookingForm">
+  {% csrf_token %}
+  <input type="hidden" name="lapangan_id" value="{{ lapangan.id }}">
+>>>>>>> Stashed changes
 
 <head>
    
@@ -136,6 +148,24 @@
     });
   </script>
 
+<<<<<<< Updated upstream
 </body>
 
+=======
+    // # mau pake toast aja 
+    // !!!!!!!!!!!!!!!!!!!!!
+    if (data.success) {
+        // messageDiv.innerHTML = `<p style="color: green;">${data.message}</p>`;
+        // contoh redirect manual kalau mau nanti
+        window.location.href = data.payment_url;
+        
+        
+    } else {
+        messageDiv.innerHTML = `<p style="color: red;">${data.message}</p>`;
+    }
+});
+</script>
+
+</body>
+>>>>>>> Stashed changes
 </html>
