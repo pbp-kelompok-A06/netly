@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Forum
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-10 px-4">
+
+    <!-- Add Forum Button -->
+    <button id="openModalBtn"
+        class="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2">
+        + Create Forum
+    </button>
+
+    <!-- Forum Cards -->
+    
+    <div class="min-h-screen flex justify-center py-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full" id="forumShow">
+            
+        <!-- Example Card -->
+            {% if data %}
+            {% for x in data %}
+                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition h-auto">
+                    <div class="flex items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">{{x.title }}</h2>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3">
+                        {{ x.description }}
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">{{ x.creator_id.user.username }}</span>
+                        <span class="inline-block bg-green-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">{{ x.member.all | length }} members</span>
+                        <span class="inline-block bg-green-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">250 posts</span>
+                    </div>
+                    <br>
+                    {% if x.creator_id == request.user.profile %}
+                    <div class="flex gap-4">
+                        <!-- Edit Button -->
+                        <a href="#" 
+                            class="text-blue-600 hover:text-blue-800 font-medium text-sm transition">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'community:delete_forum' x.id %}" 
+                            class="text-red-600 hover:text-red-800 font-medium text-sm transition">
+                            Delete
+                        </a>
+                    {% endif %}
+                       
+                    </div>
+                </div>
+            {% endfor %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+{% include 'forum_form.html' %}
+
+{% endblock %}
+
