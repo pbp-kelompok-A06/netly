@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto px-4 mt-10 mb-24">
+
+  <!-- Gambar Court -->
+  <div class="w-full max-w-5xl mx-auto mb-6 overflow-hidden rounded-lg shadow-md">
+    <img src="{{ court.image }}" alt="{{ court.name }}" class="w-full h-96 md:h-[28rem] object-cover rounded-lg">
+  </div>
+
+  <!-- Nama dan Lokasi -->
+  <div class="max-w-5xl mx-auto mb-6 text-left">
+    <h2 class="text-2xl md:text-3xl font-bold text-[#243153] mb-1">{{ court.name }}</h2>
+    <p class="text-gray-500 text-sm flex items-center gap-2">
+      {{ court.location }}
+      <span class="text-[#FACC15] text-base">★</span>
+      <span>{{ court.rating }}</span>
+    </p>
+  </div>
+
+  <hr class="my-6 border-gray-200">
+
+  <!-- Deskripsi -->
+  <div class="max-w-5xl mx-auto mb-24 text-left">
+    <h3 class="text-lg font-semibold text-[#243153] mb-2">Deskripsi</h3>
+    <p class="text-gray-600 leading-relaxed">{{ court.description }}</p>
+  </div>
+
+</section>
+
+<!-- Tombol Booking -->
+<div class="fixed bottom-0 left-0 right-0 bg-[#243153] py-4 text-center shadow-lg">
+  <a href="{% url 'booking:show_create_booking' court.id %}" 
+     class="bg-[#243153] text-[#D7FC64] font-semibold text-lg tracking-wide px-10 py-3 rounded-full shadow-md hover:bg-[#2F3F61] transition">
+    Booking
+  </a>
+</div>
+
+{% endblock %}
