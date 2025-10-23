@@ -64,14 +64,15 @@
 
     <!-- SEARCH + FILTER -->
     <section id="search" class="relative z-20 mt-8 max-w-5xl mx-auto px-4">
-    <form method="get" action="{% url 'homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative">
+    <form method="get" action="{% url 'homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative" id="search-form">
         <!-- Search Input -->
         <input 
         type="text" 
         name="q"
         value="{{ search_query.q|default:'' }}"
         placeholder="Cari Lapangan..." 
-        class="flex-grow px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#00B894] outline-none text-sm" 
+        class="flex-grow px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#00B894] outline-none text-sm"
+        id="search-input"
         />
 
         <!-- Filter Button -->
@@ -91,6 +92,7 @@
         <button 
         type="submit"
         class="bg-[#243153] text-[#D7FC64] px-6 py-3 rounded-full font-semibold hover:bg-[#2F3F61] w-full sm:w-auto transition shadow-md"
+        id="search-btn"
         >
             Search
         </button>
@@ -241,58 +243,40 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Script loaded...");
 
+  // Elements
   const filterBtn = document.getElementById("filterBtn");
   const filterCard = document.getElementById("filterCard");
   const applyFilterBtn = document.getElementById("applyFilterBtn");
   const locationSelect = document.getElementById("filter-location");
-  const searchInput = document.querySelector("input[placeholder='Cari Lapangan...']");
+  const searchForm = document.getElementById("search-form");
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
   const minInput = document.getElementById("filter-min");
   const maxInput = document.getElementById("filter-max");
   const carouselWrapper = document.querySelector(".carousel-wrapper");
   const courtContainer = document.getElementById("court-grid");
 
-  // 🌿 Toggle Filter Card (buka/tutup)
-  filterBtn.addEventListener("click", () => {
-    filterCard.classList.toggle("hidden");
-  });
+  // Toggle filter card
+  if (filterBtn && filterCard) {
+    filterBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      filterCard.classList.toggle("hidden");
+    });
+  }
 
-  // Tutup filter kalau klik di luar
+  // Close filter if clicking outside
   document.addEventListener("click", (e) => {
-    if (!filterCard.contains(e.target) && !filterBtn.contains(e.target)) {
+    if (filterCard && filterBtn && !filterCard.contains(e.target) && !filterBtn.contains(e.target)) {
       filterCard.classList.add("hidden");
     }
   });
 
-  // === FUNCTION APPLY FILTER ===
-  async function applyFilter() {
-    console.log("🎯 applyFilter() dijalankan");
-    const q = searchInput?.value.trim() || "";
-    const location = locationSelect?.value || "";
-    const min_price = minInput?.value || "";
-    const max_price = maxInput?.value || "";
-
-    // kalau cuma pilih lokasi, isi otomatis di search bar
-    if (!q && location) searchInput.value = location;
-
-    const params = new URLSearchParams({ q: searchInput.value, location, min_price, max_price });
-    const res = await fetch(`/filter-courts/?${params.toString()}`);
-    const data = await res.json();
-    console.log("📦 Data dari server:", data);
-
-    // Sembunyikan carousel saat filter aktif
-    if (carouselWrapper) {
-      if (q || location || min_price || max_price) {
-        carouselWrapper.style.display = "none";
-      } else {
-        carouselWrapper.style.display = "block";
-      }
-    }
-
-    // Kosongkan grid
+  // Reusable renderer: same markup as server template for each court
+  function renderCourtsList(courts) {
+    if (!courtContainer) return;
     courtContainer.innerHTML = "";
 
-    // Tampilkan hasil
-    if (!data.results || data.results.length === 0) {
+    if (!courts || courts.length === 0) {
       courtContainer.innerHTML = `
         <p class="text-center text-gray-500 col-span-full">
           Tidak ada lapangan ditemukan.
@@ -300,109 +284,198 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    data.results.forEach(court => {
-      courtContainer.innerHTML += `
-        <article class="court-card bg-white rounded-2xl shadow-md overflow-hidden relative">
-          <span class="badge">${court.status}</span>
+    const html = courts.map(court => {
+      // link to court detail — keep same URL pattern
+      const detailUrl = `/court/${court.id}/`;
+      const image = court.image || "";
+      const location = court.location || "";
+      const price = court.price ?? "";
+      const rating = court.rating ?? "";
+      const status = court.status || "";
+
+      return `
+        <a href="${detailUrl}" 
+        class="block bg-white rounded-2xl shadow-md overflow-hidden relative court-card transition-all hover:scale-[1.01] hover:shadow-lg">
           <div class="h-44 w-full overflow-hidden">
-            <img src="${court.image}" alt="${court.name}" class="w-full h-full object-cover">
+              <img src="${image}" alt="${court.name}" class="w-full h-full object-cover">
           </div>
           <div class="p-4">
-            <h3 class="text-lg font-semibold text-slate-800">${court.name}</h3>
-            <p class="text-sm text-gray-500 mt-1">${court.location}</p>
-            <div class="mt-4 flex items-center justify-between">
-              <div>
-                <div class="text-sm text-gray-700 font-medium">
-                  Mulai <span class="font-semibold">Rp${court.price} / sesi</span>
-                </div>
-                <div class="text-xs text-gray-400 mt-1">⭐ ${court.rating}</div>
+              <h3 class="text-lg font-semibold text-slate-800">${court.name}</h3>
+              <p class="text-sm text-gray-500 mt-1">${location}</p>
+              <div class="mt-2 flex items-center justify-between">
+                  <span class="text-sm font-semibold text-[#243153]">Rp${price}</span>
+                  <span class="text-xs text-gray-400">⭐ ${rating}</span>
               </div>
-              <button class="btn-primary px-3 py-2 rounded-full text-sm"
-                onclick="openModalFromData(this)"
-                data-name="${court.name}"
-                data-image="${court.image}"
-                data-location="${court.location}"
-                data-price="${court.price}"
-                data-rating="${court.rating}">
-                Book
-              </button>
-            </div>
           </div>
-        </article>
+        </a>
       `;
-    });
+    }).join("");
 
-    // Tutup panel filter setelah diterapkan
-    filterCard.classList.add("hidden");
+    courtContainer.innerHTML = html;
   }
 
-  // 🔹 Klik “Terapkan” → jalankan filter
+  // === AJAX: Filter courts ===
+  async function applyFilter() {
+    try {
+      const q = (searchInput?.value || "").trim();
+      const location = (locationSelect?.value || "").trim();
+      const min_price = (minInput?.value || "").trim();
+      const max_price = (maxInput?.value || "").trim();
+
+      // if user only picks location but no q, keep it visible in search input
+      if (!q && location && searchInput) searchInput.value = location;
+
+      const params = new URLSearchParams({ q: searchInput.value, location, min_price, max_price });
+      const res = await fetch(`/filter-courts/?${params.toString()}`, { credentials: 'same-origin' });
+      const data = await res.json();
+
+      // Hide carousel when filter active (same behavior as before)
+      if (carouselWrapper) {
+        if (q || location || min_price || max_price) {
+          carouselWrapper.style.display = "none";
+        } else {
+          carouselWrapper.style.display = "block";
+        }
+      }
+
+      renderCourtsList(data.results);
+      if (filterCard) filterCard.classList.add("hidden");
+    } catch (err) {
+      console.error("applyFilter error:", err);
+    }
+  }
+
+  // === AJAX: Search courts (form submit) ===
+  async function performSearch(q) {
+    try {
+      const res = await fetch(`/search-courts/?q=${encodeURIComponent(q)}`, { credentials: 'same-origin' })
+      const data = await res.json();
+
+      // Hide carousel when searching
+      if (carouselWrapper) {
+        carouselWrapper.style.display = q ? "none" : "block";
+      }
+
+      renderCourtsList(data.results);
+    } catch (err) {
+      console.error("search error:", err);
+    }
+  }
+
+  // Intercept search form submit
+  if (searchForm) {
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = (searchInput.value || "").trim();
+      performSearch(q);
+    });
+  }
+
+  // Also ensure clicking the search button triggers AJAX (some browsers / event ordering)
+  if (searchBtn) {
+    searchBtn.addEventListener("click", (e) => {
+      // prevent normal submit navigation, then do AJAX search
+      e.preventDefault();
+      const q = (searchInput.value || "").trim();
+      performSearch(q);
+    });
+  }
+
+  // Support pressing Enter in the input even if form wasn't submitted directly
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const q = (searchInput.value || "").trim();
+        performSearch(q);
+      }
+    });
+  }
+
+  // Apply filter button
   if (applyFilterBtn) {
-    applyFilterBtn.addEventListener("click", () => {
-      console.log("🖱️ Tombol Terapkan diklik");
+    applyFilterBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       applyFilter();
     });
   }
 
-});
+  // === Carousel logic (unchanged behavior) ===
+  (function initCarousel() {
+    const carousel = document.getElementById("carousel");
+    if (!carousel) return;
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("🎠 Carousel script aktif...");
+    const items = carousel.querySelectorAll(".carousel-item");
+    const nextBtn = document.getElementById("next");
+    const prevBtn = document.getElementById("prev");
+    const dotsContainer = document.getElementById("carousel-dots");
+    let current = 0;
 
-  const carousel = document.getElementById("carousel");
-  const items = carousel ? carousel.querySelectorAll(".carousel-item") : [];
-  const nextBtn = document.getElementById("next");
-  const prevBtn = document.getElementById("prev");
-  const dotsContainer = document.getElementById("carousel-dots");
-  let current = 0;
+    if (!items || items.length === 0) return;
 
-  if (!carousel || items.length === 0) return;
-
-  // Buat dots
-  dotsContainer.innerHTML = "";
-  items.forEach((_, i) => {
-    const dot = document.createElement("span");
-    dot.className = "dot" + (i === 0 ? " active" : "");
-    dot.addEventListener("click", () => goToSlide(i));
-    dotsContainer.appendChild(dot);
-  });
-
-  const dots = dotsContainer.querySelectorAll(".dot");
-
-  // Fungsi pindah slide
-  function showSlide(index) {
-    items.forEach((item, i) => {
-      item.classList.toggle("active", i === index);
+    dotsContainer.innerHTML = "";
+    items.forEach((_, i) => {
+      const dot = document.createElement("span");
+      dot.className = "dot" + (i === 0 ? " active" : "");
+      dot.addEventListener("click", () => goToSlide(i));
+      dotsContainer.appendChild(dot);
     });
-    dots.forEach((dot, i) => {
-      dot.classList.toggle("active", i === index);
-    });
-  }
 
-  function nextSlide() {
-    current = (current + 1) % items.length;
-    showSlide(current);
-  }
+    const dots = dotsContainer.querySelectorAll(".dot");
 
-  function prevSlide() {
-    current = (current - 1 + items.length) % items.length;
-    showSlide(current);
-  }
+    function showSlide(index) {
+      items.forEach((item, i) => {
+        item.classList.toggle("active", i === index);
+      });
+      dots.forEach((dot, i) => {
+        dot.classList.toggle("active", i === index);
+      });
+    }
 
-  function goToSlide(index) {
-    current = index;
-    showSlide(current);
-  }
+    function nextSlide() {
+      current = (current + 1) % items.length;
+      showSlide(current);
+    }
 
-  // Event listeners
-  nextBtn?.addEventListener("click", nextSlide);
-  prevBtn?.addEventListener("click", prevSlide);
+    function prevSlide() {
+      current = (current - 1 + items.length) % items.length;
+      showSlide(current);
+    }
 
-  // Auto-slide tiap 5 detik
-  setInterval(nextSlide, 5000);
+    function goToSlide(index) {
+      current = index;
+      showSlide(current);
+    }
+
+    nextBtn?.addEventListener("click", nextSlide);
+    prevBtn?.addEventListener("click", prevSlide);
+    setInterval(nextSlide, 5000);
+  })();
+
+  // === Optional: expose a small helper so other inline buttons can open modal (kept) ===
+  window.openModalFromData = function (btn) {
+    const name = btn.dataset.name;
+    const image = btn.dataset.image;
+    const location = btn.dataset.location;
+    const price = btn.dataset.price;
+    const rating = btn.dataset.rating;
+
+    const modal = document.getElementById("modal");
+    if (!modal) return;
+    document.getElementById("modal-image").src = image || "";
+    document.getElementById("modal-name").textContent = name || "";
+    document.getElementById("modal-location").textContent = location || "";
+    document.getElementById("modal-price").textContent = price ? `Rp${price}` : "";
+    document.getElementById("modal-rating").textContent = rating ? `⭐ ${rating}` : "";
+    modal.classList.remove("hidden");
+  };
+
+  window.closeModal = function () {
+    const modal = document.getElementById("modal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+  };
 
 });
-
-
 </script>
 {% endblock %}
