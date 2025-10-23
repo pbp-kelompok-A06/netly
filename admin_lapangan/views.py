@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import Lapangan, JadwalLapangan
 from .forms import LapanganForm, JadwalLapanganForm
 from django.contrib.auth.decorators import login_required
@@ -50,10 +51,10 @@ def show_lapangan_list(request):
         admin_lapangan=request.user.profile
     )
     
-    # Apply search filter if query exists
+    # FIXED: Apply search filter properly using Q objects
     if search_query:
         lapangan_list = lapangan_list.filter(
-            lapangan_list.filter(name__icontains=search_query, location__icontains=search_query)
+            Q(name__icontains=search_query) | Q(location__icontains=search_query)
         )
     
     # Order by creation date
@@ -72,9 +73,27 @@ def show_lapangan_list(request):
 
 @login_required(login_url='/login/')
 @admin_required
+def lapangan_detail(request, pk):
+    lapangan = get_object_or_404(
+        Lapangan, 
+        pk=pk, 
+        admin_lapangan=request.user.profile
+    )
+    
+    # Ambil jadwal terkait
+    jadwals = lapangan.jadwal.all().order_by('tanggal', 'start_main')[:10]  
+    
+    context = {
+        'lapangan': lapangan,
+        'jadwals': jadwals,
+    }
+    return render(request, 'lapangan_detail.html', context)
+
+@login_required(login_url='/login/')
+@admin_required
 def create_lapangan_ajax(request):
     if request.method == 'POST':
-        form = LapanganForm(request.POST, request.FILES)
+        form = LapanganForm(request.POST)  
         if form.is_valid():
             lapangan = form.save(commit=False)
             lapangan.admin_lapangan = request.user.profile  
@@ -103,6 +122,7 @@ def create_lapangan_ajax(request):
 @login_required(login_url='/login/')
 @admin_required
 def get_lapangan_json(request, pk):
+    """Untuk fetch data ke form edit (AJAX)"""
     try:
         lapangan = Lapangan.objects.get(
             pk=pk, 
@@ -114,7 +134,7 @@ def get_lapangan_json(request, pk):
             'location': lapangan.location,
             'description': lapangan.description,
             'price': str(lapangan.price),
-            'image': lapangan.image.url if lapangan.image else ''
+            'image': lapangan.image or ''  # CHANGED: direct value, no .url
         }
         return JsonResponse({'status': 'success', 'data': data})
     except Lapangan.DoesNotExist:
@@ -134,7 +154,7 @@ def edit_lapangan_ajax(request, pk):
     
     try:
         lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
-        form = LapanganForm(request.POST, request.FILES, instance=lapangan)
+        form = LapanganForm(request.POST, instance=lapangan)  # REMOVED: request.FILES
         
         if form.is_valid():
             form.save()

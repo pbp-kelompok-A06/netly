@@ -2,6 +2,7 @@ from django.urls import path
 from admin_lapangan.views import (
     admin_dashboard,
     show_lapangan_list,
+    lapangan_detail,  # NEW
     create_lapangan_ajax,
     get_lapangan_json,
     edit_lapangan_ajax,
@@ -21,6 +22,7 @@ urlpatterns = [
     
     # Lapangan URLs
     path('lapangan/', show_lapangan_list, name='lapangan_list'),
+    path('lapangan/<uuid:pk>/', lapangan_detail, name='lapangan_detail'), 
     path('lapangan/ajax/create/', create_lapangan_ajax, name='create_lapangan_ajax'),
     path('lapangan/ajax/get/<uuid:pk>/', get_lapangan_json, name='get_lapangan_json'),
     path('lapangan/ajax/edit/<uuid:pk>/', edit_lapangan_ajax, name='edit_lapangan_ajax'),

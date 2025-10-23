@@ -22,7 +22,8 @@
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-900">Lapangan Terbaru</h2>
-                <a href="{% url 'admin_lapangan:lapangan_list' %}" class="text-[#243153] text-sm font-medium">
+                <a href="{% url 'admin_lapangan:lapangan_list' %}" 
+                   class="text-[#243153] text-sm font-medium hover:underline">
                     Lihat Semua →
                 </a>
             </div>
@@ -33,7 +34,7 @@
                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                             <div class="flex items-center flex-1">
                                 {% if lapangan.image %}
-                                <img src="{{ lapangan.image.url }}" 
+                                <img src="{{ lapangan.image }}" 
                                      alt="{{ lapangan.name }}"
                                      class="w-16 h-16 rounded-lg object-cover mr-4">
                                 {% else %}
@@ -46,16 +47,16 @@
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-gray-900">{{ lapangan.name }}</h3>
                                     <p class="text-sm text-gray-600">{{ lapangan.location }}</p>
-                                    <p class="text-sm font-medium text-243153 mt-1">Rp {{ lapangan.price|floatformat:0 }}/jam</p>
+                                    <p class="text-sm font-medium text-[#243153] mt-1">Rp {{ lapangan.price|floatformat:0 }}/jam</p>
                                 </div>
                             </div>
                             <div class="flex gap-2 ml-4">
-                                <a href="{% url 'admin_lapangan:get_lapangan_json' lapangan.id %}" 
-                                   class="px-3 py-1 text-sm  bg-[#D7FC64] text-[#243153] rounded">
+                                <a href="{% url 'admin_lapangan:lapangan_detail' lapangan.id %}" 
+                                   class="px-3 py-1 text-sm bg-[#D7FC64] text-[#243153] rounded hover:bg-opacity-90 transition-all">
                                     Detail
                                 </a>
                                 <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" 
-                                   class="px-3 py-1 text-sm bg-[#243153] text-white rounded">
+                                   class="px-3 py-1 text-sm bg-[#243153] text-[#D7FC64] rounded hover:bg-opacity-90 transition-all">
                                     Jadwal
                                 </a>
                             </div>
@@ -71,7 +72,7 @@
                         <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan lapangan pertama Anda.</p>
                         <div class="mt-6">
                             <a href="{% url 'admin_lapangan:lapangan_list' %}" 
-                               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
                                 <svg class="mr-2 -ml-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>

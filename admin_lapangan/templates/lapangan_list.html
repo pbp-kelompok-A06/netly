@@ -5,12 +5,19 @@
 {% block content %}
 <div class="bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="flex justify-between items-center mb-6">
-            <div class="mb-6">
-                <a href="{% url 'admin_lapangan:dashboard' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                    ← Kembali ke Dashboard
-                </a>
-            </div>
+        <!-- Back Button -->
+        <div class="mb-6">
+            <a href="{% url 'admin_lapangan:dashboard' %}" 
+               class="inline-flex items-center text-gray-600 hover:text-[#243153] font-medium transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Kembali ke Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Kelola Lapangan</h1>
                 <p class="text-gray-600 mt-1">Atur dan kelola lapangan badminton Anda</p>
@@ -34,21 +41,23 @@
                     name="search" 
                     value="{{ search_query }}"
                     placeholder="Cari lapangan berdasarkan nama atau lokasi..." 
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#243153] focus:border-transparent">
                 <button 
                     type="submit"
-                    class="px-6 py-2 bg-[#243153] text-[#D7FC64] rounded-lg ">
+                    class="px-6 py-2 bg-[#243153] text-[#D7FC64] rounded-lg font-medium hover:bg-opacity-90 transition-all">
                     Cari
                 </button>
             </form>
         </div>
 
+        <!-- Lapangan Grid -->
         <div id="lapangan-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% if lapangans %}
                 {% for lapangan in lapangans %}
                 <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                    <!-- Image -->
                     {% if lapangan.image %}
-                        <img class="h-48 w-full object-cover" src="{{ lapangan.image.url }}" alt="{{ lapangan.name }}">
+                        <img class="h-48 w-full object-cover" src="{{ lapangan.image }}" alt="{{ lapangan.name }}">
                     {% else %}
                         <div class="h-48 w-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
                             <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,6 +66,7 @@
                         </div>
                     {% endif %}
                     
+                    <!-- Card Content -->
                     <div class="p-6">
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ lapangan.name }}</h3>
                         
@@ -72,19 +82,26 @@
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span class="font-semibold text-lg">Rp {{ lapangan.price|floatformat:0 }}/jam</span>
+                            <span class="font-semibold text-lg text-[#243153]">Rp {{ lapangan.price|floatformat:0 }}/jam</span>
                         </div>
                         
+                        <!-- Action Buttons -->
                         <div class="flex flex-col space-y-2 pt-4 border-t border-gray-100">
+                            <!-- FIXED: Tombol Detail sekarang mengarah ke lapangan_detail view -->
+                            <a href="{% url 'admin_lapangan:lapangan_detail' lapangan.id %}" 
+                               class="flex-1 px-4 py-2 bg-[#D7FC64] text-[#243153] rounded-md text-sm font-medium text-center hover:bg-opacity-90 transition-all">
+                                Lihat Detail
+                            </a>
+                            
                             <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" 
-                               class="flex-1 px-4 py-2 bg-[#243153] text-[#D7FC64] rounded-md text-sm font-medium ">
+                               class="flex-1 px-4 py-2 bg-[#243153] text-[#D7FC64] rounded-md text-sm font-medium text-center hover:bg-opacity-90 transition-all">
                                 Kelola Jadwal
                             </a>
                             
                             <div class="flex space-x-2">
                                 <button 
                                     onclick="showEditModal('{{ lapangan.id }}')" 
-                                    class="flex-1 px-4 py-2 bg-[#243153] text-[#D7FC64] rounded-md text-sm font-medium ">
+                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
                                     Edit
                                 </button>
                                 <button 
@@ -103,7 +120,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada lapangan</h3>
-                    <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan lapangan pertama Anda.</p>
+                    <p class="mt-1 text-sm text-gray-500">
+                        {% if search_query %}
+                            Tidak ada hasil untuk pencarian "{{ search_query }}"
+                        {% else %}
+                            Mulai dengan menambahkan lapangan pertama Anda.
+                        {% endif %}
+                    </p>
                     <button 
                         onclick="showCreateModal()" 
                         class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
@@ -153,7 +176,7 @@
                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                     <span class="sr-only">Last</span>
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                         <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
                 </a>
