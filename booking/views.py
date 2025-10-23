@@ -133,15 +133,15 @@ def show_json(request):
             'total_price': booking.total_price(),
             'jadwal': jadwal_list,
         })
-        
-    # 3. Kembalikan list JSON. safe=False diperlukan karena objek teratas adalah list.
+
+    
     return JsonResponse(data, safe=False)
 
 @login_required
 def complete_booking(request, booking_id):
     # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
     try:
-        booking = Booking.objects.get(id=booking_id, user_id=request.user_id.profile.id)
+        booking = Booking.objects.get(id=booking_id, user_id=request.user.profile.id)
     except Booking.DoesNotExist:
         return JsonResponse({'message': 'Booking not found or not authorized'}, status=404)
 
@@ -168,8 +168,8 @@ def booking_detail(request, booking_id):
     })
     
 # function untuk ngedirect ke booking_list
-#EDLYNNN INI UNCOMMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# @login_required
+
+@login_required
 def show_booking_list(request):
     return render(request, 'booking_list.html')
 

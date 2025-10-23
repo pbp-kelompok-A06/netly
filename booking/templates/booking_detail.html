@@ -35,7 +35,7 @@
         
         <!-- Article Content -->
          <!-- JANLUP TAMBAHIN HIDDEN EDELLLLL!!! -->
-        <article id="booking-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden  ">
+        <article id="booking-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden hidden ">
             
             <!-- Header -->
             <div class="p-6 sm:p-8">
@@ -44,15 +44,15 @@
                 </div>
                 
                 <div id="badges-container" class="flex flex-wrap gap-2 mb-4">
-                    <!-- Badges will be inserted here --> badges
+                    <!-- Badges will be inserted here --> 
                 </div>
                 <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
-                    <!-- Title will be inserted here --> title
+                    <!-- Title will be inserted here --> 
                 </h1>
                 
                 <div class="flex flex-wrap items-center text-sm text-gray-500 gap-4">
                     <time id="article-date">
-                        <!-- Date will be inserted here --> date - date
+                        <!-- Date will be inserted here --> 
                     </time>
     \
                 </div>
@@ -70,7 +70,7 @@
             <div class="p-6 sm:p-8">
                 <div class="prose prose-lg max-w-none">
                     <div id="article-content-text" class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
-                        <!-- Content will be inserted here --> isiiiiiiii banyak
+                        <!-- Content will be inserted here --> 
                     </div>
                 </div>
                 <div id="button-container" class="mt-6"></div>
@@ -203,9 +203,9 @@ function confirmPayment(bookingId) {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
 
     fetch(url, {
-        method: 'POST', // Atau PATCH, tergantung bagaimana kamu mengatur view di Django
+        method: 'POST', 
         headers: {
-            'Content-Type': 'application/json',
+            
             'X-CSRFToken': csrfToken // Penting untuk keamanan di Django
         },
         // body: JSON.stsringify({ status_book: 'Completed' }) // Opsional, tergantung implementasi Django
@@ -217,7 +217,7 @@ function confirmPayment(bookingId) {
         return response.json();
     })
     .then(data => {
-        alert('Pembayaran berhasil dikonfirmasi!');
+        showToast("success", 'Pembayaran berhasil dikonfirmasi!');
         // Setelah berhasil, panggil ulang renderBooking atau refresh halaman
         // Untuk menampilkan statuss yang sudah diperbarui
         
@@ -225,7 +225,7 @@ function confirmPayment(bookingId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert(`Konfirmasi gagal: ${error.message}`);
+        showToast("error", `Konfirmasi gagal: ${error.message}`);
     });
 }
 // Fetch booking detail
