@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Forum Post
+{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen py-6">
+    <div class="max-w-2xl mx-auto px-4">
+        
+        <div class="flex items-center justify-between mb-6">
+            <!-- Back Button -->
+            <a 
+                href="{% url 'community:forum' %}"
+                class="flex items-center gap-2 text-gray-400 hover:text-black transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span class="font-medium">Back</span>
+            </a>
+
+            <!-- Refresh Button -->
+            <button 
+                onclick="window.location.reload()"
+                class="flex items-center gap-2 text-gray-400 hover:text-black transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span class="font-medium">Refresh</span>
+            </button>
+        </div>
+
+        <!-- Create Post Form -->
+        <div class="border-b border-gray-800 pb-6 mb-6">
+            <div class="flex items-start gap-3">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&size=40&background=random" 
+                     class="w-10 h-10 rounded-full flex-shrink-0" />
+                <div class="flex-1">
+                    <form method="POST" action="#" class="space-y-3" id="postForm">
+                        {% csrf_token %}
+                        <input 
+                            type="text"
+                            id="header"
+                            name="header"
+                            placeholder="Thread title..."
+                            class="w-full bg-transparent placeholder-gray-600 focus:outline-none text-lg font-semibold mb-2"
+                            required
+                        />
+                        <textarea 
+                            id="content"
+                            name="content"
+                            placeholder="What's on your mind..."
+                            rows="3"
+                            class="w-full bg-transparent placeholder-gray-600 resize-none focus:outline-none text-base"
+                            required
+                        ></textarea>
+                        <button 
+                            type="submit"
+                            class="bg-white text-black font-semibold px-5 py-2 rounded-full text-sm hover:bg-gray-200 transition">
+                            Post
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Threads Feed Header -->
+        <h2 class="text-2xl font-bold mb-6">Threads Feed</h2>
+
+        <!-- Threads Feed Content -->
+        <div class="space-y-6" id="threadsList">
+            {% if data_post %}
+            {% for data in data_post %}
+            <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
+                <!-- User Avatar -->
+                <img src="https://ui-avatars.com/api/?name={{ data.user_id.user.username }}&size=40&background=random" 
+                     class="w-10 h-10 rounded-full flex-shrink-0" />
+                
+                <!-- Thread Content -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-semibold">{{ data.user_id.user.username }}</span>
+                        <span class="text-gray-500 text-sm">2 days ago</span>
+                    </div>
+                    
+                    <!-- Thread Title/Header -->
+                    <h3 class="text-lg font-bold mb-2">{{ data.header }}</h3>
+                    
+                    <!-- Thread Content -->
+                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">{{ data.content }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
+                <!-- User Avatar -->
+                <img src="https://ui-avatars.com/api/?name=evan&size=40&background=random" 
+                     class="w-10 h-10 rounded-full flex-shrink-0" />
+                
+                <!-- Thread Content -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="font-semibold">Evan</span>
+                        <span class="text-gray-500 text-sm">2 days ago</span>
+                    </div>
+                    
+                    <!-- Thread Title/Header -->
+                    <h3 class="text-lg font-bold mb-2">HALO DUNIA</h3>
+                    
+                    <!-- Thread Content -->
+                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">APA KABARRRRRRR? Lorem ipsum dolor, sit amet consectetur adipisicing elit. Odit, ullam blanditiis officia beatae mollitia necessitatibus sapiente neque id culpa laboriosam aut eligendi quam in, iure quis ex?</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const textarea = document.querySelector('textarea[name="content"]')
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto'
+                this.style.height = (this.scrollHeight) + 'px'
+            })
+        }
+
+        const postForm = document.getElementById("postForm")
+        const threadsList = document.getElementById("threadsList")
+        async function fetchPost(e){
+            e.preventDefault()
+            try{
+                const url = "{% url 'community:fetch_post_id' id_forum %}"
+                const response = await fetch(url, {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+
+                const data = await response.json()
+                if(data.success){
+                    data.data.forEach(el => {
+                        threadsList.appendChild(
+                            `
+                            <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
+                                <!-- User Avatar -->
+                                <img src="https://ui-avatars.com/api/?name=${ el.user_id.username }&size=40&background=random" 
+                                    class="w-10 h-10 rounded-full flex-shrink-0" />
+                                
+                                <!-- Thread Content -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="font-semibold">${ el.user_id.username }</span>
+                                        <span class="text-gray-500 text-sm">2 days ago</span>
+                                    </div>
+                                    
+                                    <!-- Thread Title/Header -->
+                                    <h3 class="text-lg font-bold mb-2">${ el.title }</h3>
+                                    
+                                    <!-- Thread Content -->
+                                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">${ el.content }</p>
+                                </div>
+                            </div>
+                                
+                            
+                            `
+                        )
+                    })
+                }else{
+                    console.log(data.msg)
+                }
+
+            }catch(err){
+                console.log(err)
+            }
+            
+
+        }
+
+        async function createPost(e) {
+            e.preventDefault()
+            const formData = new FormData()
+            formData.append('header', document.getElementById("header").value)
+            formData.append('content', document.getElementById("content").value)
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
+            
+            try{
+                const url = "{% url 'community:create_post' id_forum %}"
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: formData
+                })
+
+                const data = await response.json()
+                if(data.success){
+                    setTimeout(() => window.location.href = "{% url 'community:fetch_post_id' id_forum %}", 1000)
+                    console.log(data.msg)
+                }else{
+                    console.log(data.msg)
+                }
+
+            }catch(err){
+                console.log(err)
+            }
+            
+        }
+
+        postForm.addEventListener("submit", createPost)
+
+
+    })
+    
+
+    
+</script>
+{% endblock %}

@@ -5,109 +5,151 @@ Forum
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto py-10 px-4">
+<div class="container mx-auto py-10 px-4 max-w-7xl">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Forums</h1>
+            <p class="text-gray-600 mt-1">Join communities and start discussions</p>
+        </div>
+        <button id="openModalBtn"
+            class="rounded-lg bg-blue-600 py-3 px-6 text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800">
+            + New Forum
+        </button>
+    </div>
 
-    <!-- Add Forum Button -->
-    <button id="openModalBtn"
-        class="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2">
-        + Create Forum
-    </button>
+    <!-- Forum Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="forumShow">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        
+        {% if data %}
+        {% for x in data %}
+        <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+            <!-- Colorful Header Banner -->
+            <div class="h-24 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 relative">
+                <div class="absolute inset-0 bg-black opacity-10"></div>
+                <!-- Forum Title Overlay -->
+                <div class="absolute bottom-0 left-0 right-0 p-4">
+                    <a href="{% url 'community:fetch_post_id' id_forum=x.id %}" class="text-white font-bold text-xl drop-shadow-lg">{{ x.title }}</a>
+                </div>
+            </div>
 
-    <!-- Forum Cards -->
-    
-    <div class="min-h-screen flex justify-center py-10">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full" id="forumShow">
-            
-        <!-- Example Card -->
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-            {% if data %}
-            {% for x in data %}
-                <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition h-auto">
-                    <div class="flex items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-800">{{x.title }}</h2>
+            <!-- Card Content -->
+            <div class="p-5">
+                <!-- Description -->
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[2.5rem]">
+                    {{ x.description }}
+                </p>
+
+                <!-- Stats Section -->
+                <div class="flex items-center gap-4 mb-4 text-sm">
+                    <div class="flex items-center gap-1">
+                        
+                        <span class="font-semibold text-gray-900">Members: {{ x.member.all|length }}</span>
                     </div>
-                    <p class="text-gray-600 text-sm mb-3">
-                        {{ x.description }}
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">{{ x.creator_id.user.username }}</span>
-                        <span class="inline-block bg-green-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">{{ x.member.all | length }} members</span>
-                        <span class="inline-block bg-green-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">250 posts</span>
+                    <div class="flex items-center gap-1">
+                        
+                        <span class="text-gray-600 text-xs">Created by: {{ x.creator_id.user.username }}</span>
                     </div>
-                    <br>
+                </div>
+
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                     {% if x.creator_id == request.user.profile %}
-                    <div class="flex gap-4">
-                        <!-- Edit Button -->
-                        <a href="#" 
-                            class="text-blue-600 hover:text-blue-800 font-medium text-sm transition">
+                    <div class="flex gap-3">
+                        <button 
+                            data-url="{% url 'community:fetch_forum_id' x.id %}" 
+                            class="editForm text-blue-600 hover:text-blue-800 font-medium text-sm transition">
                             Edit
-                        </a>
-
+                        </button>
                         <a href="{% url 'community:delete_forum' x.id %}" 
                             class="text-red-600 hover:text-red-800 font-medium text-sm transition">
                             Delete
                         </a>
-                    {% endif %}
-                    {% if not x.is_member %}
-
-                        <button 
-                            class="joinBtn text-blue-600 hover:text-blue-800 font-medium text-sm transition"
-                            data-forum-id="{{ x.id }}"
-                        >
-                        Join
-                        </button>
-                    {% else %}
-                        <span class="text-gray-500 text-sm font-medium">Joined</span>
-                    {% endif %}
                     </div>
-
+                    {% endif %}
+                    
+                    {% if not x.is_member %}
+                    <button 
+                        class="joinBtn ml-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition"
+                        data-forum-id="{{ x.id }}">
+                        Join Forum
+                    </button>
+                    {% else %}
+                    <span class="ml-auto inline-flex items-center gap-1 bg-green-100 text-green-700 text-sm font-medium px-3 py-1 rounded-full">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Joined
+                    </span>
+                    {% endif %}
                 </div>
-            {% endfor %}
-            {% endif %}
-
+            </div>
         </div>
+        {% endfor %}
+        {% else %}
+        <!-- Empty State -->
+        <div class="col-span-full text-center py-20">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No forums yet</h3>
+            <p class="text-gray-600 mb-4">Be the first to create a forum community</p>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">
+                Create First Forum
+            </button>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 {% include 'forum_form.html' %}
+{% include 'forum_edit.html' %}
 
 {% endblock %}
 
-
 {% block javascript %}
-
 <script>
-
     const joinBtn = document.querySelectorAll(".joinBtn")
     
+
     joinBtn.forEach(btn => {
         btn.addEventListener('click', async () => {
+            // Add loading state
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Joining...';
+            
             const formData = new FormData()
             formData.append('id_forum', btn.dataset.forumId)
             formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
-            const response = await fetch("{% url 'community:join_forum' %}", {
-                method: "POST",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                },
-                body: formData
-            })
-
-            const data = await response.json()
-            if(data.success){
-                setTimeout(() => window.location.href = "{% url 'community:forum' %}", 1000)
-            }else{
-                alert(data.msg)
-            }
             
+            try {
+                const response = await fetch("{% url 'community:join_forum' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: formData
+                })
 
+                const data = await response.json()
+                if(data.success){
+                    btn.textContent = 'Joined!';
+                    setTimeout(() => window.location.href = "{% url 'community:forum' %}", 1000)
+                } else {
+                    alert(data.msg)
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         })
     })
-
-
-
 </script>
-
-
-
 {% endblock javascript %}
