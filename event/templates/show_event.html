@@ -35,11 +35,14 @@
                 </div>
             </div>
 
-            <div class="w-full"> <button 
+            <div class="w-full"> 
+                {% if user.is_authenticated and user.profile.role == 'admin' %}
+                <button 
                     onclick="showCreateModal()" 
                     class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
                     Add New Event
                 </button>
+                {% endif %}
             </div>
         </div>
     </div>
