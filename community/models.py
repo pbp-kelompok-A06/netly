@@ -19,7 +19,7 @@ class Forum(models.Model):
 
 class Forum_Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="forum_post_user")
     forum_id = models.ForeignKey(Forum, on_delete=models.CASCADE)
     header = models.CharField(max_length=255)
     content = models.TextField()
