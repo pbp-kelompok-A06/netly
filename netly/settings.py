@@ -51,10 +51,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'booking',
     'event',
     'community',
     'homepage',
-    'authentication_user'
+    'authentication_user',
+    'admin_lapangan',
 ]
 
 MIDDLEWARE = [
@@ -165,7 +167,7 @@ if DEBUG:
 else:
     STATIC_ROOT = BASE_DIR / 'static'
 
-# Default primary key field type
+# Default primary key field types
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
