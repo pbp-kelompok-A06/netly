@@ -19,6 +19,7 @@ Forum
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full" id="forumShow">
             
         <!-- Example Card -->
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             {% if data %}
             {% for x in data %}
                 <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition h-auto">
@@ -47,8 +48,19 @@ Forum
                             Delete
                         </a>
                     {% endif %}
-                       
+                    {% if not x.is_member %}
+
+                        <button 
+                            class="joinBtn text-blue-600 hover:text-blue-800 font-medium text-sm transition"
+                            data-forum-id="{{ x.id }}"
+                        >
+                        Join
+                        </button>
+                    {% else %}
+                        <span class="text-gray-500 text-sm font-medium">Joined</span>
+                    {% endif %}
                     </div>
+
                 </div>
             {% endfor %}
             {% endif %}
@@ -61,3 +73,41 @@ Forum
 
 {% endblock %}
 
+
+{% block javascript %}
+
+<script>
+
+    const joinBtn = document.querySelectorAll(".joinBtn")
+    
+    joinBtn.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const formData = new FormData()
+            formData.append('id_forum', btn.dataset.forumId)
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
+            const response = await fetch("{% url 'community:join_forum' %}", {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: formData
+            })
+
+            const data = await response.json()
+            if(data.success){
+                setTimeout(() => window.location.href = "{% url 'community:forum' %}", 1000)
+            }else{
+                alert(data.msg)
+            }
+            
+
+        })
+    })
+
+
+
+</script>
+
+
+
+{% endblock javascript %}

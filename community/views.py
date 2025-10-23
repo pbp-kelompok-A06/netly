@@ -8,13 +8,15 @@ from authentication_user.models import UserProfile
 # fetch forum
 def fetch_forum(request):
     forum_list = Forum.objects.all().prefetch_related('member')
+
+    for forum in forum_list:
+        forum.is_member = forum.member.filter(id=request.user.profile.id).exists()
+
     context = {
         "data": forum_list
     }
     return render(request, "forum.html", context)
 
-# request.user.profile.id
-# request.user.profile.fullname
 
 # fetch post by id forum
 def fetch_post_id(request, id_forum):
@@ -32,7 +34,6 @@ def fetch_comment_id(request, id_forum, id_forum_post):
         "data": post_list
     }
     return 0
-    
 # create forum
 def create_forum(request):
     form = ForumForm()
@@ -43,8 +44,6 @@ def create_forum(request):
             forum_entry.creator_id = request.user.profile
             forum_entry.save()
             forum_entry.member.add(request.user.profile)
-
-            
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     "success": True,
@@ -57,10 +56,24 @@ def create_forum(request):
                     "msg": "failed created."
                 })
 
-    context = {
-        "form": form
-    }
-    return 0
+# join forum
+def join_forum(request):
+    if request.method == "POST":
+        forum = get_object_or_404(Forum, pk = request.POST.get('id_forum'))
+        if request.user.profile not in forum.member.all():
+            forum.member.add(request.user.profile)
+            return JsonResponse({
+                "success": True,
+                "msg": f"Successfully joined forum {forum.title}"
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "msg": "You are already joined."
+            })
+
+
+
 
 # create post
 
