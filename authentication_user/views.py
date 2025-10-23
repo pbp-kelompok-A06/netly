@@ -11,13 +11,13 @@ import json
 # untuk call register.html
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect('homepage:homepage') # kalau  berhasil login, langsung ke homepage
+        return redirect('homepage') # kalau  berhasil login, langsung ke homepage
     return render(request, "register.html")
 
 # untuk call login.html
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('homepage:homepage') 
+        return redirect('homepage') 
     return render(request, "login.html")
 
 @login_required(login_url='/login') 

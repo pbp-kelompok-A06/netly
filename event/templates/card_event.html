@@ -1,20 +1,30 @@
 {% load static %}
 <div class="bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col"> 
     
-    {% if event.image_url %}
-        <img class="h-48 w-full object-cover" 
-             src="{{ event.image_url }}" 
-             alt="Event image for {{ event.name }}">
-    {% else %}
-        <img class="h-48 w-full object-cover" 
-             src="{% static 'image/default.jpg' %}" 
-             alt="Default event image">
-    {% endif %}
+    <div class="relative w-full h-48">
+        {% if event.image_url %}
+            <img class="h-48 w-full object-cover" 
+                src="{{ event.image_url }}" 
+                alt="Event image for {{ event.name }}">
+        {% else %}
+            <img class="h-48 w-full object-cover" 
+                src="{% static 'image/default.jpg' %}" 
+                alt="Default event image">
+        {% endif %}
+
+        {% if user.is_authenticated and user.profile in event.participant.all %}
+        <div class="absolute top-2 right-2 z-10"> {# Floating position #}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#D7FC64] text-[#243153]">
+                Registered
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
         
     <div class="p-6 flex flex-col flex-grow">
 
-        <h2 class="text-xl font-bold text-gray-900 mb-4 line-clamp-2">{{ event.name }}</h2>
-        
+        <h2 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{{ event.name }}</h2>
         <div class="flex items-start text-sm text-gray-600 mb-2">
             <svg class="w-4 h-4 text-gray-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -32,11 +42,11 @@
         
         <div class="mt-auto pt-4 border-t border-gray-100">
             <a href="{% url 'event:event_detail' event.pk %}" 
-               class="w-full text-center inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#24A353] hover:bg-opacity-90">
+               class="w-full text-center inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
                 View Details
             </a>
 
-            {% if user.is_authenticated and user.profile.role == 'admin' and event.admin.id == user.profile.id %}
+            {% comment %} {% if user.is_authenticated and user.profile.role == 'admin' and event.admin.id == user.profile.id %} {% endcomment %}
             <div class="flex justify-between items-center text-sm mt-3">
                 <span class="text-gray-500">Your event</span>
                 <div class="flex space-x-3">
@@ -48,6 +58,6 @@
                     </button>
                 </div>
             </div>
-            {% endif %}
+            {% comment %} {% endif %} {% endcomment %}
         </div>
     </div> </div>

@@ -31,8 +31,18 @@ def get_event_json(request, pk):
         if request.user.profile != event.admin:
             return JsonResponse({'status': 'fail', 'message': 'Bukan admin'}, status=403)
         
-        # ubah model object langsung menjadi dictionary
-        event_data = model_to_dict(event)
+        # ubah tanggal jadi string with .isoformat()
+        event_data = {
+            'id': event.id,
+            'name': event.name,
+            'description': event.description,
+            'start_date': event.start_date.isoformat(), 
+            'end_date': event.end_date.isoformat(),    
+            'location': event.location,
+            'image_url': event.image_url,
+            'max_participants': event.max_participants,
+        }
+        
         # jadikan datanya sebagai response
         return JsonResponse({'status': 'success', 'data': event_data})
     except Event.DoesNotExist:
@@ -40,9 +50,25 @@ def get_event_json(request, pk):
     
 # show semua event yang ada
 def show_events(request):
-    events = Event.objects.all().order_by('start_date')     # sort berdasarkan event
+    # ambil parameter sort dari URL, defaultnya ascending
+    sort_order = request.GET.get('sort', 'asc')
+
+    # tentukan urutan based on parameter sort
+    if sort_order == 'desc':
+        # '-start_date' berarti descending (terbaru/latest)
+        order_by_field = '-start_date'
+        sort_label = 'Latest'
+    else:
+        # 'start_date' berarti ascending (terlama/earliest)
+        order_by_field = 'start_date'
+        sort_label = 'Earliest'
+
+    # ambilevent dari database dengan urutan yang benar
+    events = Event.objects.all().order_by(order_by_field)
+    
     context = {
-        'events': events
+        'events': events,
+        'current_sort_label': sort_label        
     }
     return render(request, "show_event.html", context)
 
@@ -52,7 +78,7 @@ def event_detail(request, pk):
     
     # cek dulu user sudah join event ini atau belum
     is_participant = False
-    if request.user.profile.is_authenticated:
+    if request.user.is_authenticated:
         is_participant = event.participant.filter(id=request.user.profile.id).exists()
 
     # cek apakah event sudah lewat atau belum
@@ -71,7 +97,7 @@ def event_detail(request, pk):
 # [CRUD] create, edit, dan update event hanya untuk admin -> user hanya bisa lihat dan join
 
 # handle create event melalui AJAX modal
-@admin_required
+# @admin_required
 @login_required(login_url='/login/')
 @require_POST
 def create_event_ajax(request):
@@ -86,7 +112,7 @@ def create_event_ajax(request):
         return JsonResponse({'status': 'fail', 'errors': form.errors}, status=400)
 
 # handle edit event
-@admin_required
+# @admin_required
 @login_required(login_url='/login/')
 @require_POST
 def edit_event_ajax(request, pk):
@@ -109,7 +135,7 @@ def edit_event_ajax(request, pk):
         return JsonResponse({'status': 'fail', 'message': 'Event tidak ditemukan'}, status=404)
 
 @login_required(login_url='/login/')
-@admin_required
+# @admin_required
 @require_POST
 def delete_event_ajax(request, pk):
     try:

@@ -5,22 +5,46 @@
 {% block content %}
 {% include 'navbar.html' %}
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" style="padding-top: 6rem;"> <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            Upcoming Events
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" style="padding-top: 6rem;"> 
+    
+    <div class="pb-5 mb-5 border-b border-gray-450">
+        <h1 class="text-3xl font-bold text-gray-900 mb-5">
+            Badminton Events
         </h1>
-        
-        {% if user.is_authenticated and user.profile.role == 'admin' %}
-        <button 
-            onclick="showCreateModal()" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
-            Add New Event
-        </button>
-        {% endif %}
+
+        <div class="flex gap-4 items-center">
+            
+            <div class="relative w-full text-left"> <div>
+                    <button type="button" id="sort-menu-button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" aria-expanded="true" aria-haspopup="true">
+                        Sort Date: {{ current_sort_label }}
+                        <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="sort-menu" class="hidden origin-top-left absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10" role="menu" aria-orientation="vertical" aria-labelledby="sort-menu-button" tabindex="-1">
+                    <div class="py-1" role="none">
+                        <a href="?sort=asc" class="text-gray-700 block px-4 py-2 text-sm {% if current_sort_label == 'Earliest' %}bg-gray-100{% endif %}" role="menuitem" tabindex="-1">
+                            Earliest (Ascending)
+                        </a>
+                        <a href="?sort=desc" class="text-gray-700 block px-4 py-2 text-sm {% if current_sort_label == 'Latest' %}bg-gray-100{% endif %}" role="menuitem" tabindex="-1">
+                            Latest (Descending)
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full"> <button 
+                    onclick="showCreateModal()" 
+                    class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                    Add New Event
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
         {% if events %}
             {% for event in events %}
                 {% include 'card_event.html' with event=event %}
@@ -31,7 +55,8 @@
 </div>
 
 {% include 'event_modal.html' %}
-{% include 'event_delete_modal.html' %}  
+{% include 'event_delete_modal.html' %}
+{% include 'toast.html' %}  
 {% endblock content %}
 
 {% block javascript %}
@@ -109,6 +134,26 @@
         
         showEventModal(); 
     }
+
+    // untuk dropdown sort 
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortButton = document.getElementById('sort-menu-button');
+        const sortMenu = document.getElementById('sort-menu');
+
+        if (sortButton && sortMenu) {
+            // tampilkan atau sembunyikan menu saat tombol diklik
+            sortButton.addEventListener('click', function() {
+                sortMenu.classList.toggle('hidden');
+            });
+
+            // hide menu saat mengklik di luar
+            document.addEventListener('click', function(event) {
+                if (!sortButton.contains(event.target) && !sortMenu.contains(event.target)) {
+                    sortMenu.classList.add('hidden');
+                }
+            });
+        }
+    });
 
     // untuk edit
     async function showEditModal(eventId) {
