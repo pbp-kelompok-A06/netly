@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Jadwal - {{ lapangan.name }}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <a href="{% url 'admin_lapangan:lapangan_list' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                ← Kembali ke Daftar Lapangan
+            </a>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ lapangan.name }}</h2>
+            <p class="text-gray-600"><span class="font-medium">Lokasi:</span> {{ lapangan.location }}</p>
+            <p class="text-gray-600"><span class="font-medium">Harga:</span> Rp {{ lapangan.price|floatformat:0 }}/jam</p>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Jadwal Ketersediaan</h1>
+                <p class="text-gray-600 mt-1">Kelola slot waktu untuk booking</p>
+            </div>
+            
+            <button 
+                onclick="showCreateJadwalModal()" 
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 transition-all">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Tambah Jadwal
+            </button>
+        </div>
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tanggal
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Jam Mulai
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Jam Selesai
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="relative px-6 py-3">
+                            <span class="sr-only">Actions</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="jadwal-table-body" class="bg-white divide-y divide-gray-200">
+                </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div id="jadwal-empty-state" class="hidden text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada jadwal</h3>
+                <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan jadwal ketersediaan pertama.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'jadwal_modal.html' %}
+{% include 'delete_modal.html' %}
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    const jadwalModal = document.getElementById('jadwalModal');
+    const jadwalModalContent = document.getElementById('jadwalModalContent');
+    const jadwalForm = document.getElementById('jadwalForm');
+    const modalTitle = document.getElementById('jadwalModalTitle');
+    const modalSubtitle = document.getElementById('jadwalModalSubtitle');
+    const submitButton = document.getElementById('jadwalSubmitButton');
+
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+    let jadwalIdToDelete = null;
+
+    const lapanganId = "{{ lapangan.id }}";
+    const createUrl = "{% url 'admin_lapangan:create_jadwal_ajax' lapangan.id %}";
+    const editUrlTemplate = "{% url 'admin_lapangan:edit_jadwal_ajax' '00000000-0000-0000-0000-000000000000' %}";
+    const getJsonUrlTemplate = "{% url 'admin_lapangan:get_jadwal_json' '00000000-0000-0000-0000-000000000000' %}";
+    const deleteUrlTemplate = "{% url 'admin_lapangan:delete_jadwal_ajax' '00000000-0000-0000-0000-000000000000' %}";
+    const fetchListUrl = "{% url 'admin_lapangan:fetch_jadwal_list_ajax' lapangan.id %}";
+
+    function showJadwalModal() {
+        jadwalModal.classList.remove('hidden');
+        setTimeout(() => jadwalModalContent.classList.add('opacity-100', 'scale-100'), 50);
+    }
+
+    function hideJadwalModal() {
+        jadwalModalContent.classList.remove('opacity-100', 'scale-100');
+        setTimeout(() => jadwalModal.classList.add('hidden'), 150);
+    }
+
+    function showDeleteJadwalModal(jadwalId) {
+        jadwalIdToDelete = jadwalId;
+        deleteModal.classList.remove('hidden');
+    }
+
+    function hideDeleteModal() {
+        jadwalIdToDelete = null;
+        deleteModal.classList.add('hidden');
+    }
+
+    function showCreateJadwalModal() {
+        jadwalForm.reset();
+        modalTitle.textContent = 'Tambah Jadwal Baru';
+        modalSubtitle.textContent = 'Isi form untuk menambahkan jadwal';
+        submitButton.textContent = 'Tambah Jadwal';
+        jadwalForm.setAttribute('data-action-url', createUrl);
+        showJadwalModal();
+    }
+
+    async function showEditJadwalModal(jadwalId) {
+        jadwalForm.reset();
+        const getUrl = getJsonUrlTemplate.replace('00000000-0000-0000-0000-000000000000', jadwalId);
+        
+        try {
+            const response = await fetch(getUrl);
+            if (!response.ok) throw new Error('Failed to fetch data.');
+            
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message || 'Could not find data.');
+
+            const jadwal = result.data;
+            
+            document.getElementById('tanggal').value = jadwal.tanggal;
+            document.getElementById('start_main').value = jadwal.start_main;
+            document.getElementById('end_main').value = jadwal.end_main;
+            document.getElementById('is_available').checked = jadwal.is_available;
+
+            modalTitle.textContent = 'Edit Jadwal';
+            modalSubtitle.textContent = 'Perbarui data jadwal';
+            submitButton.textContent = 'Simpan Perubahan';
+
+            const editUrl = editUrlTemplate.replace('00000000-0000-0000-0000-000000000000', jadwalId);
+            jadwalForm.setAttribute('data-action-url', editUrl);
+
+            showJadwalModal();
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', error.message, 'error');
+        }
+    }
+
+    // Fungsi untuk format tanggal
+    function formatDate(dateString) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const date = new Date(dateString);
+        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    // Fungsi untuk render jadwal table
+    function renderJadwalTable(jadwals) {
+        const tbody = document.getElementById('jadwal-table-body');
+        const emptyState = document.getElementById('jadwal-empty-state');
+
+        tbody.innerHTML = '';
+
+        if (!jadwals || jadwals.length === 0) {
+            tbody.closest('table').classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        tbody.closest('table').classList.remove('hidden');
+        emptyState.classList.add('hidden');
+
+        jadwals.forEach(jadwal => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            const statusBadge = jadwal.is_available
+                ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Tersedia</span>'
+                : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Tidak Tersedia</span>';
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${formatDate(jadwal.tanggal)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${jadwal.start_main}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${jadwal.end_main}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${statusBadge}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button 
+                        onclick="showEditJadwalModal('${jadwal.id}')" 
+                        class="text-blue-600 hover:text-blue-900 mr-3">
+                        Edit
+                    </button>
+                    <button 
+                        onclick="showDeleteJadwalModal('${jadwal.id}')" 
+                        class="text-red-600 hover:text-red-900">
+                        Hapus
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    // Fungsi untuk fetch dan refresh list
+    async function refreshJadwalList() {
+        try {
+            const response = await fetch(fetchListUrl);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                renderJadwalTable(data.data);
+            } else {
+                showToast('Error', 'Gagal memuat data', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', 'Terjadi kesalahan saat memuat data', 'error');
+        }
+    }
+
+    // Form submit handler
+    jadwalForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const url = jadwalForm.getAttribute('data-action-url');
+        if (!url) return;
+
+        const formData = new FormData(jadwalForm);
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": csrftoken }
+            });
+            
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                hideJadwalModal();
+                showToast('Berhasil!', data.message, 'success');
+                // Refresh list tanpa reload
+                await refreshJadwalList();
+            } else {
+                const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
+                showToast('Error', errorMsg, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', 'Terjadi kesalahan tidak terduga.', 'error');
+        }
+    });
+
+    // Delete handler
+    confirmDeleteButton.addEventListener('click', async () => {
+        if (!jadwalIdToDelete) return;
+
+        const deleteUrl = deleteUrlTemplate.replace('00000000-0000-0000-0000-000000000000', jadwalIdToDelete);
+
+        try {
+            const response = await fetch(deleteUrl, {
+                method: "POST",
+                headers: { 
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                hideDeleteModal();
+                showToast('Berhasil!', result.message, 'success');
+                // Refresh list tanpa reload
+                await refreshJadwalList();
+            } else {
+                showToast('Error', result.message || 'Gagal menghapus jadwal.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', 'Terjadi kesalahan. Silakan coba lagi.', 'error');
+        } finally {
+            hideDeleteModal();
+        }
+    });
+
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshJadwalList();
+    });
+</script>
+{% endblock javascript %}
