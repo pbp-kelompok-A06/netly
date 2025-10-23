@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   
+  <meta charset="UTF-8">
+   
+  <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Pilih Jadwal Booking</title>
+    
+   
+  <script src="https://cdn.tailwindcss.com"></script>
+    
+   
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary-dark': '#243153',
+            'accent-lime': '#D7FC64',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-10">
+
+
+  <div id="bookingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 ">
+
+    <div id="modalOverlay" class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
+
+    <div class="relative max-w-lg w-full">
+       
+          <form id="bookingForm" class="relative bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-6">
+             
+        <button type="button" id="closeModalBtn"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+              {% csrf_token %}
+              <input type="hidden" name="lapangan_id" value="{{ lapangan.id }}">
+              
+              <div>
+                  <h1 class="text-2xl font-bold text-primary-dark">Pilih Jadwal Tersedia</h1>
+                  <p class="text-gray-500 mt-1">Pilih satu atau lebih jadwal di bawah ini.</p>
+                </div>
+
+              <div class="space-y-3 max-h-60 overflow-y-auto pr-2">
+
+            <!-- TESTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG -->
+          <!--           <label
+            class="flex items-center p-4 w-full border border-gray-200 rounded-lg cursor-pointer hover:border-primary-dark hover:bg-gray-50 transition-all duration-200">
+                        <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}"                    
+               class="h-5 w-5 rounded-md accent-primary-dark focus:ring-2 focus:ring-primary-dark">
+                        
+                        <span class="ml-3 font-medium text-gray-800">
+              24-24-24 - 08.00 s/d 10.00
+                            {{ jadwal.tanggal }} - {{ jadwal.start_main }} s/d {{ jadwal.end_main }}
+                          </span>
+                      </label> -->
+                  {% for jadwal in jadwals %}
+
+                    {% if  jadwal.is_available %}
+                    <label
+            class="flex items-center p-4 w-full border border-gray-200 rounded-lg cursor-pointer hover:border-primary-dark hover:bg-gray-50 transition-all duration-200">
+                        <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}"                    
+               class="h-5 w-5 rounded-md accent-primary-dark focus:ring-2 focus:ring-primary-dark">
+                        
+                        <span class="ml-3 font-medium text-gray-800">
+              
+                            {{ jadwal.tanggal }} - {{ jadwal.start_main }} s/d {{ jadwal.end_main }}
+                          </span>
+                      </label>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+              <button type="submit"                
+          class="w-full text-white bg-primary-dark font-semibold py-3 px-4 rounded-lg ...">
+                  Lanjut ke Pembayaran
+                </button>
+           
+      </form>
+
+          <div id="message" class="mt-4 text-center font-medium">
+            </div>
+       
+        </div>
+  </div>
+  <script>
+    document.getElementById("bookingForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const response = await fetch("{% url 'booking:create_booking' %}", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      const messageDiv = document.getElementById("message");
+
+      if (data.success) {
+        window.location.href = data.payment_url;
+      } else {
+        messageDiv.innerHTML = `<p class="text-red-600">${data.message}</p>`;
+      }
+    });
+  </script>
+
+  <script>
+    // Ambil elemen-elemen modal
+    
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const bookingModal = document.getElementById('bookingModal');
+    const modalOverlay = document.getElementById('modalOverlay');
+
+    // Fungsi untuk membuka modal
+
+
+    // Fungsi untuk menutup modal (via tombol X)
+    closeModalBtn.addEventListener('click', function () {
+      bookingModal.classList.add('hidden');
+    });
+
+    // Fungsi untuk menutup modal (via klik di luar/overlay)
+    modalOverlay.addEventListener('click', function () {
+      bookingModal.classList.add('hidden');
+    });
+  </script>
+
+</body>
+
+</html>

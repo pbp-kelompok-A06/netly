@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Booking Detail </title>
+{% endblock meta %}
+
+{% block content %}
+<div class="bg-gray-50 w-full min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <a href="{% url 'booking:show_booking_list' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                ← Back to My Booking List
+            </a>
+        </div>
+
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <svg class="animate-spin h-8 w-8 text-green-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <p class="text-gray-600 mt-3">Loading booking detail...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center hidden">
+            <div class="w-16 h-16 mx-auto mb-4">
+                <div class="text-red-500 text-5xl">⚠️</div>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Failed to load booking</h3>
+            <p class="text-gray-500">Please try again later.</p>
+        </div>
+        
+        <!-- Article Content -->
+         <!-- JANLUP TAMBAHIN HIDDEN EDELLLLL!!! -->
+        <article id="booking-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden  ">
+            
+            <!-- Header -->
+            <div class="p-6 sm:p-8">
+                <div id="badges-container" class="flex flex-wrap items-center gap-2 mb-4">
+                    <!-- Dynamic badges will be inserted here -->
+                </div>
+                
+                <div id="badges-container" class="flex flex-wrap gap-2 mb-4">
+                    <!-- Badges will be inserted here --> badges
+                </div>
+                <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                    <!-- Title will be inserted here --> title
+                </h1>
+                
+                <div class="flex flex-wrap items-center text-sm text-gray-500 gap-4">
+                    <time id="article-date">
+                        <!-- Date will be inserted here --> date - date
+                    </time>
+    \
+                </div>
+            </div>
+
+            <!-- Featured Image -->
+            <div id="featured-image-container" class="px-6 sm:px-8 hidden">
+                <img id="featured-image" 
+                     src="" 
+                     alt="" 
+                     class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg">
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 sm:p-8">
+                <div class="prose prose-lg max-w-none">
+                    <div id="article-content-text" class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
+                        <!-- Content will be inserted here --> isiiiiiiii banyak
+                    </div>
+                </div>
+                <div id="button-container" class="mt-6"></div>
+            </div>
+
+            
+            <div id="button-container" class="flex justify-between p-6 sm:p-8"> </div>
+
+            
+        </article>
+    </div>
+</div>
+{% endblock content %}
+<script>
+// Configuration
+const BOOKING_ID = "{{ booking_id }}";
+const BOOKING_DETAIL_ENDPOINT = `{% url 'booking:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', BOOKING_ID);
+
+// DOM Elements
+const loadingState = document.getElementById('loading-state');
+const errorState = document.getElementById('error-state');
+const bookingContent = document.getElementById('booking-content');
+const badgesContainer = document.getElementById('badges-container');
+const articleTitle = document.getElementById('article-title');
+const articleDate = document.getElementById('article-date');
+const articleContentText = document.getElementById('article-content-text');
+const buttonContainer = document.getElementById('button-container');
+
+// Show/hide page sections
+function showState(state) {
+    loadingState.classList.toggle('hidden', state !== 'loading');
+    errorState.classList.toggle('hidden', state !== 'error');
+    articleContent.classList.toggle('hidden', state !== 'ready');
+}
+
+
+
+
+// Render booking content
+function renderBooking(bookingData) {
+    // Set title
+    articleTitle.textContent = bookingData.lapangan.name;
+    document.title = `${bookingData.lapangan.name} - Booking`;
+
+    // Set badges
+    badgesContainer.innerHTML = '';
+    
+    // Category badge
+    const categoryBadge = document.createElement('span');
+// Tambahkan logika warna Tailwind berdasarkan status
+    let badgeClass = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium ';
+    if (bookingData.status_book === 'pending') { 
+        badgeClass += 'bg-red-500 text-white';
+    } else if (bookingData.status_book === 'completed') {
+        badgeClass += 'bg-green-600 text-white';
+    } else if (bookingData.status_book === 'failed') {
+        badgeClass += 'bg-gray-400 text-white';
+    } else {
+        badgeClass += 'bg-blue-500 text-white';
+    }
+
+    categoryBadge.className = badgeClass;
+    categoryBadge.textContent = bookingData.status_book || 'Uncategorized';
+    badgesContainer.appendChild(categoryBadge);
+    
+    
+ 
+    
+    // Set date and views
+    const formattedDate = new Date(bookingData.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    articleDate.textContent = formattedDate;
+    let schedulesText = bookingData.jadwal.map(jadwalItem => {
+        // Assuming tanggal is YYYY-MM-DD and times are HH:MM:SS
+        const date = new Date(jadwalItem.tanggal).toLocaleDateString('id-ID', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+        const startTime = jadwalItem.start_main.substring(0, 5); // Take HH:MM
+        const endTime = jadwalItem.end_main.substring(0, 5); // Take HH:MM
+        return `Tanggal: ${date} (Jam: ${startTime} - ${endTime})`;
+        }).join('\n');
+    const bookingDetailText = `
+        Username: ${bookingData.user.fullname}
+        Nama Lapangan: ${bookingData.lapangan.name}
+        Harga Lapangan per Jam: Rp ${parseFloat(bookingData.lapangan.price).toLocaleString('id-ID')}
+        Tanggal Sewa & Waktu:
+        ${schedulesText}
+        LAKUKAN PEMBAYARAN KE REKENING 123-456-789 AN. NETLY-SPOTIPE
+        --------------------------------
+        Total Harga: Rp ${parseFloat(bookingData.total_price).toLocaleString('id-ID')}
+        Status: ${bookingData.status_book}
+    `;
+    
+
+
+    
+    // Set content
+    articleContentText.textContent = bookingDetailText;
+    
+    // ADD BUTTON CONFIRM PAYMENT YANG AKAN UBAH STATUS BOOKING JADI COMPLETED, KALO EXPIRED OR DAH BAYAR JADI GAK MUNCUL
+    if (bookingData.status_book === 'pending') { // Ganti 'Unpaid' sesuai status di model Django kamu
+        
+        const confirmButton = document.createElement('button');
+        confirmButton.id = 'confirmPaymentBtn';
+        confirmButton.textContent = 'Konfirmasi Pembayaran';
+        
+        // Tailwind CSS classes untuk tombol 
+        confirmButton.className = 'w-full md:w-auto mt-4 px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-300';
+        
+        // Event Listener untuk Tombol
+        confirmButton.addEventListener('click', () => {
+            // Panggil fungsi untuk update status di backend Django
+            confirmPayment(bookingData.id); 
+        });
+
+        buttonContainer.appendChild(confirmButton);
+    }
+    
+}
+function confirmPayment(bookingId) {
+    // Ganti URL ini dengan endpoint API Django kamu untuk update booking
+    const url = `{% url 'booking:complete_booking' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', bookingId); 
+    
+    // Mendapatkan CSRF Token untuk request POST/PUT/PATCH di Django
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
+
+    fetch(url, {
+        method: 'POST', // Atau PATCH, tergantung bagaimana kamu mengatur view di Django
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken // Penting untuk keamanan di Django
+        },
+        // body: JSON.stsringify({ status_book: 'Completed' }) // Opsional, tergantung implementasi Django
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Gagal mengkonfirmasi pembayaran.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert('Pembayaran berhasil dikonfirmasi!');
+        // Setelah berhasil, panggil ulang renderBooking atau refresh halaman
+        // Untuk menampilkan statuss yang sudah diperbarui
+        
+        loadBookingDetail(); // Memuat ulang detail booking 
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`Konfirmasi gagal: ${error.message}`);
+    });
+}
+// Fetch booking detail
+async function loadBookingDetail() {
+    try {
+        showState('loading');
+        const response = await fetch(BOOKING_DETAIL_ENDPOINT, {
+            headers: { 'Accept': 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch booking detail');
+        }
+        const bookingData = await response.json();
+        renderBooking(bookingData);
+        showState('ready');
+    } catch (error) {
+        console.error('Error loading booking detail:', error);
+        showState('error');
+    }
+}
+
+// Initialize page
+loadBookingDetail();
+</script>
