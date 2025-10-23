@@ -21,19 +21,19 @@ def admin_required(view_func):
 # Dashboard
 @admin_required
 def admin_dashboard(request):
-    recent_lapangan = Lapangan.objects.filter(admin=request.user)[:5]
+    recent_lapangan = Lapangan.objects.filter(admin_lapangan=request.user.profile)[:5]
     
     context = {
         'recent_lapangan': recent_lapangan,
     }
-    return render(request, 'admin_lapangan/dashboard.html', context)
+    return render(request, 'dashboard.html', context)
 
 # Lapangan CRUD
 @login_required(login_url='/login/')
 @admin_required
 def show_lapangan_list(request):
     search_query = request.GET.get('search', '')
-    lapangan_list = Lapangan.objects.filter(admin=request.user)
+    lapangan_list = Lapangan.objects.filter(admin_lapangan=request.user.profile)
     
     if search_query:
         lapangan_list = lapangan_list.filter(
@@ -48,7 +48,7 @@ def show_lapangan_list(request):
         'lapangan': lapangan,
         'search_query': search_query,
     }
-    return render(request, 'admin_lapangan/lapangan_list.html', context)
+    return render(request, 'lapangan_list.html', context)
 
 @login_required(login_url='/login/')
 @admin_required
@@ -57,7 +57,7 @@ def create_lapangan_ajax(request):
         form = LapanganForm(request.POST, request.FILES)
         if form.is_valid():
             lapangan = form.save(commit=False)
-            lapangan.admin = request.user
+            lapangan.admin = request.user.profile
             lapangan.save()
             return JsonResponse({
                 'status': 'success',
@@ -77,13 +77,13 @@ def create_lapangan_ajax(request):
     else:
         form = LapanganForm()
     
-    return render(request, 'admin_lapangan/lapangan_form.html', {'form': form, 'action': 'Create'})
+    return render(request, 'lapangan_form.html', {'form': form, 'action': 'Create'})
 
 @login_required(login_url='/login/')
 @admin_required
 def get_lapangan_json(request, pk):
     try:
-        lapangan = Lapangan.objects.get(pk=pk, admin=request.user)
+        lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
         data = {
             'id': str(lapangan.id),
             'name': lapangan.name,
@@ -100,7 +100,7 @@ def get_lapangan_json(request, pk):
 @admin_required
 def edit_lapangan_ajax(request, pk):
     try:
-        lapangan = Lapangan.objects.get(pk=pk, admin=request.user)
+        lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
         form = LapanganForm(request.POST, request.FILES, instance=lapangan)
         
         if form.is_valid():
@@ -123,7 +123,7 @@ def edit_lapangan_ajax(request, pk):
 @require_http_methods(["POST", "DELETE"])
 def delete_lapangan_ajax(request, pk):
     try:
-        lapangan = Lapangan.objects.get(pk=pk, admin=request.user)
+        lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
         lapangan_name = lapangan.name
         lapangan.delete()
         return JsonResponse({
@@ -137,19 +137,19 @@ def delete_lapangan_ajax(request, pk):
 @login_required(login_url='/login/')
 @admin_required
 def show_jadwal_list(request, lapangan_id):
-    lapangan = get_object_or_404(Lapangan, id=lapangan_id, admin=request.user)
+    lapangan = get_object_or_404(Lapangan, id=lapangan_id, admin_lapangan=request.user.profile)
     jadwal = lapangan.jadwal.all().order_by('tanggal', 'start_main')
     
     context = {
         'lapangan': lapangan,
         'jadwal': jadwal,
     }
-    return render(request, 'admin_lapangan/jadwal_list.html', context)
+    return render(request, 'jadwal_list.html', context)
 
 @admin_required
 def create_jadwal_ajax(request, lapangan_id):
     try:
-        lapangan = Lapangan.objects.get(pk=lapangan_id, admin=request.user)
+        lapangan = Lapangan.objects.get(pk=lapangan_id, admin_lapangan=request.user.profile)
         form = JadwalLapanganForm(request.POST)
         
         if form.is_valid():
@@ -172,7 +172,7 @@ def create_jadwal_ajax(request, lapangan_id):
 @admin_required
 def edit_jadwal_ajax(request, pk):
     try:
-        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin=request.user)
+        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin_lapangan=request.user.profile)
         form = JadwalLapanganForm(request.POST, instance=jadwal)
         
         if form.is_valid():
@@ -194,7 +194,7 @@ def edit_jadwal_ajax(request, pk):
 @require_http_methods(["POST", "DELETE"])
 def delete_jadwal_ajax(request, pk):
     try:
-        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin=request.user)
+        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin_lapangan=request.user.profile)
         jadwal.delete()
         return JsonResponse({
             'status': 'success',
@@ -206,7 +206,7 @@ def delete_jadwal_ajax(request, pk):
 @admin_required
 def get_jadwal_json(request, pk):
     try:
-        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin=request.user)
+        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin_lapangan=request.user.profile)
         data = {
             'id': str(jadwal.id),
             'tanggal': jadwal.tanggal.strftime('%Y-%m-%d'),

@@ -10,7 +10,7 @@
             <div class="flex justify-between items-center">
                 <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
                 <div class="flex gap-4">
-                    <a href="{% url 'admin_lapangan:lapangan_create' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <a href="{% url 'admin_lapangan:create_lapangan_ajax' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                         + Lapangan Baru
                     </a>
                 </div>
@@ -39,7 +39,7 @@
                                 <p class="text-sm font-medium text-blue-600 mt-1">Rp {{ lapangan.price|floatformat:0 }}/jam</p>
                             </div>
                             <div class="flex gap-2">
-                                <a href="{% url 'admin_lapangan:lapangan_detail' lapangan.id %}" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                                <a href="{% url 'admin_lapangan:get_lapangan_json' lapangan.id %}" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
                                     Detail
                                 </a>
                                 <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
