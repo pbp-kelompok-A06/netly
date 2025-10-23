@@ -46,7 +46,7 @@
                 View Details
             </a>
 
-            {% comment %} {% if user.is_authenticated and user.profile.role == 'admin' and event.admin.id == user.profile.id %} {% endcomment %}
+              {% if user.is_authenticated and user.profile.role == 'admin' and event.admin.id == user.profile.id %}   
             <div class="flex justify-between items-center text-sm mt-3">
                 <span class="text-gray-500">Your event</span>
                 <div class="flex space-x-3">
@@ -58,6 +58,6 @@
                     </button>
                 </div>
             </div>
-            {% comment %} {% endif %} {% endcomment %}
+              {% endif %}   
         </div>
     </div> </div>

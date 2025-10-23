@@ -97,7 +97,7 @@ def event_detail(request, pk):
 # [CRUD] create, edit, dan update event hanya untuk admin -> user hanya bisa lihat dan join
 
 # handle create event melalui AJAX modal
-# @admin_required
+@admin_required
 @login_required(login_url='/login/')
 @require_POST
 def create_event_ajax(request):
@@ -112,7 +112,7 @@ def create_event_ajax(request):
         return JsonResponse({'status': 'fail', 'errors': form.errors}, status=400)
 
 # handle edit event
-# @admin_required
+@admin_required
 @login_required(login_url='/login/')
 @require_POST
 def edit_event_ajax(request, pk):
@@ -135,7 +135,7 @@ def edit_event_ajax(request, pk):
         return JsonResponse({'status': 'fail', 'message': 'Event tidak ditemukan'}, status=404)
 
 @login_required(login_url='/login/')
-# @admin_required
+@admin_required
 @require_POST
 def delete_event_ajax(request, pk):
     try:

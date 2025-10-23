@@ -30,7 +30,7 @@
                 </a>
             </div>
             <div>
-                {% comment %} {% if user.is_authenticated and user.profile.role == 'admin' %} {% endcomment %}
+                  {% if user.is_authenticated and user.profile.role == 'admin' %}   
                 <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md mb-4" role="showToast">
                     <p class="font-bold">You're an admin</p>
                     <p class="text-sm">You can edit or delete this event.</p>
@@ -48,7 +48,7 @@
                         </button>
                     </div>
                 </div>
-                {% comment %} {% endif %} {% endcomment %}
+                  {% endif %}   
 
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ event.name }}</h1>
                 <div class="text-sm text-gray-600 space-y-1">
