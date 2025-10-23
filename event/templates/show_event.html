@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}all events{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" style="padding-top: 6rem;"> <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            Upcoming Events
+        </h1>
+        
+        {% if user.is_authenticated and user.profile.role == 'admin' %}
+        <button 
+            onclick="showCreateModal()" 
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+            Add New Event
+        </button>
+        {% endif %}
+    </div>
+
+    <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        {% if events %}
+            {% for event in events %}
+                {% include 'card_event.html' with event=event %}
+            {% endfor %} 
+        {% else %}
+            <p class="col-span-full text-center text-gray-500">No events scheduled right now.</p>
+        {% endif %} </div>
+</div>
+
+{% include 'event_modal.html' %}
+{% include 'event_delete_modal.html' %}  
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // untuk create atau edit modal
+    const eventModal = document.getElementById('eventModal');
+    const eventModalContent = document.getElementById('eventModalContent');
+    const eventForm = document.getElementById('eventForm');
+    const eventModalTitle = document.getElementById('modalTitle');
+    const eventModalSubtitle = document.getElementById('modalSubtitle');
+    const eventSubmitButton = document.getElementById('submitButton');
+    const eventIdInput = document.getElementById('eventId'); // Input 'hidden' untuk ID
+
+    // untuk delete modal
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+    let eventIdToDelete = null;
+
+    // url templates dari event_modal.html
+    const createUrl = eventForm.dataset.createUrl;
+    const editUrlTemplate = eventForm.dataset.editUrlTemplate;
+    const getJsonUrlTemplate = "{% url 'event:get_event_json' '00000000-0000-0000-0000-000000000000' %}";
+    const deleteUrlTemplate = "{% url 'event:delete_event_ajax' '00000000-0000-0000-0000-000000000000' %}";
+
+    
+    // menampilkan or menyembunyikan modal create atau edit
+    function showEventModal() {
+        eventModal.classList.remove('hidden');
+        setTimeout(() => eventModalContent.classList.add('opacity-100', 'scale-100'), 50);
+    }
+
+    function hideEventModal() {
+        eventModalContent.classList.remove('opacity-100', 'scale-100');
+        setTimeout(() => eventModal.classList.add('hidden'), 150);
+    }
+
+    // untuk menampilkan atau menyembunyikan modal delete
+    function showDeleteModal(eventId) {
+        eventIdToDelete = eventId;
+        deleteModal.classList.remove('hidden');
+    }
+
+    function hideDeleteModal() {
+        eventIdToDelete = null;
+        deleteModal.classList.add('hidden');
+    }
+
+    // CRUD
+    // untuk mode create
+    function showCreateModal() {
+        eventForm.reset(); 
+        eventIdInput.value = ''; 
+        eventModalTitle.textContent = 'Create New Event';
+        eventModalSubtitle.textContent = 'Fill out the form to add a new event';
+        eventSubmitButton.textContent = 'Add Event';
+        
+        // set URL form ke endpoint 'create' -> karena modal sama dengan edit, jadi harus set attribute
+        eventForm.setAttribute('data-action-url', createUrl);
+        
+        showEventModal(); 
+    }
+
+    // untuk edit
+    async function showEditModal(eventId) {
+        eventForm.reset();
+        
+        // ambil data event dari server
+        const getUrl = getJsonUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventId);
+        
+        try {
+            const response = await fetch(getUrl);
+            if (!response.ok) throw new Error('Failed to fetch event data.');
+            
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message || 'Could not find data.');
+
+            const event = result.data;
+            
+            // pre-fill formnya karna ini untuk edit
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('name').value = event.name;
+            document.getElementById('description').value = event.description;
+            document.getElementById('start_date').value = event.start_date;
+            document.getElementById('end_date').value = event.end_date;
+            document.getElementById('location').value = event.location;
+            document.getElementById('image_url').value = event.image_url;
+            document.getElementById('max_participants').value = event.max_participants;
+
+            // untuk edit
+            eventModalTitle.textContent = 'Edit Event';
+            eventModalSubtitle.textContent = 'Update your event details';
+            eventSubmitButton.textContent = 'Update Event';
+
+            // set URL form ke endpoint 'edit'
+            const editUrl = editUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventId);
+            eventForm.setAttribute('data-action-url', editUrl);
+
+            // show modal
+            showEventModal();
+
+        } catch (error) {
+            console.error('Error in showEditModal:', error);
+            showToast('Error: ' + error.message);
+        }
+    }
+
+    // listener untuk create atau edit event modal -> modalnya sama, url yang dihandle beda
+    // yang diatur di 'data-action-url' oleh showCreateModal atau showEditModal
+    eventForm.addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        
+        // ambil url untuk cek user sedang mau create atau edit
+        const url = eventForm.getAttribute('data-action-url');
+        if (!url) {
+            console.error('No action URL set on form.');
+            return;
+        }
+
+        const formData = new FormData(eventForm);
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                body: formData,
+                headers: { 
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest" 
+                }
+            });
+            
+            const data = await response.json(); 
+
+            if (data.status === 'success') {
+                hideEventModal();
+                showToast(data.message); 
+                
+                // refresh halaman untuk lihat perubahan
+                setTimeout(() => {
+                    window.location.reload(); 
+                }, 1000); 
+            } else {
+                const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
+                showToast('Error: ' + errorMsg);
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            showToast('An unexpected error occurred.');
+        }
+    });
+
+    // listener untuk delete button
+    confirmDeleteButton.addEventListener('click', async () => {
+        if (!eventIdToDelete) return;
+
+        // simpan url lengkap untuk menuju delete_event_ajax di views.py
+        const deleteUrl = deleteUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventIdToDelete);
+
+        // kirim sinyal POST ke deleteUrl -> urls.py akan terusin ke delete_event_ajax()
+        try {
+            const response = await fetch(deleteUrl, {
+                method: "POST",
+                headers: { 
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showToast(result.message);
+                // automatically reload kalau berhasil
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast(result.message || 'Failed to delete event.');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            showToast('An error occurred. Please try again.');
+        } finally {
+            hideDeleteModal();
+        }
+    });
+
+</script>
+{% endblock javascript %}
