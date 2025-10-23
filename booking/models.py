@@ -1,5 +1,5 @@
-from datetime import timezone
-import datetime
+from django.utils import timezone
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from authentication_user.models import UserProfile
@@ -34,7 +34,7 @@ class Booking(models.Model):
     
     
     def is_expired(self):
-        now = timezone.localtime()
+        now = timezone.now()
         for j in self.jadwal.all():
             waktu_selesai = datetime.combine(j.tanggal, j.end_main)
             #maksud make aware di sini yaitu 

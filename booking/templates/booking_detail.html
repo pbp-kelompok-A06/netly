@@ -9,7 +9,7 @@
 <div class="bg-gray-50 w-full min-h-screen">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">
-            <a href="{% url 'show_booking_list' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <a href="{% url 'booking:show_booking_list' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 ← Back to My Booking List
             </a>
         </div>
@@ -87,7 +87,7 @@
 <script>
 // Configuration
 const BOOKING_ID = "{{ booking_id }}";
-const BOOKING_DETAIL_ENDPOINT = `{% url 'main:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', BOOKING_ID);
+const BOOKING_DETAIL_ENDPOINT = `{% url 'booking:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', BOOKING_ID);
 
 // DOM Elements
 const loadingState = document.getElementById('loading-state');
@@ -160,12 +160,12 @@ function renderBooking(bookingData) {
     const bookingDetailText = `
         Username: ${bookingData.user.fullname}
         Nama Lapangan: ${bookingData.lapangan.name}
-        Harga Lapangan per Jam: Rp ${bookingData.lapangan.price.toLocaleString('id-ID')}
+        Harga Lapangan per Jam: Rp ${parseFloat(bookingData.lapangan.price).toLocaleString('id-ID')}
         Tanggal Sewa & Waktu:
         ${schedulesText}
         LAKUKAN PEMBAYARAN KE REKENING 123-456-789 AN. NETLY-SPOTIPE
         --------------------------------
-        Total Harga: Rp ${bookingData.total_price.toLocaleString('id-ID')}
+        Total Harga: Rp ${parseFloat(bookingData.total_price).toLocaleString('id-ID')}
         Status: ${bookingData.status_book}
     `;
     

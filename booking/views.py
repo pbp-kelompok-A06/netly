@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 
 def test(request):
     
-    return render(request, 'booking_detail.html')
+    return render(request, 'booking_list.html')
 @csrf_exempt  # kalau belum handle CSRF token di JS, tapi idealnya pakai token ya
 # diuncomment kalo dah ada login
 # @login_required
@@ -64,8 +64,8 @@ def show_json_by_id(request, booking_id):
             'price': booking.lapangan_id.price,
         },
         'user': {
-            'id': booking.user_id.profile.id,
-            'fullname': booking.user_id.profile.fullname,
+            'id': booking.user_id.id,
+            'fullname': booking.user_id.fullname,
         },
         'created_at': booking.created_at,
         'status_book': booking.status_book,
@@ -76,7 +76,7 @@ def show_json_by_id(request, booking_id):
     return JsonResponse(data)
 
 
-@login_required
+@login_required(login_url='/login/')
 def show_json(request):
     """
     Mengambil SEMUA booking untuk user yang sedang login dan mengembalikannya sebagai list JSON.
@@ -99,7 +99,11 @@ def show_json(request):
             'lapangan': {
                 'id': str(booking.lapangan_id.id),
                 'name': booking.lapangan_id.name, # Gunakan 'name' agar sesuai dengan JS di list page
-                'harga': booking.lapangan_id.price,
+                'price': booking.lapangan_id.price,
+            },
+            'user': {
+                'id': str(booking.user_id.id),
+                'fullname': booking.user_id.fullname,
             },
             
             'status_book': booking.status_book,
@@ -146,29 +150,29 @@ def booking_detail(request, booking_id):
 def show_booking_list(request):
     return render(request, 'booking_list.html')
 
-def show_json(request):
-    bookings = Booking.objects.filter(user_id=request.user.profile.id)
-    # Pastikan setiap booking dicek apakah sudah expired
-    for booking in bookings:
-        booking.is_expired()
+# def show_json(request):
+#     bookings = Booking.objects.filter(user_id=request.user.profile.id)
+#     # Pastikan setiap booking dicek apakah sudah expired
+#     for booking in bookings:
+#         booking.is_expired()
 
-    data = []
-    for booking in bookings:
-        jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main', 'is_available'))
-        data.append({
-            'id': str(booking.id),
-            'lapangan': {
-                'id': booking.lapangan_id.id,
-                'name': booking.lapangan_id.name,
-                'price': booking.lapangan_id.price,
-            },
-            'user': {
-                'id': booking.user_id.profile.id,
+#     data = []
+#     for booking in bookings:
+#         jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main', 'is_available'))
+#         data.append({
+#             'id': str(booking.id),
+#             'lapangan': {
+#                 'id': booking.lapangan_id.id,
+#                 'name': booking.lapangan_id.name,
+#                 'price': booking.lapangan_id.price,
+#             },
+#             'user': {
+#                 'id': booking.user_id.id,
 
-            },
-            'created_at': booking.created_at,
-            'status_book': booking.status_book,
-            'total_price': booking.total_price(),
-            'jadwal': jadwal_list,
-        })
-    return JsonResponse(data, safe=False)
+#             },
+#             'created_at': booking.created_at,
+#             'status_book': booking.status_book,
+#             'total_price': booking.total_price(),
+#             'jadwal': jadwal_list,
+#         })
+#     return JsonResponse(data, safe=False)

@@ -1,61 +1,110 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <form id="bookingForm">
-  {% csrf_token %}
-  <input type="hidden" name="lapangan_id" value="{{ lapangan.id }}">
-
-  {% for jadwal in jadwals %}
-    {% if !jadwal.is_booked %}
-      <label>
-          <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}">
-          {{ jadwal.tanggal }} - {{ jadwal.jam_mulai }} s/d {{ jadwal.jam_selesai }}
-        </label><br>
-    {% endif %}
-  {% endfor %}
-
-  <button type="submit">Lanjut ke Pembayaran</button>
-</form>
-
-<div id="message"></div>
-
-
-<script>
-document.getElementById("bookingForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    // lebih reusable dibanding document.querySelector("#bookingForm")
-    const form = e.target;
-    const formData = new FormData(form);
-
-    const response = await fetch("{% url 'create_booking' %}", {
-        method: "POST",
-        body: formData,
-    });
-
-    
-    const data = await response.json();
-    const messageDiv = document.getElementById("message");
-    
-
-    // # mau pake toast aja 
-    // !!!!!!!!!!!!!!!!!!!!!
-    if (data.success) {
-        // messageDiv.innerHTML = `<p style="color: green;">${data.message}</p>`;
-        // contoh redirect manual kalau mau nanti
-        window.location.href = data.payment_url;
-        
-        
-    } else {
-        messageDiv.innerHTML = `<p style="color: red;">${data.message}</p>`;
+  <title>Pilih Jadwal Booking</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary-dark': '#243153',
+            'accent-lime': '#D7FC64',
+          }
+        }
+      }
     }
-});
-</script>
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-lg w-full">
+  
+    <form id="bookingForm" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-6">
+      
+      {% csrf_token %}
+      <input type="hidden" name="lapangan_id" value="{{ lapangan.id }}">
+      
+      <div>
+        <h1 class="text-2xl font-bold text-primary-dark">Pilih Jadwal Tersedia</h1>
+        <p class="text-gray-500 mt-1">Pilih satu atau lebih jadwal di bawah ini.</p>
+      </div>
+
+      <div class="space-y-3 max-h-60 overflow-y-auto pr-2">
+          <label class="flex items-center p-4 w-full border border-gray-200 rounded-lg cursor-pointer hover:border-primary-dark hover:bg-gray-50 transition-all duration-200">
+            <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}" 
+                   class="h-5 w-5 rounded-md accent-primary-dark focus:ring-2 focus:ring-primary-dark">
+            
+            <span class="ml-3 font-medium text-gray-800">
+              tanggal - 09.00 s/d 20.00
+            </span>
+          </label>
+        {% for jadwal in jadwals %}
+        
+          {% if  jadwal.is_available %}
+          <label class="flex items-center p-4 w-full border border-gray-200 rounded-lg cursor-pointer hover:border-primary-dark hover:bg-gray-50 transition-all duration-200">
+            <input type="checkbox" name="jadwal_id" value="{{ jadwal.id }}" 
+                   class="h-5 w-5 rounded-md accent-primary-dark focus:ring-2 focus:ring-primary-dark">
+            
+            <span class="ml-3 font-medium text-gray-800">
+              {{ jadwal.tanggal }} - {{ jadwal.start_main }} s/d {{ jadwal.end_main }}
+            </span>
+          </label>
+          {% endif %}
+          
+        {% endfor %}
+      </div>
+
+      <button type="submit" 
+              class="w-full text-white bg-primary-dark font-semibold py-3 px-4 rounded-lg 
+                     hover:bg-accent-lime hover:text-primary-dark 
+                     focus:outline-none focus:ring-2 focus:ring-accent-lime focus:ring-offset-2 
+                     transition-all duration-300 ease-in-out">
+        Lanjut ke Pembayaran
+      </button>
+    </form>
+
+    <div id="message" class="mt-4 text-center font-medium">
+      </div>
+  
+  </div><script>
+  document.getElementById("bookingForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      // lebih reusable dibanding document.querySelector("#bookingForm")
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const response = await fetch("{% url 'booking:create_booking' %}", {
+          method: "POST",
+          body: formData,
+      });
+
+      
+      const data = await response.json();
+      const messageDiv = document.getElementById("message");
+      
+
+      // # mau pake toast aja 
+      // !!!!!!!!!!!!!!!!!!!!!
+      if (data.success) {
+          // messageDiv.innerHTML = `<p style="color: green;">${data.message}</p>`;
+          // contoh redirect manual kalau mau nanti
+          window.location.href = data.payment_url;
+          
+          
+      } else {
+          // Kita gunakan kelas Tailwind untuk pesan error
+          messageDiv.innerHTML = `<p class="text-red-600">${data.message}</p>`;
+      }
+  });
+  </script>
 
 </body>
 </html>
