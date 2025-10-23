@@ -10,7 +10,7 @@ def configure_lapangan_image_path(obj, filename):
 
 class Lapangan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lapangan_managed')
+    admin_lapangan = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lapangan_managed')
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     description = models.TextField()

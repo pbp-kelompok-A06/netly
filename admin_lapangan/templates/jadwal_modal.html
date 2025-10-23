@@ -1,0 +1,66 @@
+<div id="jadwalModal" class="hidden fixed inset-0 z-50 w-full flex items-center justify-center bg-gray-800 bg-opacity-50">
+  <div id="jadwalModalContent" class="bg-white rounded-lg shadow-lg w-5/6 sm:w-3/5 md:w-1/2 lg:w-2/5 xl:w-1/3 max-h-screen overflow-y-auto transform transition-all duration-300 opacity-0 scale-95">
+    
+    <div class="flex items-center justify-between p-4 border-b">
+      <div>
+        <h3 id="jadwalModalTitle" class="text-xl font-semibold text-gray-900">
+          Tambah Jadwal
+        </h3>
+        <p class="text-sm text-gray-600 mt-1" id="jadwalModalSubtitle">Form jadwal ketersediaan</p>
+      </div>
+      <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center" onclick="hideJadwalModal()">
+        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="sr-only">Close</span>
+      </button>
+    </div>
+
+    <div class="px-6 py-4 space-y-4 form-style">
+      <form id="jadwalForm">
+          {% csrf_token %}
+          
+          <div class="mb-4">
+            <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-2">Tanggal *</label>
+            <input type="date" id="tanggal" name="tanggal" 
+                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                   required>
+            <p class="mt-1 text-xs text-gray-500">Pilih tanggal untuk slot booking</p>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="start_main" class="block text-sm font-medium text-gray-700 mb-2">Jam Mulai *</label>
+              <input type="time" id="start_main" name="start_main" 
+                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                     required>
+            </div>
+            <div>
+              <label for="end_main" class="block text-sm font-medium text-gray-700 mb-2">Jam Selesai *</label>
+              <input type="time" id="end_main" name="end_main" 
+                     class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                     required>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="flex items-center">
+              <input type="checkbox" id="is_available" name="is_available" value="true" checked
+                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+              <span class="ml-2 text-sm text-gray-700">Tersedia untuk booking</span>
+            </label>
+            <p class="mt-1 text-xs text-gray-500 ml-6">Centang jika slot ini tersedia untuk dibooking oleh user</p>
+          </div>
+      </form>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-200 rounded-b">
+      <button type="button" class="order-2 sm:order-1 flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors text-center" onclick="hideJadwalModal()">
+        Batal
+      </button>
+      <button type="submit" id="jadwalSubmitButton" form="jadwalForm" class="order-1 sm:order-2 flex-1 bg-[#243153] text-[#D7FC64] px-6 py-3 rounded-md font-medium hover:bg-opacity-80 transition-colors">
+        Tambah Jadwal
+      </button>
+    </div>
+  </div>
+</div>
