@@ -130,8 +130,8 @@
             document.getElementById('eventId').value = event.id;
             document.getElementById('name').value = event.name;
             document.getElementById('description').value = event.description;
-            document.getElementById('start_date').value = event.start_date;
-            document.getElementById('end_date').value = event.end_date;
+            document.getElementById('start_date').value = event.start_date.slice(0, 10);
+            document.getElementById('end_date').value = event.end_date.slice(0, 10);
             document.getElementById('location').value = event.location;
             document.getElementById('image_url').value = event.image_url;
             document.getElementById('max_participants').value = event.max_participants;

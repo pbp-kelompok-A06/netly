@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import date, timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -16,9 +16,9 @@ def is_admin(user):
 # untuk admin authentication -> untuk function yang hanya bisa diakses oleh admin
 def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if not request.user.profile.is_authenticated:
+        if not request.user.is_authenticated:
             return redirect('authentication_user:login')
-        if not is_admin(request.user.profile):
+        if not is_admin(request.user):
             return HttpResponseForbidden("You don't have permission to access this page.")
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -55,9 +55,8 @@ def event_detail(request, pk):
     if request.user.profile.is_authenticated:
         is_participant = event.participant.filter(id=request.user.profile.id).exists()
 
-    now = timezone.now()
     # cek apakah event sudah lewat atau belum
-    is_event_active = event.start_date > now
+    is_event_active = event.start_date > date.today()
     # cek apakah kuota sudah penuh
     is_event_full = event.participant.count() >= event.max_participants
 
