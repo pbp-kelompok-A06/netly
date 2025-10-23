@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Netly - Find & Book Badminton Courts{% endblock %}
+
+{% block meta %}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Carousel */
+    .carousel-item { opacity: 0; transition: opacity 0.6s ease-in-out; }
+    .carousel-item.active { opacity: 1; z-index: 1; }
+
+    /* make overlay lighter so cards below still readable */
+    .gradient-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.18); z-index: 0; border-radius: 12px; }
+
+    .arrow { position: absolute; top: 50%; transform: translateY(-50%); color: white; background: rgba(0,0,0,0.35); border-radius: 50%; width: 38px; height: 38px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: all 0.18s ease; z-index: 10; }
+    .arrow:hover { background: rgba(0,0,0,0.55); transform: translateY(-50%) scale(1.05); }
+
+    /* Dots */
+    .dot { height: 8px; width: 8px; margin: 0 5px; background-color: #2F3F61; border-radius: 50%; display:inline-block; cursor:pointer; transition: all 0.15s ease; }
+    .dot.active { background: #D7FC64; transform: scale(1.2); }
+
+    /* Buttons */
+    .btn-primary {
+      background-color: #243153;
+      color: #D7FC64;
+      padding: 0.6rem 1.2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+    }
+    .btn-primary:hover {
+      background-color: #2F3F61;
+      transform: scale(1.02);
+      box-shadow: 0 8px 18px rgba(36,49,83,0.12);
+    }
+
+    /* Cards */
+    .court-card { transition: all 0.28s ease-in-out; }
+    .court-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 14px 30px rgba(2,6,23,0.06); }
+
+    .badge {
+      position: absolute; top: 12px; left: 12px;
+      background: #D7FC64; color: #243153;
+      font-size: 0.75rem; padding: 0.22rem 0.7rem;
+      border-radius: 9999px; font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .feature-icon { background-color: #243153; color: #D7FC64; }
+
+    /* ensure small carousel images have rounded corners */
+    .carousel-img { border-radius: 12px; }
+
+    /* small responsive tweak: keep a comfortable gap under carousel */
+    @media (min-width: 768px) {
+      .carousel-wrapper { margin-bottom: 1.5rem; }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+
+    <!-- SEARCH + FILTER -->
+    <section id="search" class="relative z-20 mt-8 max-w-5xl mx-auto px-4">
+    <form method="get" action="{% url 'homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative">
+        <!-- Search Input -->
+        <input 
+        type="text" 
+        name="q"
+        value="{{ search_query.q|default:'' }}"
+        placeholder="Cari Lapangan..." 
+        class="flex-grow px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#00B894] outline-none text-sm" 
+        />
+
+        <!-- Filter Button -->
+        <button 
+        id="filterBtn" 
+        type="button"
+        class="p-3 rounded-full bg-[#0A2647] text-white hover:bg-[#0C315C] transition"
+        >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 019 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+        </svg>
+        </button>
+
+        <!-- Search Button -->
+        <button 
+        type="submit"
+        class="bg-[#243153] text-[#D7FC64] px-6 py-3 rounded-full font-semibold hover:bg-[#2F3F61] w-full sm:w-auto transition shadow-md"
+        >
+            Search
+        </button>
+    </form>
+
+        <!-- Filter Card -->
+        <div id="filterCard" class="hidden absolute top-[110%] right-0 w-full sm:w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-5 animate-fade">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Filter</h3>
+
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Lokasi</label>
+            <select id="filter-location" class="w-full border border-gray-200 rounded-lg px-3 py-2 ...">
+            <option value="">Pilih Lokasi</option>
+            <option>Jakarta Pusat</option>
+            <option>Jakarta Barat</option>
+            <option>Jakarta Timur</option>
+            <option>Jakarta Selatan</option>
+            <option>Jakarta Utara</option>
+            </select>
+        </div>
+
+        <div class="flex gap-2">
+            <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Harga Min</label>
+            <input id="filter-min" type="number" placeholder="Rp" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B894]" />
+            </div>
+            <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Harga Max</label>
+            <input id="filter-max" type="number" placeholder="Rp" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B894]" />
+            </div>
+        </div>
+
+        <button id="applyFilterBtn" class="mt-4 w-full bg-[#0A2647] text-white rounded-lg py-2 font-semibold hover:bg-[#0C315C]">
+        Terapkan
+        </button>
+        </div>
+    </div>
+    </section>
+
+    {% if not search_query.q %}
+    <!-- SMALL CAROUSEL -->
+    <section class="max-w-5xl mx-auto px-4 mt-6 carousel-wrapper">
+    <div class="relative w-full h-56 md:h-64">
+        <div id="carousel" class="relative w-full h-full overflow-hidden">
+        {% for event in event_list %}
+            <div class="carousel-item absolute inset-0 {% if forloop.first %}active{% endif %} flex items-center justify-center">
+            <img src="{{ event.image }}" alt="{{ event.name|default:'Event' }}" class="w-full h-full object-cover carousel-img">
+            <div class="gradient-overlay"></div>
+
+            <div class="absolute left-6 bottom-6 text-white z-10">
+                <h3 class="text-lg md:text-xl font-bold">{{ event.name|default:'Event' }}</h3>
+                <p class="text-sm md:text-base text-gray-100/90 mt-1 max-w-md">{{ event.description|default:"Join the biggest badminton events near you." }}</p>
+            </div>
+            </div>
+        {% empty %}
+            <div class="carousel-item active absolute inset-0 flex items-center justify-center">
+            <img src="{% static 'img/default-banner.jpg' %}" alt="Welcome" class="w-full h-full object-cover carousel-img">
+            <div class="gradient-overlay"></div>
+            <div class="absolute left-6 bottom-6 text-white z-10">
+                <h3 class="text-lg md:text-xl font-bold">Temukan event badminton terdekat</h3>
+                <p class="text-sm md:text-base text-gray-100/90 mt-1">Cepat, mudah, dan terintegrasi dengan jadwal real-time.</p>
+            </div>
+            </div>
+        {% endfor %}
+        </div>
+
+      <!-- Arrows (smaller) -->
+    <div id="prev" class="arrow left-4">&#10094;</div>
+    <div id="next" class="arrow right-4">&#10095;</div>
+    <div id="carousel-dots" class="absolute bottom-3 left-0 right-0 flex justify-center z-20"></div>
+
+      <!-- Dots under the carousel (centered) -->
+      <div id="carousel-dots" class="absolute bottom-3 left-0 right-0 flex justify-center z-20"></div>
+    </div>
+  </section>
+{% endif %}
+
+  <section class="max-w-5xl mx-auto px-4 mt-8 pb-20">
+
+    <!-- grid: 3 desktop, 2 tablet, 1 mobile -->
+    <div id="court-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {% for court in court_list %}
+        <a href="{% url 'court-detail' court.id %}" 
+        class="block bg-white rounded-2xl shadow-md overflow-hidden relative court-card transition-all hover:scale-[1.01] hover:shadow-lg">
+
+        <div class="h-44 w-full overflow-hidden">
+            <img src="{{ court.image }}" alt="{{ court.name }}" class="w-full h-full object-cover">
+        </div>
+
+        <div class="p-4">
+            <h3 class="text-lg font-semibold text-slate-800">{{ court.name }}</h3>
+            <p class="text-sm text-gray-500 mt-1">{{ court.location|default:"Lokasi tidak tersedia" }}</p>
+            <div class="mt-2 flex items-center justify-between">
+            <span class="text-sm font-semibold text-[#243153]">Rp{{ court.price }}</span>
+            <span class="text-xs text-gray-400">⭐ {{ court.rating }}</span>
+            </div>
+        </div>
+
+        </a>
+
+
+      {% empty %}
+        {% for i in "1234"|make_list %}
+          <article class="court-card bg-white rounded-2xl shadow-md overflow-hidden relative">
+            <span class="badge">Available</span>
+            <div class="h-44 w-full overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1549187774-b4e9b0445b66?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="placeholder" class="w-full h-full object-cover">
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-slate-800">Smash Arena</h3>
+              <p class="text-sm text-gray-500 mt-1">Jakarta Selatan</p>
+              <div class="mt-4 flex items-center justify-between">
+                <div>
+                  <div class="text-sm text-gray-700 font-medium">
+                    Mulai <span class="font-semibold">Rp75.000 / sesi</span>
+                  </div>
+                  <div class="text-xs text-gray-400 mt-1">⭐ 4.8</div>
+                </div>
+                <a href="#" class="btn-primary px-3 py-2 rounded-full text-sm">Book</a>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+  <!-- MODAL (informational) -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 flex justify-center items-center z-50 px-4">
+    <div class="bg-white rounded-xl p-6 max-w-xl w-full shadow-2xl">
+      <div class="flex items-start gap-4">
+        <img id="modal-image" src="" alt="court" class="w-32 h-24 object-cover rounded-md">
+        <div class="flex-1">
+          <h3 id="modal-name" class="text-xl font-bold text-slate-800"></h3>
+          <p id="modal-location" class="text-sm text-gray-500 mt-1"></p>
+          <p id="modal-price" class="text-sm font-medium text-green-600 mt-2"></p>
+          <p id="modal-rating" class="text-sm text-gray-600 mt-1"></p>
+
+          <div class="mt-4 grid grid-cols-2 gap-2">
+            <button class="btn-primary w-full">Proceed to Booking</button>
+            <button onclick="closeModal()" class="w-full border border-gray-200 rounded-md px-3 py-2">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script defer>
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ Script loaded...");
+
+  const filterBtn = document.getElementById("filterBtn");
+  const filterCard = document.getElementById("filterCard");
+  const applyFilterBtn = document.getElementById("applyFilterBtn");
+  const locationSelect = document.getElementById("filter-location");
+  const searchInput = document.querySelector("input[placeholder='Cari Lapangan...']");
+  const minInput = document.getElementById("filter-min");
+  const maxInput = document.getElementById("filter-max");
+  const carouselWrapper = document.querySelector(".carousel-wrapper");
+  const courtContainer = document.getElementById("court-grid");
+
+  // 🌿 Toggle Filter Card (buka/tutup)
+  filterBtn.addEventListener("click", () => {
+    filterCard.classList.toggle("hidden");
+  });
+
+  // Tutup filter kalau klik di luar
+  document.addEventListener("click", (e) => {
+    if (!filterCard.contains(e.target) && !filterBtn.contains(e.target)) {
+      filterCard.classList.add("hidden");
+    }
+  });
+
+  // === FUNCTION APPLY FILTER ===
+  async function applyFilter() {
+    console.log("🎯 applyFilter() dijalankan");
+    const q = searchInput?.value.trim() || "";
+    const location = locationSelect?.value || "";
+    const min_price = minInput?.value || "";
+    const max_price = maxInput?.value || "";
+
+    // kalau cuma pilih lokasi, isi otomatis di search bar
+    if (!q && location) searchInput.value = location;
+
+    const params = new URLSearchParams({ q: searchInput.value, location, min_price, max_price });
+    const res = await fetch(`/filter-courts/?${params.toString()}`);
+    const data = await res.json();
+    console.log("📦 Data dari server:", data);
+
+    // Sembunyikan carousel saat filter aktif
+    if (carouselWrapper) {
+      if (q || location || min_price || max_price) {
+        carouselWrapper.style.display = "none";
+      } else {
+        carouselWrapper.style.display = "block";
+      }
+    }
+
+    // Kosongkan grid
+    courtContainer.innerHTML = "";
+
+    // Tampilkan hasil
+    if (!data.results || data.results.length === 0) {
+      courtContainer.innerHTML = `
+        <p class="text-center text-gray-500 col-span-full">
+          Tidak ada lapangan ditemukan.
+        </p>`;
+      return;
+    }
+
+    data.results.forEach(court => {
+      courtContainer.innerHTML += `
+        <article class="court-card bg-white rounded-2xl shadow-md overflow-hidden relative">
+          <span class="badge">${court.status}</span>
+          <div class="h-44 w-full overflow-hidden">
+            <img src="${court.image}" alt="${court.name}" class="w-full h-full object-cover">
+          </div>
+          <div class="p-4">
+            <h3 class="text-lg font-semibold text-slate-800">${court.name}</h3>
+            <p class="text-sm text-gray-500 mt-1">${court.location}</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div>
+                <div class="text-sm text-gray-700 font-medium">
+                  Mulai <span class="font-semibold">Rp${court.price} / sesi</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-1">⭐ ${court.rating}</div>
+              </div>
+              <button class="btn-primary px-3 py-2 rounded-full text-sm"
+                onclick="openModalFromData(this)"
+                data-name="${court.name}"
+                data-image="${court.image}"
+                data-location="${court.location}"
+                data-price="${court.price}"
+                data-rating="${court.rating}">
+                Book
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    });
+
+    // Tutup panel filter setelah diterapkan
+    filterCard.classList.add("hidden");
+  }
+
+  // 🔹 Klik “Terapkan” → jalankan filter
+  if (applyFilterBtn) {
+    applyFilterBtn.addEventListener("click", () => {
+      console.log("🖱️ Tombol Terapkan diklik");
+      applyFilter();
+    });
+  }
+
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("🎠 Carousel script aktif...");
+
+  const carousel = document.getElementById("carousel");
+  const items = carousel ? carousel.querySelectorAll(".carousel-item") : [];
+  const nextBtn = document.getElementById("next");
+  const prevBtn = document.getElementById("prev");
+  const dotsContainer = document.getElementById("carousel-dots");
+  let current = 0;
+
+  if (!carousel || items.length === 0) return;
+
+  // Buat dots
+  dotsContainer.innerHTML = "";
+  items.forEach((_, i) => {
+    const dot = document.createElement("span");
+    dot.className = "dot" + (i === 0 ? " active" : "");
+    dot.addEventListener("click", () => goToSlide(i));
+    dotsContainer.appendChild(dot);
+  });
+
+  const dots = dotsContainer.querySelectorAll(".dot");
+
+  // Fungsi pindah slide
+  function showSlide(index) {
+    items.forEach((item, i) => {
+      item.classList.toggle("active", i === index);
+    });
+    dots.forEach((dot, i) => {
+      dot.classList.toggle("active", i === index);
+    });
+  }
+
+  function nextSlide() {
+    current = (current + 1) % items.length;
+    showSlide(current);
+  }
+
+  function prevSlide() {
+    current = (current - 1 + items.length) % items.length;
+    showSlide(current);
+  }
+
+  function goToSlide(index) {
+    current = index;
+    showSlide(current);
+  }
+
+  // Event listeners
+  nextBtn?.addEventListener("click", nextSlide);
+  prevBtn?.addEventListener("click", prevSlide);
+
+  // Auto-slide tiap 5 detik
+  setInterval(nextSlide, 5000);
+
+});
+
+
+</script>
+{% endblock %}

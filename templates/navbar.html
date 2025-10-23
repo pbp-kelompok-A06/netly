@@ -1,0 +1,23 @@
+<!-- navbar.html -->
+<header class="fixed w-full z-50 backdrop-blur-lg bg-white/70 border-b border-gray-100">
+  <div class="max-w-7xl mx-auto flex justify-between items-center py-3 px-6">
+    <!-- Logo -->
+    <a href="{% url 'homepage' %}" class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-[#243153]">
+        <span class="text-[#D7FC64] font-extrabold">N</span>
+      </div>
+      <span class="text-xl font-extrabold text-[#243153]">Netly</span>
+    </a>
+
+    <!-- Menu -->
+    <nav class="hidden md:flex gap-8 text-sm font-medium text-[#2F3F61]">
+      <a href="{% url 'homepage' %}" class="hover:text-[#D7FC64]">Home</a>
+      <a href="#" class="hover:text-[#D7FC64]">My Booking</a>
+      <a href="#" class="hover:text-[#D7FC64]">Community</a>
+      <a href="#" class="hover:text-[#D7FC64]">Event & Tournament</a>
+    </nav>
+  </div>
+</header>
+
+<!-- spacer supaya konten nggak ketutupan -->
+<div class="h-16"></div>

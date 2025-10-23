@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.name }}{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<div class="min-h-screen flex items-center justify-center p-4" style="padding-top: 6rem;">
+
+    <div class="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col md:flex-row">
+
+        <div class="w-full md:w-2/5">
+            <img class="h-64 md:h-full w-full object-cover" 
+                 src="{{ event.image_url|default:'https://via.placeholder.com/400x500?text=Event+Image' }}" 
+                 alt="event image">
+        </div>
+
+        <div class="w-full md:w-3/5 p-6 flex flex-col justify-between">
+            
+            <div>
+                {% if user.is_authenticated and user.profile.role == 'admin' %}
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md mb-4" role="showToast">
+                    <p class="font-bold">admin panel</p>
+                    <p class="text-sm">You can edit or delete this event.</p>
+                    <div class="flex gap-2 mt-2">
+                        <button 
+                            onclick=`showEditModal("{% url "event:get_event_json" event.pk %}", "{% url "event:edit_event_ajax" event.pk %}")` 
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                            edit event
+                        </button>
+
+                        <button 
+                            onclick=`showDeleteModal(`{% url 'event:delete_event_ajax' event.pk %}')`
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700">
+                            delete event
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ event.name }}</h1>
+                <div class="text-sm text-gray-600 space-y-1">
+                    <p><span class="font-medium">Location:</span> {{ event.location }}</p>
+                    <p><span class="font-medium">Date:</span> {{ event.start_date|date:"d M Y" }} - {{ event.end_date|date:"d M Y" }}</p>
+                    <p><span class="font-medium">Max. participants:</span> 
+                        <span id="participant-count">{{ event.participant.count }}</span> / {{ event.max_participants }}
+                    </p>
+                </div>
+                <hr class="my-4">
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">description:</h4>
+                <p class="text-gray-600 text-base leading-relaxed">
+                    {{ event.description|linebreaksbr }}
+                </p>
+            </div>
+            
+            <div id="join-container" class="mt-8 text-right">
+                {% csrf_token %} 
+                
+                {% if user.is_authenticated %}
+                    {% if is_participant %}
+                        {% if is_event_active %}
+                            <button id="join-leave-btn" 
+                                    data-url="{% url 'event:join_event_ajax' event.pk %}"
+                                    class="... py-3 px-6 ... text-white bg-red-600 hover:bg-red-700">
+                                Cancel Join
+                            </button>
+                        {% else %}
+                            <span class="text-gray-500 font-medium">You attended this event.</span>
+                        {% endif %}
+                    {% else %}
+                        {% if not is_event_active %}
+                            <button class="disabled_button" disabled>Event has passed</button>
+                        {% elif is_event_full %}
+                            <button class="disabled_button" disabled>Event is full</button>
+                        {% else %}
+                            <button id="join-leave-btn" 
+                                    data-url="{% url 'event:join_event_ajax' event.pk %}"
+                                    class="... py-3 px-6 ... text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                                Join
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <p class="text-gray-500">please 
+                        <a href="{% url 'auth:login' %}" class="text-indigo-600 font-medium hover:underline">login</a> 
+                        to join this event.
+                    </p>
+                {% endif %}
+            </div>
+        </div> </div> </div> {% include 'event_modal.html' %}
+{% include 'event_delete_modal.html' %}
+
+<style>
+    /* disabled button ketika event sudah lewat atau participant sudah full */
+    .disabled_button { 
+        width: 100%;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        border-radius: 0.375rem;
+        background-color: #D1D5DB; /* bg-gray-300 */
+        color: #6B7280; /* text-gray-500 */
+        cursor: not-allowed;
+    }
+</style>
+
+{% endblock %}
+
+
+{% block javascript %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    const eventModal = document.getElementById('eventModal');
+    const eventModalContent = document.getElementById('eventModalContent');
+    const eventForm = document.getElementById('eventForm');
+    const eventModalTitle = document.getElementById('modalTitle');
+    const eventModalSubtitle = document.getElementById('modalSubtitle');
+    const eventSubmitButton = document.getElementById('submitButton');
+    const eventIdInput = document.getElementById('eventId'); 
+
+    function showEventModal() {
+        eventModal.classList.remove('hidden');
+        setTimeout(() => eventModalContent.classList.add('opacity-100', 'scale-100'), 50);
+    }
+
+    function hideEventModal() {
+        eventModalContent.classList.remove('opacity-100', 'scale-100');
+        setTimeout(() => eventModal.classList.add('hidden'), 150);
+    }
+
+    async function showEditModal(get_url, post_url) {
+        try {
+            const response = await fetch(get_url, { headers: { "X-CSRFToken": csrftoken } });
+            const res = await response.json();
+            if (res.status !== 'success') {
+                showToast('error', res.message, 'error'); 
+                return;
+            }
+            const data = res.data;
+            
+            eventForm.reset();
+            document.getElementById('name').value = data.name;
+            document.getElementById('description').value = data.description;
+            document.getElementById('start_date').value = data.start_date.slice(0, 10);
+            document.getElementById('end_date').value = data.end_date.slice(0, 10);
+            document.getElementById('location').value = data.location;
+            document.getElementById('max_participants').value = data.max_participants;
+            document.getElementById('image_url').value = data.image_url;
+            eventIdInput.value = data.id; 
+            
+            eventModalTitle.textContent = 'edit event';
+            eventModalSubtitle.textContent = 'update the event details';
+            eventSubmitButton.textContent = 'save changes';
+            eventForm.setAttribute('data-action-url', post_url); 
+            
+            showEventModal();
+
+        } catch (error) {
+            console.error('failed to fetch event data:', error);
+            showToast('error', 'failed to load event data.', 'error');
+        }
+    }
+    
+    eventForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const url = eventForm.getAttribute('data-action-url');
+        if (!url) return; 
+        const formData = new FormData(eventForm);
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": csrftoken }
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                hideEventModal();
+                showToast(data.message, '', 'success');
+                setTimeout(() => window.location.reload(), 1500); 
+            } else {
+                const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
+                showToast('validation error', errorMsg, 'error');
+            }
+        } catch (error) {
+            console.error('error submitting form:', error);
+            showToast('error', 'an unexpected error occurred.', 'error');
+        }
+    });
+
+    
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+    let globalDeleteUrl = ''; 
+
+    function showDeleteModal(url) {
+        globalDeleteUrl = url; 
+        deleteModal.classList.remove('hidden');
+    }
+
+    function hideDeleteModal() {
+        deleteModal.classList.add('hidden');
+        globalDeleteUrl = '';
+    }
+
+    confirmDeleteButton.addEventListener('click', async function() {
+        if (!globalDeleteUrl) return; 
+
+        try {
+            const response = await fetch(globalDeleteUrl, {
+                method: 'POST',
+                headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                hideDeleteModal();
+                showToast(data.message, '', 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'event:show_events' %}";
+                }, 1500);
+            } else {
+                showToast('error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('error deleting event:', error);
+            showToast('error', 'an unexpected error occurred.', 'error');
+        }
+    });
+    
+    const joinContainer = document.getElementById('join-container');
+    
+    if (joinContainer) {
+        joinContainer.addEventListener('click', function (e) {
+            
+            // cuma jalanin kalo yang diklik tombol 'join-leave-btn'
+            if (e.target.id === 'join-leave-btn') {
+                e.preventDefault(); 
+                
+                const button = e.target;
+                const ajaxUrl = button.dataset.url;
+                const csrfToken = joinContainer.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+                // kirim request ajax
+                fetch(ajaxUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // wait balasan dari server
+                    if (data.status === 'success') {
+                        showToast(data.message, '', 'success');
+
+                        document.getElementById('participant-count').innerText = data.new_participant_count;
+                        
+                        if (data.action === 'join') {
+                            joinContainer.innerHTML = `
+                                {% csrf_token %}
+                                <p class="text-green-600 font-semibold mb-2">You are registered.</p>
+                                <button id="join-leave-btn" data-url="${ajaxUrl}" 
+                                        class="... py-3 px-6 ... bg-red-600 ...">
+                                    cancel join
+                                </button>`;
+                        } else {
+                            joinContainer.innerHTML = `
+                                {% csrf_token %}
+                                <button id="join-leave-btn" data-url="${ajaxUrl}" 
+                                        class="... py-3 px-6 ... bg-[#243153] text-[#D7FC64] ...">
+                                    join
+                                </button>`;
+                        }
+                    } else {
+                        showToast('failed!', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('join/leave error:', error);
+                    showToast('oops...', 'an unexpected error occurred!', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock javascript %}
