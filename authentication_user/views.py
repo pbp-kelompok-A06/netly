@@ -10,13 +10,13 @@ import json
 
 # untuk call register.html
 def register_view(request):
-    if request.user.is_authenticated:
+    if request.user.profile.is_authenticated:
         return redirect('homepage:homepage') # kalau  berhasil login, langsung ke homepage
     return render(request, "register.html")
 
 # untuk call login.html
 def login_view(request):
-    if request.user.is_authenticated:
+    if request.user.profile.is_authenticated:
         return redirect('homepage:homepage') 
     return render(request, "login.html")
 

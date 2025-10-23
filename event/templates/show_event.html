@@ -31,6 +31,7 @@
 </div>
 
 {% include 'event_modal.html' %}
+{% include 'event_delete_modal.html' %}  
 {% endblock content %}
 
 {% block javascript %}
@@ -202,6 +203,7 @@
     confirmDeleteButton.addEventListener('click', async () => {
         if (!eventIdToDelete) return;
 
+        // simpan url lengkap untuk menuju delete_event_ajax di views.py
         const deleteUrl = deleteUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventIdToDelete);
 
         // kirim sinyal POST ke deleteUrl -> urls.py akan terusin ke delete_event_ajax()

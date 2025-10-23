@@ -11,14 +11,14 @@ from django.forms.models import model_to_dict
 import json
 
 def is_admin(user):
-    return hasattr(user, 'profile') and user.profile.role == 'admin_lapangan'
+    return hasattr(user, 'profile') and user.profile.role == 'admin'
 
 # untuk admin authentication -> untuk function yang hanya bisa diakses oleh admin
 def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
+        if not request.user.profile.is_authenticated:
             return redirect('authentication_user:login')
-        if not is_admin(request.user):
+        if not is_admin(request.user.profile):
             return HttpResponseForbidden("You don't have permission to access this page.")
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -28,7 +28,7 @@ def admin_required(view_func):
 def get_event_json(request, pk):
     try:
         event = Event.objects.get(pk=pk)
-        if request.user != event.admin:
+        if request.user.profile != event.admin:
             return JsonResponse({'status': 'fail', 'message': 'Bukan admin'}, status=403)
         
         # ubah model object langsung menjadi dictionary
@@ -52,8 +52,8 @@ def event_detail(request, pk):
     
     # cek dulu user sudah join event ini atau belum
     is_participant = False
-    if request.user.is_authenticated:
-        is_participant = event.participant.filter(id=request.user.profile.id).exists()
+    if request.user.profile.is_authenticated:
+        is_participant = event.participant.filter(id=request.user.profile.profile.id).exists()
 
     now = timezone.now()
     # cek apakah event sudah lewat atau belum
@@ -80,7 +80,7 @@ def create_event_ajax(request):
 
     if form.is_valid():
         event = form.save(commit=False)
-        event.admin = request.user          # adminnya adalah user yg lagi login
+        event.admin = request.user.profile          # adminnya adalah user yg lagi login
         event.save()
         return JsonResponse({'status': 'success', 'message': 'Event baru berhasil dibuat!'})
     else:
@@ -95,7 +95,7 @@ def edit_event_ajax(request, pk):
         # get event sesuai dengan primary keynya
         event = Event.objects.get(pk=pk)
         
-        if request.user != event.admin:
+        if request.user.profile != event.admin:
             return JsonResponse({'status': 'fail', 'message': 'Bukan admin'}, status=403)
             
         form = EventForm(request.POST or None, instance=event)
@@ -115,7 +115,7 @@ def edit_event_ajax(request, pk):
 def delete_event_ajax(request, pk):
     try:
         event = Event.objects.get(pk=pk)
-        if request.user != event.admin:
+        if request.user.profile != event.admin:
             return JsonResponse({'status': 'fail', 'message': 'Bukan admin'}, status=403)
         
         event.delete()
@@ -128,7 +128,7 @@ def delete_event_ajax(request, pk):
 def join_leave_event(request, pk):
     if request.method == 'POST':
         event = get_object_or_404(Event, pk=pk)
-        user = request.user
+        user = request.user.profile
 
         # cek apakah dia participat (sudah join) dari eventnya atau bukan
         is_participant = event.participant.filter(id=user.id).exists()
@@ -154,7 +154,7 @@ def join_event_ajax(request, pk):
     # fungsi ini mirip join_leave_event, tapi balasannya dalam bentuk JSON
     try:
         event = get_object_or_404(Event, pk=pk)
-        user = request.user
+        user = request.user.profile
 
         # cek apakah user sudah jadi participant atau udah join
         is_participant = event.participant.filter(id=user.id).exists()

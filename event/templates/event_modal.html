@@ -15,7 +15,10 @@
     </div>
 
     <div class="px-6 py-4 space-y-4 form-style">
-      <form id="eventForm" data-create-url="{% url 'event:create_event_ajax' %}">
+      <form id="eventForm" 
+        data-create-url="{% url 'event:create_event_ajax' %}"
+        data-edit-url-template="{% url 'event:edit_event_ajax' '00000000-0000-0000-0000-000000000000' %}"
+      >
           {% csrf_token %}
           <input type="hidden" id="eventId" name="eventId">
           
@@ -54,7 +57,6 @@
             <label for="image_url" class="block text-sm font-medium text-gray-700">Image URL</label>
             <input type="url" id="image_url" name="image_url" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" placeholder="https://...">
           </div>
-          
       </form>
     </div>
 
