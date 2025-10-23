@@ -6,6 +6,11 @@
 <div class="bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex justify-between items-center mb-6">
+            <div class="mb-6">
+                <a href="{% url 'admin_lapangan:dashboard' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                    ← Kembali ke Dashboard
+                </a>
+            </div>
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Kelola Lapangan</h1>
                 <p class="text-gray-600 mt-1">Atur dan kelola lapangan badminton Anda</p>
@@ -19,6 +24,23 @@
                 </svg>
                 Tambah Lapangan
             </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <form method="GET" action="{% url 'admin_lapangan:lapangan_list' %}" class="flex gap-2">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ search_query }}"
+                    placeholder="Cari lapangan berdasarkan nama atau lokasi..." 
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <button 
+                    type="submit"
+                    class="px-6 py-2 bg-[#243153] text-[#D7FC64] rounded-lg ">
+                    Cari
+                </button>
+            </form>
         </div>
 
         <div id="lapangan-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -55,14 +77,14 @@
                         
                         <div class="flex flex-col space-y-2 pt-4 border-t border-gray-100">
                             <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" 
-                               class="w-full text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                               class="flex-1 px-4 py-2 bg-[#243153] text-[#D7FC64] rounded-md text-sm font-medium ">
                                 Kelola Jadwal
                             </a>
                             
                             <div class="flex space-x-2">
                                 <button 
                                     onclick="showEditModal('{{ lapangan.id }}')" 
-                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+                                    class="flex-1 px-4 py-2 bg-[#243153] text-[#D7FC64] rounded-md text-sm font-medium ">
                                     Edit
                                 </button>
                                 <button 
@@ -82,14 +104,68 @@
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada lapangan</h3>
                     <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan lapangan pertama Anda.</p>
+                    <button 
+                        onclick="showCreateModal()" 
+                        class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Tambah Lapangan
+                    </button>
                 </div>
             {% endif %}
         </div>
+
+        <!-- Pagination -->
+        {% if lapangans.has_other_pages %}
+        <div class="mt-8 flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                {% if lapangans.has_previous %}
+                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">First</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="?page={{ lapangans.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Previous</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                {% endif %}
+                
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                    Page {{ lapangans.number }} of {{ lapangans.paginator.num_pages }}
+                </span>
+                
+                {% if lapangans.has_next %}
+                <a href="?page={{ lapangans.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Next</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="?page={{ lapangans.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Last</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-{% include 'admin_lapangan/lapangan_modal.html' %}
-{% include 'admin_lapangan/delete_modal.html' %}
+{% include 'lapangan_modal.html' %}
+{% include 'delete_modal.html' %}
 {% endblock content %}
 
 {% block javascript %}

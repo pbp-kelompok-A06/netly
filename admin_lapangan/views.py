@@ -19,12 +19,23 @@ def admin_required(view_func):
     return wrapper
 
 # Dashboard
+@login_required(login_url='/login/')
 @admin_required
 def admin_dashboard(request):
-    recent_lapangan = Lapangan.objects.filter(admin_lapangan=request.user.profile)[:5]
+    recent_lapangan = Lapangan.objects.filter(
+        admin_lapangan=request.user.profile
+    ).order_by('-created_at')[:5]
+    
+    # Count statistics
+    total_lapangan = Lapangan.objects.filter(admin_lapangan=request.user.profile).count()
+    total_jadwal = JadwalLapangan.objects.filter(
+        lapangan__admin_lapangan=request.user.profile
+    ).count()
     
     context = {
         'recent_lapangan': recent_lapangan,
+        'total_lapangan': total_lapangan,
+        'total_jadwal': total_jadwal,
     }
     return render(request, 'dashboard.html', context)
 
@@ -32,20 +43,29 @@ def admin_dashboard(request):
 @login_required(login_url='/login/')
 @admin_required
 def show_lapangan_list(request):
-    search_query = request.GET.get('search', '')
-    lapangan_list = Lapangan.objects.filter(admin_lapangan=request.user.profile)
+    search_query = request.GET.get('search', '').strip()
     
+    # Base queryset - only show lapangan owned by current admin
+    lapangan_list = Lapangan.objects.filter(
+        admin_lapangan=request.user.profile
+    )
+    
+    # Apply search filter if query exists
     if search_query:
         lapangan_list = lapangan_list.filter(
             lapangan_list.filter(name__icontains=search_query, location__icontains=search_query)
         )
     
+    # Order by creation date
+    lapangan_list = lapangan_list.order_by('-created_at')
+    
+    # Pagination
     paginator = Paginator(lapangan_list, 10)
     page_number = request.GET.get('page')
-    lapangan = paginator.get_page(page_number)
+    lapangans = paginator.get_page(page_number)
     
     context = {
-        'lapangan': lapangan,
+        'lapangans': lapangans,
         'search_query': search_query,
     }
     return render(request, 'lapangan_list.html', context)
@@ -57,7 +77,7 @@ def create_lapangan_ajax(request):
         form = LapanganForm(request.POST, request.FILES)
         if form.is_valid():
             lapangan = form.save(commit=False)
-            lapangan.admin = request.user.profile
+            lapangan.admin_lapangan = request.user.profile  
             lapangan.save()
             return JsonResponse({
                 'status': 'success',
@@ -74,16 +94,20 @@ def create_lapangan_ajax(request):
                 'message': 'Validasi gagal',
                 'errors': form.errors
             }, status=400)
-    else:
-        form = LapanganForm()
     
-    return render(request, 'lapangan_form.html', {'form': form, 'action': 'Create'})
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Method not allowed'
+    }, status=405)
 
 @login_required(login_url='/login/')
 @admin_required
 def get_lapangan_json(request, pk):
     try:
-        lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
+        lapangan = Lapangan.objects.get(
+            pk=pk, 
+            admin_lapangan=request.user.profile
+        )
         data = {
             'id': str(lapangan.id),
             'name': lapangan.name,
@@ -94,11 +118,20 @@ def get_lapangan_json(request, pk):
         }
         return JsonResponse({'status': 'success', 'data': data})
     except Lapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Lapangan tidak ditemukan'}, status=404)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan'
+        }, status=404)
 
 @login_required(login_url='/login/')
 @admin_required
 def edit_lapangan_ajax(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed'
+        }, status=405)
+    
     try:
         lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
         form = LapanganForm(request.POST, request.FILES, instance=lapangan)
@@ -116,14 +149,20 @@ def edit_lapangan_ajax(request, pk):
                 'errors': form.errors
             }, status=400)
     except Lapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Lapangan tidak ditemukan'}, status=404)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan'
+        }, status=404)
 
 @login_required(login_url='/login/')
 @admin_required
 @require_http_methods(["POST", "DELETE"])
 def delete_lapangan_ajax(request, pk):
     try:
-        lapangan = Lapangan.objects.get(pk=pk, admin_lapangan=request.user.profile)
+        lapangan = Lapangan.objects.get(
+            pk=pk, 
+            admin_lapangan=request.user.profile
+        )
         lapangan_name = lapangan.name
         lapangan.delete()
         return JsonResponse({
@@ -131,25 +170,42 @@ def delete_lapangan_ajax(request, pk):
             'message': f'Lapangan "{lapangan_name}" berhasil dihapus!'
         })
     except Lapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Lapangan tidak ditemukan'}, status=404)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan'
+        }, status=404)
 
 # Jadwal CRUD
 @login_required(login_url='/login/')
 @admin_required
 def show_jadwal_list(request, lapangan_id):
-    lapangan = get_object_or_404(Lapangan, id=lapangan_id, admin_lapangan=request.user.profile)
-    jadwal = lapangan.jadwal.all().order_by('tanggal', 'start_main')
+    lapangan = get_object_or_404(
+        Lapangan, 
+        id=lapangan_id, 
+        admin_lapangan=request.user.profile
+    )
+    jadwals = lapangan.jadwal.all().order_by('tanggal', 'start_main')
     
     context = {
         'lapangan': lapangan,
-        'jadwal': jadwal,
+        'jadwals': jadwals,
     }
     return render(request, 'jadwal_list.html', context)
 
+@login_required(login_url='/login/')
 @admin_required
 def create_jadwal_ajax(request, lapangan_id):
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed'
+        }, status=405)
+    
     try:
-        lapangan = Lapangan.objects.get(pk=lapangan_id, admin_lapangan=request.user.profile)
+        lapangan = Lapangan.objects.get(
+            pk=lapangan_id, 
+            admin_lapangan=request.user.profile
+        )
         form = JadwalLapanganForm(request.POST)
         
         if form.is_valid():
@@ -167,12 +223,47 @@ def create_jadwal_ajax(request, lapangan_id):
                 'errors': form.errors
             }, status=400)
     except Lapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Lapangan tidak ditemukan'}, status=404)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan'
+        }, status=404)
 
+@login_required(login_url='/login/')
+@admin_required
+def get_jadwal_json(request, pk):
+    try:
+        jadwal = JadwalLapangan.objects.get(
+            pk=pk, 
+            lapangan__admin_lapangan=request.user.profile
+        )
+        data = {
+            'id': str(jadwal.id),
+            'tanggal': jadwal.tanggal.strftime('%Y-%m-%d'),
+            'start_main': jadwal.start_main.strftime('%H:%M'),
+            'end_main': jadwal.end_main.strftime('%H:%M'),
+            'is_available': jadwal.is_available
+        }
+        return JsonResponse({'status': 'success', 'data': data})
+    except JadwalLapangan.DoesNotExist:
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Jadwal tidak ditemukan'
+        }, status=404)
+
+@login_required(login_url='/login/')
 @admin_required
 def edit_jadwal_ajax(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed'
+        }, status=405)
+    
     try:
-        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin_lapangan=request.user.profile)
+        jadwal = JadwalLapangan.objects.get(
+            pk=pk, 
+            lapangan__admin_lapangan=request.user.profile
+        )
         form = JadwalLapanganForm(request.POST, instance=jadwal)
         
         if form.is_valid():
@@ -188,32 +279,27 @@ def edit_jadwal_ajax(request, pk):
                 'errors': form.errors
             }, status=400)
     except JadwalLapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Jadwal tidak ditemukan'}, status=404)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Jadwal tidak ditemukan'
+        }, status=404)
 
+@login_required(login_url='/login/')
 @admin_required
 @require_http_methods(["POST", "DELETE"])
 def delete_jadwal_ajax(request, pk):
     try:
-        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin_lapangan=request.user.profile)
+        jadwal = JadwalLapangan.objects.get(
+            pk=pk, 
+            lapangan__admin_lapangan=request.user.profile
+        )
         jadwal.delete()
         return JsonResponse({
             'status': 'success',
             'message': 'Jadwal berhasil dihapus!'
         })
     except JadwalLapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Jadwal tidak ditemukan'}, status=404)
-
-@admin_required
-def get_jadwal_json(request, pk):
-    try:
-        jadwal = JadwalLapangan.objects.get(pk=pk, lapangan__admin_lapangan=request.user.profile)
-        data = {
-            'id': str(jadwal.id),
-            'tanggal': jadwal.tanggal.strftime('%Y-%m-%d'),
-            'start_main': jadwal.start_main.strftime('%H:%M'),
-            'end_main': jadwal.end_main.strftime('%H:%M'),
-            'is_available': jadwal.is_available
-        }
-        return JsonResponse({'status': 'success', 'data': data})
-    except JadwalLapangan.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Jadwal tidak ditemukan'}, status=404)
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Jadwal tidak ditemukan'
+        }, status=404)
