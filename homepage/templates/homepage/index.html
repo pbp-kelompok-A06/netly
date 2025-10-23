@@ -1,26 +1,12 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Netly - Find & Book Badminton Courts</title>
 
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+{% block title %}Netly - Find & Book Badminton Courts{% endblock %}
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+{% block meta %}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #243153; overflow-x: hidden; }
-    header { transition: background 0.3s ease; }
-    nav a { position: relative; transition: color 0.25s ease; }
-    nav a::after { content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 2px; background: #D7FC64; transition: width 0.25s ease; }
-    nav a:hover { color: #D7FC64; }
-    nav a:hover::after { width: 100%; }
-
-    /* Carousel (smaller now) */
+    /* Carousel */
     .carousel-item { opacity: 0; transition: opacity 0.6s ease-in-out; }
     .carousel-item.active { opacity: 1; z-index: 1; }
 
@@ -72,34 +58,9 @@
       .carousel-wrapper { margin-bottom: 1.5rem; }
     }
   </style>
-</head>
+{% endblock %}
 
-<body class="relative bg-gray-50">
-
-  <!-- NAVBAR -->
-  <header class="fixed w-full z-50 backdrop-blur-lg bg-white/70 border-b border-gray-100">
-    <div class="max-w-7xl mx-auto flex justify-between items-center py-3 px-6">
-      <!-- Logo -->
-      <a href="#" class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-[#243153]">
-          <span class="text-[#D7FC64] font-extrabold">N</span>
-        </div>
-        <span class="text-xl font-extrabold text-[#243153]">Netly</span>
-      </a>
-
-      <!-- Menu (center) -->
-      <nav class="hidden md:flex gap-8 text-sm font-medium text-[#2F3F61]">
-        <a href="#" class="hover:text-[#D7FC64]">Home</a>
-        <a href="#" class="hover:text-[#D7FC64]">My Booking</a>
-        <a href="#" class="hover:text-[#D7FC64]">Community</a>
-        <a href="#" class="hover:text-[#D7FC64]">Event & Tournament</a>
-      </nav>
-
-    </div>
-  </header>
-
-  <!-- spacer -->
-  <div class="h-16"></div>
+{% block content %}
 
     <!-- SEARCH + FILTER -->
     <section id="search" class="relative z-20 mt-8 max-w-5xl mx-auto px-4">
@@ -439,9 +400,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Auto-slide tiap 5 detik
   setInterval(nextSlide, 5000);
+
 });
+
+
 </script>
-
-
-</body>
-</html>
+{% endblock %}
