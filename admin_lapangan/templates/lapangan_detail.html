@@ -55,20 +55,20 @@
             <div class="p-8">
                 <!-- Header -->
                 <div class="border-b border-gray-200 pb-6 mb-6">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ lapangan.name }}</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2" id="lapangan-name">{{ lapangan.name }}</h1>
                     <div class="flex items-center text-gray-600 space-x-4">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                            <span>{{ lapangan.location }}</span>
+                            <span id="lapangan-location">{{ lapangan.location }}</span>
                         </div>
                         <div class="flex items-center text-[#243153] font-bold text-xl">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span>Rp {{ lapangan.price|floatformat:0 }}/jam</span>
+                            <span id="lapangan-price">Rp {{ lapangan.price|floatformat:0 }}/jam</span>
                         </div>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
                 <!-- Description -->
                 <div class="mb-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-3">Deskripsi</h2>
-                    <p class="text-gray-600 leading-relaxed">{{ lapangan.description }}</p>
+                    <p class="text-gray-600 leading-relaxed" id="lapangan-description">{{ lapangan.description }}</p>
                 </div>
 
                 <!-- Jadwal Section -->
@@ -223,6 +223,7 @@
             document.getElementById('location').value = lapangan.location;
             document.getElementById('description').value = lapangan.description;
             document.getElementById('price').value = lapangan.price;
+            document.getElementById('image').value = lapangan.image || '';
 
             modalTitle.textContent = 'Edit Lapangan';
             modalSubtitle.textContent = 'Perbarui data lapangan Anda';
@@ -236,6 +237,14 @@
             console.error('Error:', error);
             showToast('Error', error.message, 'error');
         }
+    }
+
+    // Update UI setelah edit berhasil
+    function updateLapanganUI(data) {
+        document.getElementById('lapangan-name').textContent = data.name;
+        document.getElementById('lapangan-location').textContent = data.location;
+        document.getElementById('lapangan-description').textContent = data.description;
+        document.getElementById('lapangan-price').textContent = `Rp ${parseFloat(data.price).toLocaleString('id-ID')}/jam`;
     }
 
     lapanganForm.addEventListener('submit', async function(e) {
@@ -258,7 +267,16 @@
             if (data.status === 'success') {
                 hideLapanganModal();
                 showToast('Berhasil!', data.message, 'success');
-                setTimeout(() => window.location.reload(), 1500);
+                
+                // Update UI tanpa reload
+                const lapanganId = url.split('/').slice(-2, -1)[0];
+                const getUrl = getJsonUrlTemplate.replace('00000000-0000-0000-0000-000000000000', lapanganId);
+                const lapanganResponse = await fetch(getUrl);
+                const lapanganData = await lapanganResponse.json();
+                
+                if (lapanganData.status === 'success') {
+                    updateLapanganUI(lapanganData.data);
+                }
             } else {
                 const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
                 showToast('Error', errorMsg, 'error');

@@ -27,16 +27,8 @@ def admin_dashboard(request):
         admin_lapangan=request.user.profile
     ).order_by('-created_at')[:5]
     
-    # Count statistics
-    total_lapangan = Lapangan.objects.filter(admin_lapangan=request.user.profile).count()
-    total_jadwal = JadwalLapangan.objects.filter(
-        lapangan__admin_lapangan=request.user.profile
-    ).count()
-    
     context = {
         'recent_lapangan': recent_lapangan,
-        'total_lapangan': total_lapangan,
-        'total_jadwal': total_jadwal,
     }
     return render(request, 'dashboard.html', context)
 
@@ -122,7 +114,6 @@ def create_lapangan_ajax(request):
 @login_required(login_url='/login/')
 @admin_required
 def get_lapangan_json(request, pk):
-    """Untuk fetch data ke form edit (AJAX)"""
     try:
         lapangan = Lapangan.objects.get(
             pk=pk, 
@@ -322,4 +313,60 @@ def delete_jadwal_ajax(request, pk):
         return JsonResponse({
             'status': 'error', 
             'message': 'Jadwal tidak ditemukan'
+        }, status=404)
+    
+
+@login_required(login_url='/login/')
+@admin_required
+def fetch_lapangan_list_ajax(request):
+    search_query = request.GET.get('search', '').strip()
+    
+    lapangan_list = Lapangan.objects.filter(
+        admin_lapangan=request.user.profile
+    )
+    
+    if search_query:
+        lapangan_list = lapangan_list.filter(
+            Q(name__icontains=search_query) | Q(location__icontains=search_query)
+        )
+    
+    lapangan_list = lapangan_list.order_by('-created_at')
+    
+    data = []
+    for lapangan in lapangan_list:
+        data.append({
+            'id': str(lapangan.id),
+            'name': lapangan.name,
+            'location': lapangan.location,
+            'price': float(lapangan.price),
+            'image': lapangan.image or '',
+        })
+    
+    return JsonResponse({'status': 'success', 'data': data})
+
+@login_required(login_url='/login/')
+@admin_required
+def fetch_jadwal_list_ajax(request, lapangan_id):
+    try:
+        lapangan = Lapangan.objects.get(
+            pk=lapangan_id, 
+            admin_lapangan=request.user.profile
+        )
+        jadwals = lapangan.jadwal.all().order_by('tanggal', 'start_main')
+        
+        data = []
+        for jadwal in jadwals:
+            data.append({
+                'id': str(jadwal.id),
+                'tanggal': jadwal.tanggal.strftime('%Y-%m-%d'),
+                'start_main': jadwal.start_main.strftime('%H:%M'),
+                'end_main': jadwal.end_main.strftime('%H:%M'),
+                'is_available': jadwal.is_available,
+            })
+        
+        return JsonResponse({'status': 'success', 'data': data})
+    except Lapangan.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Lapangan tidak ditemukan'
         }, status=404)
