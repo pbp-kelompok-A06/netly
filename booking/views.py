@@ -73,7 +73,7 @@ def create_booking(request):
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 def show_json_by_id(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user.profile.id)
+    booking = get_object_or_404(Booking, id=booking_id)
     booking.is_expired()  # cek apakah booking sudah expired
     jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main', 'is_available'))
     data = {
@@ -96,7 +96,7 @@ def show_json_by_id(request, booking_id):
     return JsonResponse(data)
 
 
-@login_required(login_url='authentication_user:login')
+
 def show_json(request):
     if request.user.profile.role == 'admin':
         all_bookings = Booking.objects.filter(lapangan_id__admin_lapangan=request.user.profile).order_by('-created_at')
@@ -155,7 +155,7 @@ def complete_booking(request, booking_id):
 
 # flownya jadi dari create_booking di redirect ke booking_detail
 def booking_detail(request, booking_id):
-    booking = get_object_or_404(Booking, id=booking_id, user_id=request.user.profile.id)
+    booking = get_object_or_404(Booking, id=booking_id)
     booking.is_expired()
     return render(request, 'booking_detail.html', {
         'booking_id': str(booking.id), # Kirim ID ke template agar JS bisa membacanya
@@ -164,7 +164,7 @@ def booking_detail(request, booking_id):
     
 # function untuk ngedirect ke booking_list
 
-@login_required(login_url='authentication_user:login')
+
 def show_booking_list(request):
     return render(request, 'booking_list.html')
 

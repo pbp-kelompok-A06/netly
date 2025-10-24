@@ -19,11 +19,10 @@ class ForumViewsTestCase(TestCase):
             password='halo'
         )
         
-        # Get or create profiles
         self.profile1 = UserProfile.objects.create(user=self.user1, fullname="bambang")
         self.profile2 = UserProfile.objects.create(user=self.user2, fullname="agus")
         
-        # Create test forum
+
         self.forum = Forum.objects.create(
             title='Forum Bola',
             description='Forum bola ini adalah',
@@ -31,7 +30,7 @@ class ForumViewsTestCase(TestCase):
         )
         self.forum.member.add(self.profile1)
         
-        # Create test post
+
         self.post = Forum_Post.objects.create(
             header='Liverpool',
             content='kalah',
@@ -39,7 +38,7 @@ class ForumViewsTestCase(TestCase):
             user_id=self.profile1
         )
         
-        # Initialize client
+
         self.client = Client()
     
     def tearDown(self):
