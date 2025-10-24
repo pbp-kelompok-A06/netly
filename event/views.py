@@ -49,6 +49,7 @@ def get_event_json(request, pk):
         return JsonResponse({'status': 'fail', 'message': 'Event tidak ditemukan'}, status=404)
     
 # show semua event yang ada
+@login_required(login_url='/login/')
 def show_events(request):
     # ambil parameter sort dari URL, defaultnya ascending
     sort_order = request.GET.get('sort', 'asc')
@@ -73,6 +74,7 @@ def show_events(request):
     return render(request, "show_event.html", context)
 
 # show event's detail
+@login_required(login_url='/login/')
 def event_detail(request, pk):
     event = get_object_or_404(Event, pk=pk)
     
