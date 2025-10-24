@@ -4,9 +4,8 @@
 
 {% block content %}
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" style="padding-top: 1rem;"> 
-    
-    <div class="bg-white rounded-lg shadow-lg pt-6 px-6 pb-2 mb-5">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5" style="padding-top: 0rem;">
+    <div class="bg-white rounded-lg shadow-lg pt-6 px-6 pb-4 mb-5 w-full">
         <h1 class="text-3xl font-bold text-gray-900 mb-1">
             <span class="text-[#243153]">Badminton</span>
             <span class="text-[#c0ed3b]">Events</span>
@@ -52,7 +51,7 @@
         </div>
     </div>
 
-    <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[50vh]">
         {% if events %}
             {% for event in events %}
                 {% include 'card_event.html' with event=event %}
@@ -313,6 +312,10 @@
 
             if (result.status === 'success') {
                 showToast('Success!', result.message, 'success');
+                const cardElement = document.querySelector(`[data-event-id="${eventIdToDelete}"]`);
+                if (cardElement) {
+                    cardElement.remove();
+                }
             } else {
                 showToast('Error', result.message || 'Failed to delete event.', 'error');
             }

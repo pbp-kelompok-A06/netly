@@ -128,6 +128,7 @@ def show_json(request):
             'status_book': booking.status_book,
             'total_price': booking.total_price(),
             'jadwal': jadwal_list,
+            'created_at': booking.created_at
         })
 
     

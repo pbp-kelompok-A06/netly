@@ -93,12 +93,37 @@
         }
     }
 
-    // Render the list of bookings in the table
+    function parseDateString(s) {
+        if (!s) return null;
+        if (s instanceof Date) return s;
+        let str = String(s).trim();
+
+        // Convert "YYYY-MM-DD HH:MM:SS" -> "YYYY-MM-DDTHH:MM:SS"
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(str)) {
+            str = str.replace(' ', 'T');
+        }
+
+        // Try creating a Date
+        let d = new Date(str);
+        if (!isNaN(d)) return d;
+
+        // Try replacing space->T one more time
+        d = new Date(str.replace(' ', 'T'));
+        if (!isNaN(d)) return d;
+
+        // Try numeric timestamp
+        const n = Number(str);
+        if (!isNaN(n)) return new Date(n);
+
+        return null;
+    }
+
+
     function renderBookingsList(bookings) {
-        bookingsTableBody.innerHTML = ''; // Clear previous content
+        bookingsTableBody.innerHTML = ''
 
         if (bookings.length === 0) {
-            showListState('ready'); // Show the "No Bookings" state
+            showListState('ready')
             return;
         }
 
@@ -115,9 +140,10 @@
             // 2. Booking Date (Created At)
             let cellDate = row.insertCell();
             cellDate.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
-            const formattedDate = new Date(booking.created_at).toLocaleDateString('en-US', { 
-                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-            });
+            const parsed = parseDateString(booking.created_at);
+            const formattedDate = parsed
+                ? parsed.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Unknown date';
             cellDate.textContent = formattedDate;
 
             // 3. Status

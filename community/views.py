@@ -42,7 +42,7 @@ def fetch_post_id(request, id_forum):
     post_list = Forum_Post.objects.filter(forum_id=forum_data).select_related('user_id').order_by('-created_at')
     
     if request.user.profile not in forum_data.member.all():
-        return HttpResponse("<script>alert('You are not a member of this forum.'); window.location.href='/community/forum/';</script>")
+        return HttpResponse("<script>alert('You are not a member of this forum.'); window.location.href='/community/';</script>")
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
     
         data = []

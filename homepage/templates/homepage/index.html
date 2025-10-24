@@ -6,20 +6,6 @@
 {% block meta %}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Carousel */
-    .carousel-item { opacity: 0; transition: opacity 0.6s ease-in-out; }
-    .carousel-item.active { opacity: 1; z-index: 1; }
-
-    /* make overlay lighter so cards below still readable */
-    .gradient-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.18); z-index: 0; border-radius: 12px; }
-
-    .arrow { position: absolute; top: 50%; transform: translateY(-50%); color: white; background: rgba(0,0,0,0.35); border-radius: 50%; width: 38px; height: 38px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: all 0.18s ease; z-index: 10; }
-    .arrow:hover { background: rgba(0,0,0,0.55); transform: translateY(-50%) scale(1.05); }
-
-    /* Dots */
-    .dot { height: 8px; width: 8px; margin: 0 5px; background-color: #2F3F61; border-radius: 50%; display:inline-block; cursor:pointer; transition: all 0.15s ease; }
-    .dot.active { background: #D7FC64; transform: scale(1.2); }
-
     /* Buttons */
     .btn-primary {
       background-color: #243153;
@@ -50,27 +36,24 @@
 
     .feature-icon { background-color: #243153; color: #D7FC64; }
 
-    /* ensure small carousel images have rounded corners */
-    .carousel-img { border-radius: 12px; }
-
-    /* small responsive tweak: keep a comfortable gap under carousel */
-    @media (min-width: 768px) {
-      .carousel-wrapper { margin-bottom: 1.5rem; }
-    }
   </style>
 {% endblock %}
 
 {% block content %}
 
     <!-- SEARCH + FILTER -->
-    <section id="search" class="relative z-20 mt-8 max-w-5xl mx-auto px-4">
-    <form method="get" action="{% url 'homepage:homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative" id="search-form">
+    <section id="search" class="relative z-20 mt-8">
+    <div class="max-w-5xl mx-auto px-4">
+        <form method="get" action="{% url 'homepage:homepage' %}" 
+            class="bg-white shadow-md rounded-xl flex items-center gap-3 p-4 md:p-5"
+            id="search-form">
+
         <!-- Search Input -->
         <input 
         type="text" 
         name="q"
-        value="{{ search_query.q|default:'' }}"
-        placeholder="Cari Lapangan..." 
+        value="{{ search_query|default:'' }}"
+        placeholder="Search courts..." 
         class="flex-grow px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#00B894] outline-none text-sm"
         id="search-input"
         />
@@ -100,80 +83,55 @@
 
         <!-- Filter Card -->
         <div id="filterCard" class="hidden absolute top-[110%] right-0 w-full sm:w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-5 animate-fade">
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">Filter</h3>
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Filters</h3>
 
         <div class="mb-3">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Lokasi</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Location</label>
             <select id="filter-location" class="w-full border border-gray-200 rounded-lg px-3 py-2 ...">
-            <option value="">Pilih Lokasi</option>
-            <option>Jakarta Pusat</option>
-            <option>Jakarta Barat</option>
-            <option>Jakarta Timur</option>
-            <option>Jakarta Selatan</option>
-            <option>Jakarta Utara</option>
+                <option value="">Select Location</option>
+                <option>Jakarta Barat</option>
+                <option>Jakarta Selatan</option>
+                <option>Jakarta Utara</option>
+                <option>Jakarta Pusat</option>
+                <option>Jakarta Timur</option>
+                <option>Tangerang</option>
+                <option>Tangerang Selatan</option>
+                <option>Depok</option>
+                <option>Surabaya</option>
+                <option>Malang</option>
+                <option>Kupang</option>
+                <option>Bandung</option>
+                <option>Bogor</option>
+                <option>Bantul</option>
+                <option>Medan</option>
+                <option>Pekanbaru</option>
             </select>
         </div>
 
         <div class="flex gap-2">
             <div class="flex-1">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Harga Min</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Min Price</label>
             <input id="filter-min" type="number" placeholder="Rp" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B894]" />
             </div>
             <div class="flex-1">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Harga Max</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Max Price</label>
             <input id="filter-max" type="number" placeholder="Rp" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#00B894]" />
             </div>
         </div>
 
         <button id="applyFilterBtn" class="mt-4 w-full bg-[#0A2647] text-white rounded-lg py-2 font-semibold hover:bg-[#0C315C]">
-        Terapkan
+        Apply
         </button>
         </div>
     </div>
     </section>
 
-{% if not search_query.q %}
-<!-- SMALL CAROUSEL -->
-<section class="max-w-5xl mx-auto px-4 mt-6 carousel-wrapper">
-  <div class="relative w-full h-56 md:h-64">
-    <div id="carousel" class="relative w-full h-full overflow-hidden">
-      {% for event in event_list %}
-        <div class="carousel-item absolute inset-0 {% if forloop.first %}active{% endif %} flex items-center justify-center">
-          <img src="{{ event.image }}" alt="{{ event.name|default:'Event' }}" class="w-full h-full object-cover carousel-img">
-          <div class="gradient-overlay"></div>
-
-          <div class="absolute left-6 bottom-6 text-white z-10">
-            <h3 class="text-lg md:text-xl font-bold">{{ event.name|default:'Event' }}</h3>
-            <p class="text-sm md:text-base text-gray-100/90 mt-1 max-w-md">{{ event.description|default:"Join the biggest badminton events near you." }}</p>
-          </div>
-        </div>
-      {% empty %}
-        <div class="carousel-item active absolute inset-0 flex items-center justify-center">
-          <img src="{% static 'img/default-banner.jpg' %}" alt="Welcome" class="w-full h-full object-cover carousel-img">
-          <div class="gradient-overlay"></div>
-          <div class="absolute left-6 bottom-6 text-white z-10">
-            <h3 class="text-lg md:text-xl font-bold">Temukan event badminton terdekat</h3>
-            <p class="text-sm md:text-base text-gray-100/90 mt-1">Cepat, mudah, dan terintegrasi dengan jadwal real-time.</p>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-
-    <!-- Arrows (smaller) -->
-    <div id="prev" class="arrow left-4">&#10094;</div>
-    <div id="next" class="arrow right-4">&#10095;</div>
-    <!-- Dots under the carousel (centered) -->
-    <div id="carousel-dots" class="absolute bottom-3 left-0 right-0 flex justify-center z-20"></div>
-  </div>
-</section>
-{% endif %}
 
   <section class="max-w-5xl mx-auto px-4 mt-8 pb-20">
 
-    <!-- grid: 3 desktop, 2 tablet, 1 mobile -->
     <div id="court-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {% for court in court_list %}
-        <a href="{% url 'court-detail' court.id %}" 
+        <a href="{% url 'homepage:court-detail' court.id %}"
         class="block bg-white rounded-2xl shadow-md overflow-hidden relative court-card transition-all hover:scale-[1.01] hover:shadow-lg">
 
         <div class="h-44 w-full overflow-hidden">
@@ -182,10 +140,9 @@
 
         <div class="p-4">
             <h3 class="text-lg font-semibold text-slate-800">{{ court.name }}</h3>
-            <p class="text-sm text-gray-500 mt-1">{{ court.location|default:"Lokasi tidak tersedia" }}</p>
+            <p class="text-sm text-gray-500 mt-1">{{ court.location|default:"Location not available" }}</p>
             <div class="mt-2 flex items-center justify-between">
-            <span class="text-sm font-semibold text-[#243153]">Rp{{ court.price }}</span>
-            <span class="text-xs text-gray-400">⭐ {{ court.rating }}</span>
+            <span class="text-sm font-semibold text-[#243153]">Rp{{ court.price|floatformat:0 }}</span>
             </div>
 
         </div>
@@ -195,30 +152,10 @@
 
       {% empty %}
         <p class="text-center text-gray-500 col-span-full">
-          Tidak ada lapangan tersedia.
+          No courts available.
         </p>
       {% endfor %}
     </div>
-
-  <!-- MODAL (informational) -->
-  <div id="modal" class="hidden fixed inset-0 bg-black/60 flex justify-center items-center z-50 px-4">
-    <div class="bg-white rounded-xl p-6 max-w-xl w-full shadow-2xl">
-      <div class="flex items-start gap-4">
-        <img id="modal-image" src="" alt="court" class="w-32 h-24 object-cover rounded-md">
-        <div class="flex-1">
-          <h3 id="modal-name" class="text-xl font-bold text-slate-800"></h3>
-          <p id="modal-location" class="text-sm text-gray-500 mt-1"></p>
-          <p id="modal-price" class="text-sm font-medium text-green-600 mt-2"></p>
-          <p id="modal-rating" class="text-sm text-gray-600 mt-1"></p>
-
-          <div class="mt-4 grid grid-cols-2 gap-2">
-            <button class="btn-primary w-full">Proceed to Booking</button>
-            <button onclick="closeModal()" class="w-full border border-gray-200 rounded-md px-3 py-2">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
 <script defer>
 document.addEventListener("DOMContentLoaded", () => {
@@ -237,7 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const carouselWrapper = document.querySelector(".carousel-wrapper");
   const courtContainer = document.getElementById("court-grid");
 
-  // Toggle filter card
   if (filterBtn && filterCard) {
     filterBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -245,14 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Close filter if clicking outside
   document.addEventListener("click", (e) => {
     if (filterCard && filterBtn && !filterCard.contains(e.target) && !filterBtn.contains(e.target)) {
       filterCard.classList.add("hidden");
     }
   });
 
-  // Reusable renderer: same markup as server template for each court
   function renderCourtsList(courts) {
     if (!courtContainer) return;
     courtContainer.innerHTML = "";
@@ -260,18 +194,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!courts || courts.length === 0) {
       courtContainer.innerHTML = `
         <p class="text-center text-gray-500 col-span-full">
-          Tidak ada lapangan ditemukan.
+          No courts found.
         </p>`;
       return;
     }
 
     const html = courts.map(court => {
-      // link to court detail — keep same URL pattern
       const detailUrl = `/court/${court.id}/`;
       const image = court.image || "";
       const location = court.location || "";
       const price = court.price ?? "";
-      const rating = court.rating ?? "";
       const status = court.status || "";
 
       return `
@@ -284,8 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <h3 class="text-lg font-semibold text-slate-800">${court.name}</h3>
               <p class="text-sm text-gray-500 mt-1">${location}</p>
               <div class="mt-2 flex items-center justify-between">
-                  <span class="text-sm font-semibold text-[#243153]">Rp${price}</span>
-                  <span class="text-xs text-gray-400">⭐ ${rating}</span>
+                <span class="text-sm font-semibold text-[#243153]">Rp{{ court.price|floatformat:0 }}</span>
               </div>
           </div>
         </a>
@@ -295,7 +226,6 @@ document.addEventListener("DOMContentLoaded", () => {
     courtContainer.innerHTML = html;
   }
 
-  // === AJAX: Filter courts ===
   async function applyFilter() {
     try {
       const q = (searchInput?.value || "").trim();
@@ -303,21 +233,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const min_price = (minInput?.value || "").trim();
       const max_price = (maxInput?.value || "").trim();
 
-      // if user only picks location but no q, keep it visible in search input
       if (!q && location && searchInput) searchInput.value = location;
 
       const params = new URLSearchParams({ q: searchInput.value, location, min_price, max_price });
       const res = await fetch(`/filter-courts/?${params.toString()}`, { credentials: 'same-origin' });
       const data = await res.json();
-
-      // Hide carousel when filter active (same behavior as before)
-      if (carouselWrapper) {
-        if (q || location || min_price || max_price) {
-          carouselWrapper.style.display = "none";
-        } else {
-          carouselWrapper.style.display = "block";
-        }
-      }
 
       renderCourtsList(data.results);
       if (filterCard) filterCard.classList.add("hidden");
@@ -326,24 +246,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // === AJAX: Search courts (form submit) ===
   async function performSearch(q) {
     try {
       const res = await fetch(`/search-courts/?q=${encodeURIComponent(q)}`, { credentials: 'same-origin' })
       const data = await res.json();
-
-      // Hide carousel when searching
-      if (carouselWrapper) {
-        carouselWrapper.style.display = q ? "none" : "block";
-      }
-
       renderCourtsList(data.results);
     } catch (err) {
       console.error("search error:", err);
     }
   }
 
-  // Intercept search form submit
   if (searchForm) {
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -352,17 +264,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Also ensure clicking the search button triggers AJAX (some browsers / event ordering)
   if (searchBtn) {
     searchBtn.addEventListener("click", (e) => {
-      // prevent normal submit navigation, then do AJAX search
       e.preventDefault();
       const q = (searchInput.value || "").trim();
       performSearch(q);
     });
   }
 
-  // Support pressing Enter in the input even if form wasn't submitted directly
   if (searchInput) {
     searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -373,89 +282,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Apply filter button
   if (applyFilterBtn) {
     applyFilterBtn.addEventListener("click", (e) => {
       e.preventDefault();
       applyFilter();
     });
   }
-
-  // === Carousel logic (unchanged behavior) ===
-  (function initCarousel() {
-    const carousel = document.getElementById("carousel");
-    if (!carousel) return;
-
-    const items = carousel.querySelectorAll(".carousel-item");
-    const nextBtn = document.getElementById("next");
-    const prevBtn = document.getElementById("prev");
-    const dotsContainer = document.getElementById("carousel-dots");
-    let current = 0;
-
-    if (!items || items.length === 0) return;
-
-    dotsContainer.innerHTML = "";
-    items.forEach((_, i) => {
-      const dot = document.createElement("span");
-      dot.className = "dot" + (i === 0 ? " active" : "");
-      dot.addEventListener("click", () => goToSlide(i));
-      dotsContainer.appendChild(dot);
-    });
-
-    const dots = dotsContainer.querySelectorAll(".dot");
-
-    function showSlide(index) {
-      items.forEach((item, i) => {
-        item.classList.toggle("active", i === index);
-      });
-      dots.forEach((dot, i) => {
-        dot.classList.toggle("active", i === index);
-      });
-    }
-
-    function nextSlide() {
-      current = (current + 1) % items.length;
-      showSlide(current);
-    }
-
-    function prevSlide() {
-      current = (current - 1 + items.length) % items.length;
-      showSlide(current);
-    }
-
-    function goToSlide(index) {
-      current = index;
-      showSlide(current);
-    }
-
-    nextBtn?.addEventListener("click", nextSlide);
-    prevBtn?.addEventListener("click", prevSlide);
-    setInterval(nextSlide, 5000);
-  })();
-
-  // === Optional: expose a small helper so other inline buttons can open modal (kept) ===
-  window.openModalFromData = function (btn) {
-    const name = btn.dataset.name;
-    const image = btn.dataset.image;
-    const location = btn.dataset.location;
-    const price = btn.dataset.price;
-    const rating = btn.dataset.rating;
-
-    const modal = document.getElementById("modal");
-    if (!modal) return;
-    document.getElementById("modal-image").src = image || "";
-    document.getElementById("modal-name").textContent = name || "";
-    document.getElementById("modal-location").textContent = location || "";
-    document.getElementById("modal-price").textContent = price ? `Rp${price}` : "";
-    document.getElementById("modal-rating").textContent = rating ? `⭐ ${rating}` : "";
-    modal.classList.remove("hidden");
-  };
-
-  window.closeModal = function () {
-    const modal = document.getElementById("modal");
-    if (!modal) return;
-    modal.classList.add("hidden");
-  };
 
 });
 </script>
