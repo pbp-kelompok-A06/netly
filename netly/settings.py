@@ -41,6 +41,9 @@ ALLOWED_HOSTS = [
     'https://evan-haryo-netly.pbp.cs.ui.ac.id'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://evan-haryo-netly.pbp.cs.ui.ac.id"
+]
 
 # Application definition
 
