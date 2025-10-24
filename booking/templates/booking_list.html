@@ -109,7 +109,7 @@
             // 1. Lapangan (Field Name)
             let cellLapangan = row.insertCell();
             cellLapangan.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
-            // Use 'lapangan.nama' if 'lapangan.name' is undefined
+            
             cellLapangan.textContent = booking.lapangan.name || booking.lapangan.nama; 
 
             // 2. Booking Date (Created At)
@@ -141,7 +141,7 @@
         showListState('ready');
     }
 
-    // Fetch all bookings
+    
     async function loadBookings() {
         try {
             showListState('loading');

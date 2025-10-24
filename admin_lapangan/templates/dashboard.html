@@ -8,9 +8,17 @@
     <header class="bg-white shadow">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex justify-between items-center">
+<<<<<<< HEAD
+                <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                <div class="flex gap-4">
+                    <a href="{% url 'admin_lapangan:lapangan_create' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        + Lapangan Baru
+                    </a>
+=======
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
                     <p class="text-sm text-gray-600 mt-1">Selamat datang kembali, {{ user.profile.fullname }}!</p>
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
                 </div>
             </div>
         </div>
@@ -22,8 +30,12 @@
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 class="text-xl font-semibold text-gray-900">Lapangan Terbaru</h2>
+<<<<<<< HEAD
+                <a href="{% url 'admin_lapangan:lapangan_list' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+=======
                 <a href="{% url 'admin_lapangan:lapangan_list' %}" 
                    class="text-[#243153] text-sm font-medium hover:underline">
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
                     Lihat Semua →
                 </a>
             </div>
@@ -32,6 +44,18 @@
                     <div class="space-y-4">
                         {% for lapangan in recent_lapangan %}
                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+<<<<<<< HEAD
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-900">{{ lapangan.name }}</h3>
+                                <p class="text-sm text-gray-600">{{ lapangan.location }}</p>
+                                <p class="text-sm font-medium text-blue-600 mt-1">Rp {{ lapangan.price|floatformat:0 }}/jam</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="{% url 'admin_lapangan:lapangan_detail' lapangan.id %}" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    Detail
+                                </a>
+                                <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+=======
                             <div class="flex items-center flex-1">
                                 {% if lapangan.image %}
                                 <img src="{{ lapangan.image }}" 
@@ -57,6 +81,7 @@
                                 </a>
                                 <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" 
                                    class="px-3 py-1 text-sm bg-[#243153] text-[#D7FC64] rounded hover:bg-opacity-90 transition-all">
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
                                     Jadwal
                                 </a>
                             </div>
@@ -64,6 +89,9 @@
                         {% endfor %}
                     </div>
                 {% else %}
+<<<<<<< HEAD
+                    <p class="text-gray-500 text-center py-8">Belum ada lapangan yang terdaftar.</p>
+=======
                     <div class="text-center py-12">
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
@@ -80,6 +108,7 @@
                             </a>
                         </div>
                     </div>
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
                 {% endif %}
             </div>
         </div>
