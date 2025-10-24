@@ -3,27 +3,22 @@
 {% block title %}{{ event.name }}{% endblock %}
 
 {% block content %}
-{% include 'navbar.html' %}
 
-<div class="min-h-screen flex items-center justify-center p-4" style="padding-top: 6rem;">
-
-    
-
-    <div class="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col md:flex-row">
-        <div class="w-full md:w-2/5">
+<div class="flex justify-center p-4" style="padding-top: 6rem;">
+    <div class="max-w-5xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col sm:flex-row">
+        <div class="w-full sm:w-2/5">
             {% if event.image_url %}
-                <img class="h-64 md:h-full w-full object-cover" 
+                <img class="h-64 sm:h-full w-full object-cover"
                     src="{{ event.image_url }}" 
                     alt="event image">
             {% else %}
-                <img class="h-64 md:h-full w-full object-cover" 
+                <img class="h-64 sm:h-full w-full object-cover"
                     src="{% static 'image/default.jpg' %}" 
                     alt="Default event image">
             {% endif %}
         </div>
 
-        <div class="w-full md:w-3/5 p-6 flex flex-col justify-between">
-            
+        <div class="w-full sm:w-3/5 p-6 flex flex-col justify-between">
             <div class="max-w-4xl w-full mb-4">
                 <a href="{% url 'event:show_events' %}" class="text-gray-600 hover:text-[#243153] font-medium transition-colors">
                     ← Back
@@ -37,13 +32,13 @@
                     <div class="flex gap-2 mt-2">
                         <button 
                             onclick="showEditModal('{{ event.id }}')"
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-[#374b82] hover:bg-[#243153] transition-colors">
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-[#374b82] hover:bg-[#243153] transition-colors">
                             Edit
                         </button>
 
                         <button 
                             onclick="showDeleteModal('{{ event.id }}')"
-                            class="inline-flex items-center px-3 py-1.5 border border-red-600 text-xs font-medium rounded shadow-sm text-red-600 hover:bg-red-600 hover:text-white transition-colors">
+                            class="inline-flex items-center px-3 py-1.5 border border-red-600 text-xs font-medium rounded-full shadow-sm text-red-600 hover:bg-red-600 hover:text-white transition-colors">
                             Delete
                         </button>
                     </div>
@@ -72,7 +67,7 @@
                     {% if is_participant %}
                         <button id="join-leave-btn" 
                                 data-url="{% url 'event:join_event_ajax' event.pk %}"
-                                class="block w-full py-3 px-6 rounded-md text-white bg-red-600 hover:bg-red-700 font-semibold">
+                                class="block w-full py-3 px-6 rounded-full text-white bg-red-600 hover:bg-red-700 font-semibold">
                             Cancel Join
                         </button>
                     {% else %}
@@ -83,7 +78,7 @@
                         {% else %}
                             <button id="join-leave-btn" 
                                     data-url="{% url 'event:join_event_ajax' event.pk %}"
-                                    class="block w-full py-3 px-6 rounded-md text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 font-semibold">
+                                    class="block w-full py-3 px-6 rounded-full text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 font-semibold">
                                 Join
                             </button>
                         {% endif %}

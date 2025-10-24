@@ -127,7 +127,20 @@ def edit_event_ajax(request, pk):
         
         if form.is_valid():
             form.save()
-            return JsonResponse({'status': 'success', 'message': 'Event berhasil diperbarui.'})
+            updated_event_data = { 
+                'id': event.id,
+                'name': event.name,
+                'start_date': event.start_date.isoformat(),
+                'end_date': event.end_date.isoformat(),    
+                'location': event.location,
+                'image_url': event.image_url,
+                'max_participants': event.max_participants,
+            }
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Event berhasil diperbarui.',
+                'updated_event': updated_event_data         # kirim updated data supaya auto update (no refresh)
+            })
         else:
             return JsonResponse({'status': 'fail', 'errors': form.errors}, status=400)
             
