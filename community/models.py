@@ -28,17 +28,3 @@ class Forum_Post(models.Model):
 
     def __str__(self):
         return self.header
-    
-
-class Forum_Comment(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="forum_comment_user")
-    forum_id = models.ForeignKey(Forum, on_delete=models.CASCADE)
-    forum_post_id = models.ForeignKey(Forum_Post, on_delete=models.CASCADE)
-    comment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True) 
-
-    def __str__(self):
-        return f"Comment.{self.user_id}"
-   

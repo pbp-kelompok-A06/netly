@@ -2,7 +2,7 @@ function showToast(title, message, type = 'normal', duration = 3000) {
     const toastComponent = document.getElementById('toast-component');
     const toastTitle = document.getElementById('toast-title');
     const toastMessage = document.getElementById('toast-message');
-    
+    const toastIcon = document.getElementById('toast-icon')
     if (!toastComponent) return;
 
     // Remove all type classes first
