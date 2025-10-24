@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from community.models import Forum, Forum_Comment, Forum_Post
+from community.models import Forum, Forum_Post
 
 class ForumForm(ModelForm):
     class Meta:
@@ -15,11 +15,4 @@ class ForumPostForm(ModelForm):
         fields = [
             "header",
             "content"
-        ]
-
-class ForumCommentForm(ModelForm):
-    class Meta:
-        model = Forum_Comment
-        fields = [
-            "comment"
         ]
