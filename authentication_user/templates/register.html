@@ -156,7 +156,7 @@
 
             if (responseData.status === 'success') {
               setTimeout(() => {
-                  window.location.href = "{% url 'homepage' %}";
+                  window.location.href = "{% url 'homepage:homepage' %}";
               }, 1500);
             } else {
                 errorDiv.textContent = responseData.message;
