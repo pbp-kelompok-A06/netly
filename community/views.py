@@ -2,8 +2,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from community.models import Forum, Forum_Post
 from community.forms import ForumForm, ForumPostForm
 from django.http import JsonResponse, HttpResponse
+from django.contrib.auth.decorators import login_required
 
 # fetch forum (done)
+@login_required(login_url="authentication_user:login")
 def fetch_forum(request):
     forum_list = Forum.objects.all().prefetch_related('member')
 
@@ -16,6 +18,7 @@ def fetch_forum(request):
     return render(request, "forum.html", context)
 
 # fetch forum by id (done)
+@login_required(login_url="authentication_user:login")
 def fetch_forum_id(request, id_forum):
     forum_list = Forum.objects.filter(pk=id_forum, creator_id=request.user.profile).values('id', 'title', 'description')
     if forum_list:
@@ -26,13 +29,14 @@ def fetch_forum_id(request, id_forum):
         })
     else:
         return JsonResponse({
-            "success": True,
+            "success": False,
             "msg": "Failed to fetch",
             "data": []
         })
 
 
 # fetch post by id forum (done)
+@login_required(login_url="authentication_user:login")
 def fetch_post_id(request, id_forum):
     forum_data = get_object_or_404(Forum, id=id_forum)
     post_list = Forum_Post.objects.filter(forum_id=forum_data).select_related('user_id').order_by('-created_at')
@@ -81,6 +85,7 @@ def fetch_post_id(request, id_forum):
 
 
 # create forum (done)
+@login_required(login_url="authentication_user:login")
 def create_forum(request):
     form = ForumForm()
     if request.method == "POST":
@@ -103,6 +108,7 @@ def create_forum(request):
                 })
 
 # join forum (done)
+@login_required(login_url="authentication_user:login")
 def join_forum(request):
     if request.method == "POST":
         forum = get_object_or_404(Forum, pk = request.POST.get('id_forum'))
@@ -118,6 +124,7 @@ def join_forum(request):
                 "msg": "You are already joined."
             })
 # unjoin forum (done)
+@login_required(login_url="authentication_user:login")
 def unjoin_forum(request):
     if request.method == "POST":
         forum = get_object_or_404(Forum, pk = request.POST.get('id_forum'))
@@ -140,6 +147,7 @@ def unjoin_forum(request):
 
 
 # create post (done)
+@login_required(login_url="authentication_user:login")
 def create_post(request, id_forum):
     form = ForumPostForm()
     if request.method == "POST":
@@ -164,6 +172,7 @@ def create_post(request, id_forum):
 
 
 # update forum by id creator (done)
+@login_required(login_url="authentication_user:login")
 def update_forum(request, id_forum):
     forum_data = get_object_or_404(Forum, id=id_forum, creator_id=request.user.profile)
     if request.method == "POST":
@@ -182,12 +191,14 @@ def update_forum(request, id_forum):
     
 
 # delete forum by id creator (done)
+@login_required(login_url="authentication_user:login")
 def delete_forum(request, id_forum):
     forum_data = get_object_or_404(Forum, creator_id=request.user.profile, pk=id_forum)
     forum_data.delete()
     return redirect("community:forum")
 
 # delete post by id user and id_post (done)
+@login_required(login_url="authentication_user:login")
 def delete_forum_post(request, id_post):
     forum_post_data = get_object_or_404(Forum_Post, id=id_post, user_id=request.user.profile)
     if request.method == "POST":
