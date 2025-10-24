@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 from authentication_user.models import UserProfile
 import uuid
 import os
@@ -30,7 +29,7 @@ class Lapangan(models.Model):
 class JadwalLapangan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     lapangan = models.ForeignKey(Lapangan, on_delete=models.CASCADE, related_name='jadwal')
-    tanggal = models.DateField()                                                                                                                                                                
+    tanggal = models.DateField()
     start_main = models.TimeField()
     end_main = models.TimeField()
     is_available = models.BooleanField(default=True)

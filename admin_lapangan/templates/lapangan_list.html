@@ -5,9 +5,6 @@
 {% block content %}
 <div class="bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-<<<<<<< HEAD
-        <div class="flex justify-between items-center mb-6">
-=======
         <!-- Back Button -->
         <div class="mb-6">
             <a href="{% url 'admin_lapangan:dashboard' %}" 
@@ -21,7 +18,6 @@
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Kelola Lapangan</h1>
                 <p class="text-gray-600 mt-1">Atur dan kelola lapangan badminton Anda</p>
@@ -37,71 +33,6 @@
             </button>
         </div>
 
-<<<<<<< HEAD
-        <div id="lapangan-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% if lapangans %}
-                {% for lapangan in lapangans %}
-                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                    {% if lapangan.image %}
-                        <img class="h-48 w-full object-cover" src="{{ lapangan.image.url }}" alt="{{ lapangan.name }}">
-                    {% else %}
-                        <div class="h-48 w-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
-                            <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ lapangan.name }}</h3>
-                        
-                        <div class="flex items-start text-sm text-gray-600 mb-2">
-                            <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            <span>{{ lapangan.location }}</span>
-                        </div>
-                        
-                        <div class="flex items-center text-sm text-gray-600 mb-4">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span class="font-semibold text-lg">Rp {{ lapangan.price|floatformat:0 }}/jam</span>
-                        </div>
-                        
-                        <div class="flex flex-col space-y-2 pt-4 border-t border-gray-100">
-                            <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" 
-                               class="w-full text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
-                                Kelola Jadwal
-                            </a>
-                            
-                            <div class="flex space-x-2">
-                                <button 
-                                    onclick="showEditModal('{{ lapangan.id }}')" 
-                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
-                                    Edit
-                                </button>
-                                <button 
-                                    onclick="showDeleteModal('{{ lapangan.id }}')" 
-                                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors">
-                                    Hapus
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="col-span-full text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada lapangan</h3>
-                    <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan lapangan pertama Anda.</p>
-                </div>
-            {% endif %}
-=======
         <!-- Search Bar -->
         <div class="mb-6">
             <form id="searchForm" class="flex gap-2">
@@ -142,18 +73,12 @@
                 </svg>
                 Tambah Lapangan
             </button>
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
         </div>
     </div>
 </div>
 
-<<<<<<< HEAD
-{% include 'admin_lapangan/lapangan_modal.html' %}
-{% include 'admin_lapangan/delete_modal.html' %}
-=======
 {% include 'lapangan_modal.html' %}
 {% include 'delete_modal.html' %}
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 {% endblock content %}
 
 {% block javascript %}
@@ -189,10 +114,7 @@
     const editUrlTemplate = "{% url 'admin_lapangan:edit_lapangan_ajax' '00000000-0000-0000-0000-000000000000' %}";
     const getJsonUrlTemplate = "{% url 'admin_lapangan:get_lapangan_json' '00000000-0000-0000-0000-000000000000' %}";
     const deleteUrlTemplate = "{% url 'admin_lapangan:delete_lapangan_ajax' '00000000-0000-0000-0000-000000000000' %}";
-<<<<<<< HEAD
-=======
     const fetchListUrl = "{% url 'admin_lapangan:fetch_lapangan_list_ajax' %}";
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 
     function showLapanganModal() {
         lapanganModal.classList.remove('hidden');
@@ -240,10 +162,7 @@
             document.getElementById('location').value = lapangan.location;
             document.getElementById('description').value = lapangan.description;
             document.getElementById('price').value = lapangan.price;
-<<<<<<< HEAD
-=======
             document.getElementById('image').value = lapangan.image || '';
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 
             modalTitle.textContent = 'Edit Lapangan';
             modalSubtitle.textContent = 'Perbarui data lapangan Anda';
@@ -259,8 +178,6 @@
         }
     }
 
-<<<<<<< HEAD
-=======
     // Fungsi untuk render lapangan cards
     function renderLapanganCards(lapangans) {
         const container = document.getElementById('lapangan-list-container');
@@ -380,7 +297,6 @@
     });
 
     // Form submit handler
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
     lapanganForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -397,20 +313,12 @@
             });
             
             const data = await response.json();
-<<<<<<< HEAD
-
-            if (data.status === 'success') {
-                hideLapanganModal();
-                showToast('Berhasil!', data.message, 'success');
-                setTimeout(() => window.location.reload(), 1500);
-=======
             console.log(data)
             if (data.status === 'success') {
                 hideLapanganModal();
                 showToast('Berhasil!', data.message, 'success');
                 // Refresh list tanpa reload
                 refreshLapanganList();
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
             } else {
                 const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
                 showToast('Error', errorMsg, 'error');
@@ -421,10 +329,7 @@
         }
     });
 
-<<<<<<< HEAD
-=======
     // Delete handler
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
     confirmDeleteButton.addEventListener('click', async () => {
         if (!lapanganIdToDelete) return;
 
@@ -442,15 +347,10 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-<<<<<<< HEAD
-                showToast('Berhasil!', result.message, 'success');
-                setTimeout(() => window.location.reload(), 1500);
-=======
                 hideDeleteModal();
                 showToast('Berhasil!', result.message, 'success');
                 // Refresh list tanpa reload
                 await refreshLapanganList();
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
             } else {
                 showToast('Error', result.message || 'Gagal menghapus lapangan.', 'error');
             }
@@ -461,13 +361,10 @@
             hideDeleteModal();
         }
     });
-<<<<<<< HEAD
-=======
 
     // Load initial data
     document.addEventListener('DOMContentLoaded', function() {
         refreshLapanganList();
     });
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 </script>
 {% endblock javascript %}
