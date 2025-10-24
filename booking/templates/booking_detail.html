@@ -106,6 +106,7 @@ function showState(state) {
 
 // Render booking content
 function renderBooking(bookingData) {
+    console.log('masuk renderBooking dengan data:');
     // Set title
     articleTitle.textContent = bookingData.lapangan.name;
     document.title = `${bookingData.lapangan.name} - Booking`;
