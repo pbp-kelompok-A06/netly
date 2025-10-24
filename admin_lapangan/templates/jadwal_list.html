@@ -54,6 +54,7 @@
                         </th>
                     </tr>
                 </thead>
+<<<<<<< HEAD
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% if jadwals %}
                         {% for jadwal in jadwals %}
@@ -105,12 +106,31 @@
                     {% endif %}
                 </tbody>
             </table>
+=======
+                <tbody id="jadwal-table-body" class="bg-white divide-y divide-gray-200">
+                </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div id="jadwal-empty-state" class="hidden text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada jadwal</h3>
+                <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan jadwal ketersediaan pertama.</p>
+            </div>
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
         </div>
     </div>
 </div>
 
+<<<<<<< HEAD
 {% include 'admin_lapangan/jadwal_modal.html' %}
 {% include 'admin_lapangan/delete_modal.html' %}
+=======
+{% include 'jadwal_modal.html' %}
+{% include 'delete_modal.html' %}
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 {% endblock content %}
 
 {% block javascript %}
@@ -147,6 +167,10 @@
     const editUrlTemplate = "{% url 'admin_lapangan:edit_jadwal_ajax' '00000000-0000-0000-0000-000000000000' %}";
     const getJsonUrlTemplate = "{% url 'admin_lapangan:get_jadwal_json' '00000000-0000-0000-0000-000000000000' %}";
     const deleteUrlTemplate = "{% url 'admin_lapangan:delete_jadwal_ajax' '00000000-0000-0000-0000-000000000000' %}";
+<<<<<<< HEAD
+=======
+    const fetchListUrl = "{% url 'admin_lapangan:fetch_jadwal_list_ajax' lapangan.id %}";
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 
     function showJadwalModal() {
         jadwalModal.classList.remove('hidden');
@@ -209,6 +233,89 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+    // Fungsi untuk format tanggal
+    function formatDate(dateString) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const date = new Date(dateString);
+        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    // Fungsi untuk render jadwal table
+    function renderJadwalTable(jadwals) {
+        const tbody = document.getElementById('jadwal-table-body');
+        const emptyState = document.getElementById('jadwal-empty-state');
+
+        tbody.innerHTML = '';
+
+        if (!jadwals || jadwals.length === 0) {
+            tbody.closest('table').classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        tbody.closest('table').classList.remove('hidden');
+        emptyState.classList.add('hidden');
+
+        jadwals.forEach(jadwal => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            const statusBadge = jadwal.is_available
+                ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Tersedia</span>'
+                : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Tidak Tersedia</span>';
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${formatDate(jadwal.tanggal)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${jadwal.start_main}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${jadwal.end_main}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${statusBadge}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button 
+                        onclick="showEditJadwalModal('${jadwal.id}')" 
+                        class="text-blue-600 hover:text-blue-900 mr-3">
+                        Edit
+                    </button>
+                    <button 
+                        onclick="showDeleteJadwalModal('${jadwal.id}')" 
+                        class="text-red-600 hover:text-red-900">
+                        Hapus
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    // Fungsi untuk fetch dan refresh list
+    async function refreshJadwalList() {
+        try {
+            const response = await fetch(fetchListUrl);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                renderJadwalTable(data.data);
+            } else {
+                showToast('Error', 'Gagal memuat data', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', 'Terjadi kesalahan saat memuat data', 'error');
+        }
+    }
+
+    // Form submit handler
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
     jadwalForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -229,7 +336,12 @@
             if (data.status === 'success') {
                 hideJadwalModal();
                 showToast('Berhasil!', data.message, 'success');
+<<<<<<< HEAD
                 setTimeout(() => window.location.reload(), 1500);
+=======
+                // Refresh list tanpa reload
+                await refreshJadwalList();
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
             } else {
                 const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
                 showToast('Error', errorMsg, 'error');
@@ -240,6 +352,10 @@
         }
     });
 
+<<<<<<< HEAD
+=======
+    // Delete handler
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
     confirmDeleteButton.addEventListener('click', async () => {
         if (!jadwalIdToDelete) return;
 
@@ -257,8 +373,15 @@
             const result = await response.json();
 
             if (result.status === 'success') {
+<<<<<<< HEAD
                 showToast('Berhasil!', result.message, 'success');
                 setTimeout(() => window.location.reload(), 1500);
+=======
+                hideDeleteModal();
+                showToast('Berhasil!', result.message, 'success');
+                // Refresh list tanpa reload
+                await refreshJadwalList();
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
             } else {
                 showToast('Error', result.message || 'Gagal menghapus jadwal.', 'error');
             }
@@ -269,5 +392,13 @@
             hideDeleteModal();
         }
     });
+<<<<<<< HEAD
+=======
+
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshJadwalList();
+    });
+>>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 </script>
 {% endblock javascript %}

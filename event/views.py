@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import date, timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -16,9 +16,9 @@ def is_admin(user):
 # untuk admin authentication -> untuk function yang hanya bisa diakses oleh admin
 def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if not request.user.profile.is_authenticated:
+        if not request.user.is_authenticated:
             return redirect('authentication_user:login')
-        if not is_admin(request.user.profile):
+        if not is_admin(request.user):
             return HttpResponseForbidden("You don't have permission to access this page.")
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -31,8 +31,18 @@ def get_event_json(request, pk):
         if request.user.profile != event.admin:
             return JsonResponse({'status': 'fail', 'message': 'Bukan admin'}, status=403)
         
-        # ubah model object langsung menjadi dictionary
-        event_data = model_to_dict(event)
+        # ubah tanggal jadi string with .isoformat()
+        event_data = {
+            'id': event.id,
+            'name': event.name,
+            'description': event.description,
+            'start_date': event.start_date.isoformat(), 
+            'end_date': event.end_date.isoformat(),    
+            'location': event.location,
+            'image_url': event.image_url,
+            'max_participants': event.max_participants,
+        }
+        
         # jadikan datanya sebagai response
         return JsonResponse({'status': 'success', 'data': event_data})
     except Event.DoesNotExist:
@@ -40,9 +50,25 @@ def get_event_json(request, pk):
     
 # show semua event yang ada
 def show_events(request):
-    events = Event.objects.all().order_by('start_date')     # sort berdasarkan event
+    # ambil parameter sort dari URL, defaultnya ascending
+    sort_order = request.GET.get('sort', 'asc')
+
+    # tentukan urutan based on parameter sort
+    if sort_order == 'desc':
+        # '-start_date' berarti descending (terbaru/latest)
+        order_by_field = '-start_date'
+        sort_label = 'Latest'
+    else:
+        # 'start_date' berarti ascending (terlama/earliest)
+        order_by_field = 'start_date'
+        sort_label = 'Earliest'
+
+    # ambilevent dari database dengan urutan yang benar
+    events = Event.objects.all().order_by(order_by_field)
+    
     context = {
-        'events': events
+        'events': events,
+        'current_sort_label': sort_label        
     }
     return render(request, "show_event.html", context)
 
@@ -52,12 +78,11 @@ def event_detail(request, pk):
     
     # cek dulu user sudah join event ini atau belum
     is_participant = False
-    if request.user.profile.is_authenticated:
+    if request.user.is_authenticated:
         is_participant = event.participant.filter(id=request.user.profile.id).exists()
 
-    now = timezone.now()
     # cek apakah event sudah lewat atau belum
-    is_event_active = event.start_date > now
+    is_event_active = event.start_date > date.today()
     # cek apakah kuota sudah penuh
     is_event_full = event.participant.count() >= event.max_participants
 
@@ -102,7 +127,20 @@ def edit_event_ajax(request, pk):
         
         if form.is_valid():
             form.save()
-            return JsonResponse({'status': 'success', 'message': 'Event berhasil diperbarui.'})
+            updated_event_data = { 
+                'id': event.id,
+                'name': event.name,
+                'start_date': event.start_date.isoformat(),
+                'end_date': event.end_date.isoformat(),    
+                'location': event.location,
+                'image_url': event.image_url,
+                'max_participants': event.max_participants,
+            }
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Event berhasil diperbarui.',
+                'updated_event': updated_event_data         # kirim updated data supaya auto update (no refresh)
+            })
         else:
             return JsonResponse({'status': 'fail', 'errors': form.errors}, status=400)
             

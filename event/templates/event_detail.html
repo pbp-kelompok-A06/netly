@@ -1,42 +1,49 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block title %}{{ event.name }}{% endblock %}
 
 {% block content %}
-{% include 'navbar.html' %}
 
-<div class="min-h-screen flex items-center justify-center p-4" style="padding-top: 6rem;">
-
-    <div class="max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col md:flex-row">
-
-        <div class="w-full md:w-2/5">
-            <img class="h-64 md:h-full w-full object-cover" 
-                 src="{{ event.image_url|default:'https://via.placeholder.com/400x500?text=Event+Image' }}" 
-                 alt="event image">
+<div class="flex justify-center p-4" style="padding-top: 6rem;">
+    <div class="max-w-5xl w-full bg-white rounded-lg shadow-xl overflow-hidden flex flex-col sm:flex-row">
+        <div class="w-full sm:w-2/5">
+            {% if event.image_url %}
+                <img class="h-64 sm:h-full w-full object-cover"
+                    src="{{ event.image_url }}" 
+                    alt="event image">
+            {% else %}
+                <img class="h-64 sm:h-full w-full object-cover"
+                    src="{% static 'image/default.jpg' %}" 
+                    alt="Default event image">
+            {% endif %}
         </div>
 
-        <div class="w-full md:w-3/5 p-6 flex flex-col justify-between">
-            
+        <div class="w-full sm:w-3/5 p-6 flex flex-col justify-between">
+            <div class="max-w-4xl w-full mb-4">
+                <a href="{% url 'event:show_events' %}" class="text-gray-600 hover:text-[#243153] font-medium transition-colors">
+                    ← Back
+                </a>
+            </div>
             <div>
-                {% if user.is_authenticated and user.profile.role == 'admin' %}
+                  {% if user.is_authenticated and user.profile.role == 'admin' %}   
                 <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md mb-4" role="showToast">
-                    <p class="font-bold">admin panel</p>
+                    <p class="font-bold">You're an admin</p>
                     <p class="text-sm">You can edit or delete this event.</p>
                     <div class="flex gap-2 mt-2">
                         <button 
-                            onclick=`showEditModal("{% url "event:get_event_json" event.pk %}", "{% url "event:edit_event_ajax" event.pk %}")` 
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                            edit event
+                            onclick="showEditModal('{{ event.id }}')"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-[#374b82] hover:bg-[#243153] transition-colors">
+                            Edit
                         </button>
 
                         <button 
-                            onclick=`showDeleteModal(`{% url 'event:delete_event_ajax' event.pk %}')`
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700">
-                            delete event
+                            onclick="showDeleteModal('{{ event.id }}')"
+                            class="inline-flex items-center px-3 py-1.5 border border-red-600 text-xs font-medium rounded-full shadow-sm text-red-600 hover:bg-red-600 hover:text-white transition-colors">
+                            Delete
                         </button>
                     </div>
                 </div>
-                {% endif %}
+                  {% endif %}   
 
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ event.name }}</h1>
                 <div class="text-sm text-gray-600 space-y-1">
@@ -47,7 +54,7 @@
                     </p>
                 </div>
                 <hr class="my-4">
-                <h4 class="text-lg font-semibold text-gray-800 mb-2">description:</h4>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Description:</h4>
                 <p class="text-gray-600 text-base leading-relaxed">
                     {{ event.description|linebreaksbr }}
                 </p>
@@ -56,39 +63,38 @@
             <div id="join-container" class="mt-8 text-right">
                 {% csrf_token %} 
                 
-                {% if user.is_authenticated %}
+                {% if is_event_active %}
                     {% if is_participant %}
-                        {% if is_event_active %}
-                            <button id="join-leave-btn" 
-                                    data-url="{% url 'event:join_event_ajax' event.pk %}"
-                                    class="... py-3 px-6 ... text-white bg-red-600 hover:bg-red-700">
-                                Cancel Join
+                        <button id="join-leave-btn" 
+                                data-url="{% url 'event:join_event_ajax' event.pk %}"
+                                class="block w-full py-3 px-6 rounded-full text-white bg-red-600 hover:bg-red-700 font-semibold">
+                            Cancel Join
+                        </button>
+                    {% else %}
+                        {% if is_event_full %}
+                            <button class="disabled_button" disabled>
+                                Event is Full
                             </button>
                         {% else %}
-                            <span class="text-gray-500 font-medium">You attended this event.</span>
-                        {% endif %}
-                    {% else %}
-                        {% if not is_event_active %}
-                            <button class="disabled_button" disabled>Event has passed</button>
-                        {% elif is_event_full %}
-                            <button class="disabled_button" disabled>Event is full</button>
-                        {% else %}
                             <button id="join-leave-btn" 
                                     data-url="{% url 'event:join_event_ajax' event.pk %}"
-                                    class="... py-3 px-6 ... text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                                    class="block w-full py-3 px-6 rounded-full text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 font-semibold">
                                 Join
                             </button>
                         {% endif %}
                     {% endif %}
                 {% else %}
-                    <p class="text-gray-500">please 
-                        <a href="{% url 'auth:login' %}" class="text-indigo-600 font-medium hover:underline">login</a> 
-                        to join this event.
-                    </p>
+                    <button class="disabled_button" disabled>
+                        Event Has Ended
+                    </button>
                 {% endif %}
             </div>
-        </div> </div> </div> {% include 'event_modal.html' %}
+        </div> 
+    </div> 
+        
+{% include 'event_modal.html' %}
 {% include 'event_delete_modal.html' %}
+{% include 'toast.html' %}
 
 <style>
     /* disabled button ketika event sudah lewat atau participant sudah full */
@@ -109,6 +115,7 @@
 
 
 {% block javascript %}
+<script src="{% static 'js/toast.js' %}"></script>
 <script>
     function getCookie(name) {
         let cookieValue = null;
@@ -126,6 +133,10 @@
     }
     const csrftoken = getCookie('csrftoken');
     
+    const editUrlTemplate = "{% url 'event:edit_event_ajax' '00000000-0000-0000-0000-000000000000' %}";
+    const getJsonUrlTemplate = "{% url 'event:get_event_json' '00000000-0000-0000-0000-000000000000' %}";
+    const deleteUrlTemplate = "{% url 'event:delete_event_ajax' '00000000-0000-0000-0000-000000000000' %}";
+
     const eventModal = document.getElementById('eventModal');
     const eventModalContent = document.getElementById('eventModalContent');
     const eventForm = document.getElementById('eventForm');
@@ -144,9 +155,13 @@
         setTimeout(() => eventModal.classList.add('hidden'), 150);
     }
 
-    async function showEditModal(get_url, post_url) {
-        try {
-            const response = await fetch(get_url, { headers: { "X-CSRFToken": csrftoken } });
+    async function showEditModal(eventId) { 
+    // untuk url berdasarkan event id
+    const get_url = getJsonUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventId);
+    const post_url = editUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventId);
+
+    try {
+        const response = await fetch(get_url, { headers: { "X-CSRFToken": csrftoken } });
             const res = await response.json();
             if (res.status !== 'success') {
                 showToast('error', res.message, 'error'); 
@@ -164,9 +179,9 @@
             document.getElementById('image_url').value = data.image_url;
             eventIdInput.value = data.id; 
             
-            eventModalTitle.textContent = 'edit event';
-            eventModalSubtitle.textContent = 'update the event details';
-            eventSubmitButton.textContent = 'save changes';
+            eventModalTitle.textContent = 'Edit event';
+            eventModalSubtitle.textContent = 'Update the event details';
+            eventSubmitButton.textContent = 'Save changes';
             eventForm.setAttribute('data-action-url', post_url); 
             
             showEventModal();
@@ -204,14 +219,13 @@
             showToast('error', 'an unexpected error occurred.', 'error');
         }
     });
-
     
     const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteButton = document.getElementById('confirmDeleteButton');
     let globalDeleteUrl = ''; 
 
-    function showDeleteModal(url) {
-        globalDeleteUrl = url; 
+    function showDeleteModal(eventId) {
+        globalDeleteUrl = deleteUrlTemplate.replace('00000000-0000-0000-0000-000000000000', eventId); 
         deleteModal.classList.remove('hidden');
     }
 
@@ -280,16 +294,16 @@
                                 {% csrf_token %}
                                 <p class="text-green-600 font-semibold mb-2">You are registered.</p>
                                 <button id="join-leave-btn" data-url="${ajaxUrl}" 
-                                        class="... py-3 px-6 ... bg-red-600 ...">
-                                    cancel join
+                                        class="block w-full py-3 px-6 rounded-md text-white bg-red-600 hover:bg-red-700 font-semibold">
+                                    Cancel Join
                                 </button>`;
                         } else {
                             joinContainer.innerHTML = `
-                                {% csrf_token %}
-                                <button id="join-leave-btn" data-url="${ajaxUrl}" 
-                                        class="... py-3 px-6 ... bg-[#243153] text-[#D7FC64] ...">
-                                    join
-                                </button>`;
+                        {% csrf_token %}
+                        <button id="join-leave-btn" data-url="${ajaxUrl}" 
+                                class="block w-full py-3 px-6 rounded-md text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 font-semibold">
+                            Join
+                        </button>`;
                         }
                     } else {
                         showToast('failed!', data.message, 'error');
