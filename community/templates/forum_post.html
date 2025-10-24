@@ -8,7 +8,8 @@ Forum Post
 
 <div class="min-h-screen py-6">
     <div class="max-w-2xl mx-auto px-4">
-        
+
+        <!-- Action Buttons -->
         <div class="flex items-center justify-between mb-6">
 
             <a 
@@ -30,7 +31,7 @@ Forum Post
                 <span class="font-medium">Refresh</span>
             </button>
         </div>
-
+        <!-- Form Input -->
         <div class="border-b border-gray-800 pb-6 mb-6">
             <div class="flex items-start gap-3">
                 <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&size=40&background=random" 
@@ -64,11 +65,21 @@ Forum Post
             </div>
         </div>
 
+        <!-- Header Forum Threads -->
+        <h2 class="text-2xl font-bold mb-6">Threads Feed — {{ forum_name }} —</h2>
 
-        <h2 class="text-2xl font-bold mb-6">Threads Feed</h2>
-
+        <!-- Posts Forum Threads -->
         <div class="space-y-6" id="threadsList">
             
+        </div>
+
+        <!-- Empty State -->
+        <div class="hidden col-span-full text-center py-20" id="emptyState">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No discussions yet</h3>
+            <p class="text-gray-600 mb-4">Be the first to create a thread discussions</p>
         </div>
 
     </div>
@@ -78,93 +89,141 @@ Forum Post
 
 {% block javascript %}
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const textarea = document.querySelector('textarea[name="content"]')
-        if (textarea) {
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto'
-                this.style.height = (this.scrollHeight) + 'px'
+document.addEventListener("DOMContentLoaded", () => {
+    // elements
+    const textarea = document.querySelector('textarea[name="content"]')
+    const threadsList = document.getElementById('threadsList')
+    const emptyState = document.getElementById('emptyState')
+    const refreshBtn = document.getElementById('refreshBtn')
+    const postForm = document.getElementById('postForm')
+
+    // adaptive textarea
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto'
+            this.style.height = (this.scrollHeight) + 'px'
+        })
+    }
+
+    // helper to toggle empty state visibility
+    function updateEmptyState(hasData) {
+        if (hasData) {
+            emptyState.classList.add('hidden')
+        } else {
+            emptyState.classList.remove('hidden')
+        }
+    }
+
+    // fetchPost 
+    async function fetchPost(){
+        try {
+            const url = "{% url 'community:fetch_post_id' id_forum %}"
+            const response = await fetch(url, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
             })
-        }
-        const refreshBtn = document.getElementById("refreshBtn")
-        const postForm = document.getElementById("postForm")
-        const threadsList = document.getElementById("threadsList")
-        async function fetchPost(e){
-            try{
-                const url = "{% url 'community:fetch_post_id' id_forum %}"
-                const response = await fetch(url, {
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                threadsList.innerHTML = ''
-                const data = await response.json()
-                if(data.success){
-                    data.data.forEach(post => {
-                        threadsList.insertAdjacentHTML('beforeend',
-                            `
-                            <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
-                                <img src="https://ui-avatars.com/api/?name=${ post.user.username }&size=40&background=random" 
-                                    class="w-10 h-10 rounded-full flex-shrink-0" />
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="font-semibold">${ post.user.username }</span>
-                                        <span class="text-gray-500 text-sm">${ new Date(post.created_at).toLocaleString() }</span>
-                                    </div>
-                                    <h3 class="text-lg font-bold mb-2">${ post.header }</h3>
-                                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">${ post.content }</p>
+
+            threadsList.innerHTML = ''
+
+            const data = await response.json()
+
+            if (data.success) {
+                updateEmptyState(data.data.length > 0)
+
+                data.data.forEach(post => {
+                    const deleteBtnHtml = (post.user.id === data.current_user_id) ? 
+                        `<button data-post-id="${post.id}" class="deleteBtn text-red-600 hover:text-red-800 font-medium text-sm transition">Delete</button>` : ''
+
+                    const item = `
+                        <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
+                            <img src="https://ui-avatars.com/api/?name=${post.user.username}&size=40&background=random" class="w-10 h-10 rounded-full flex-shrink-0" />
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-semibold">${post.user.username}</span>
+                                    <span class="text-gray-500 text-sm">${new Date(post.created_at).toLocaleString()}</span>
                                 </div>
+                                <h3 class="text-lg font-bold mb-2">${post.header}</h3>
+                                <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">${post.content}</p>
                             </div>
-                            `
-                        )
-                    })
-                }else{
-                    console.log(data.msg)
-                }
-
-            }catch(err){
-                console.log(err)
-            }
-            
-
-        }
-
-        async function createPost(e) {
-            e.preventDefault()
-            const formData = new FormData()
-            formData.append('header', document.getElementById("header").value)
-            formData.append('content', document.getElementById("content").value)
-            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
-            
-            try{
-                const url = "{% url 'community:create_post' id_forum %}"
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                    },
-                    body: formData
+                            ${deleteBtnHtml}
+                        </div>
+                    `
+                    threadsList.insertAdjacentHTML('beforeend', item)
                 })
 
-                const data = await response.json()
-                if(data.success){
-                    postForm.reset()
-                    fetchPost()
-                }
+                // attach delete handlers after rendering
+                document.querySelectorAll('.deleteBtn').forEach(btn => {
+                    btn.addEventListener('click', async function(e) {
+                        e.preventDefault()
+                        const postId = this.dataset.postId
+                        const deleteUrl = `{% url 'community:delete_forum_post' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', postId)
+                        try {
+                            const response = await fetch(deleteUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                },
+                            })
 
-            }catch(err){
-                console.log(err)
+                            const data = await response.json()
+
+                            if (data.success) {
+                                showToast('Success!', data.msg, 'success')
+                                await fetchPost() 
+                            } else {
+                                showToast('Error!', data.msg, 'error')
+                            }
+                        } catch (err) {
+                            console.error(err)
+                            showToast('Error!', 'Failed to delete post.', 'error')
+                        }
+                    })
+                })
+
+            } else {
+                updateEmptyState(false)
             }
-            
+        } catch (err) {
+            console.error(err)
+            updateEmptyState(false)
         }
-        fetchPost()
-        refreshBtn.addEventListener("click", fetchPost)
-        postForm.addEventListener("submit", createPost)
+    }
 
+    // createPost
+    async function createPost(e) {
+        e.preventDefault()
+        const formData = new FormData()
+        formData.append('header', document.getElementById("header").value)
+        formData.append('content', document.getElementById("content").value)
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value)
 
-    })
-    
+        try {
+            const url = "{% url 'community:create_post' id_forum %}"
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                body: formData,
+                credentials: 'same-origin'
+            })
 
-    
+            const data = await response.json()
+            if (data.success) {
+                showToast('Success!', data.msg, 'success')
+                postForm.reset()
+                await fetchPost()
+            } else {
+                showToast('Error!', data.msg, 'error')
+            }
+        } catch (err) {
+            console.error(err)
+            showToast('Error!', 'An error occurred while creating the post.', 'error')
+        }
+    }
+
+    // load post and add listeners
+    fetchPost()
+    refreshBtn.addEventListener("click", fetchPost)
+    postForm.addEventListener("submit", createPost)
+})
 </script>
 {% endblock %}

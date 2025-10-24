@@ -75,10 +75,11 @@
                     document.querySelector('#forumModalEdit #description').value = data.data[0].description
                     openModalFuncEdit()
                 } else {
-                    console.log(data.msg)
+                    showToast('Error!', data.msg, 'error')
                 }
             } catch(err) {
-                console.log(err)
+                console.error(err)
+                showToast('Error!', 'Failed to fetch forum data.', 'error')
             }
         }
 
@@ -91,7 +92,8 @@
             formData.append('csrfmiddlewaretoken', document.querySelector('#forumModalEdit [name=csrfmiddlewaretoken]').value)
 
             try {
-                const response = await fetch(`/community/update-forum/${currentForumId}/`, {
+                const url = "{% url 'community:update_forum' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', `${currentForumId}`)
+                const response = await fetch(url, {
                     method: "POST",
                     headers: {
                         "X-Requested-With": "XMLHttpRequest"
@@ -101,13 +103,15 @@
 
                 const data = await response.json()
                 if(data.success) {
+                    showToast('Success!', 'Forum updated successfully.', 'success')
                     closeModalFuncEdit()
                     setTimeout(() => window.location.href = "{% url 'community:forum' %}", 1000)
                 } else {
-                    console.log(data.msg)
+                    showToast('Error!', data.msg || 'Failed to update forum.', 'error')
                 }
             } catch(err) {
-                console.log(err)
+                console.error(err)
+                showToast('Error!', 'An error occurred while updating the forum.', 'error')
             }
         }
 
