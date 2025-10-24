@@ -18,11 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', include(('homepage.urls', 'homepage'), namespace='homepage')),
     path('community/', include('community.urls')),
-    path('', include('homepage.urls')),
-    path('booking/', include('booking.urls')),
-    path('event/', include('event.urls')),
-    path('', include('authentication_user.urls')),
-    # path('', include('authentication_user.urls')) --> uncomment pas udah ada views + urls dari app ini aja yaa
+    path('booking/', include(('booking.urls', 'booking'), namespace='booking')),           
+    path('admin-lapangan/', include(('admin_lapangan.urls', 'admin_lapangan'), namespace='admin_lapangan')),
+    path('event/', include(('event.urls', 'event'), namespace='event')),
+    path('authentication_user/', include(('authentication_user.urls', 'authentication_user'), namespace='authentication_user')),
 ]
+

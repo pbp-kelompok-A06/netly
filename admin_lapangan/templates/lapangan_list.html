@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Lapangan - Admin{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Kelola Lapangan</h1>
+                <p class="text-gray-600 mt-1">Atur dan kelola lapangan badminton Anda</p>
+            </div>
+            
+            <button 
+                onclick="showCreateModal()" 
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 transition-all">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Tambah Lapangan
+            </button>
+        </div>
+
+        <div id="lapangan-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% if lapangans %}
+                {% for lapangan in lapangans %}
+                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                    {% if lapangan.image %}
+                        <img class="h-48 w-full object-cover" src="{{ lapangan.image.url }}" alt="{{ lapangan.name }}">
+                    {% else %}
+                        <div class="h-48 w-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
+                            <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ lapangan.name }}</h3>
+                        
+                        <div class="flex items-start text-sm text-gray-600 mb-2">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>{{ lapangan.location }}</span>
+                        </div>
+                        
+                        <div class="flex items-center text-sm text-gray-600 mb-4">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="font-semibold text-lg">Rp {{ lapangan.price|floatformat:0 }}/jam</span>
+                        </div>
+                        
+                        <div class="flex flex-col space-y-2 pt-4 border-t border-gray-100">
+                            <a href="{% url 'admin_lapangan:jadwal_list' lapangan.id %}" 
+                               class="w-full text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Kelola Jadwal
+                            </a>
+                            
+                            <div class="flex space-x-2">
+                                <button 
+                                    onclick="showEditModal('{{ lapangan.id }}')" 
+                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+                                    Edit
+                                </button>
+                                <button 
+                                    onclick="showDeleteModal('{{ lapangan.id }}')" 
+                                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors">
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada lapangan</h3>
+                    <p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan lapangan pertama Anda.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'admin_lapangan/lapangan_modal.html' %}
+{% include 'admin_lapangan/delete_modal.html' %}
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    const lapanganModal = document.getElementById('lapanganModal');
+    const lapanganModalContent = document.getElementById('lapanganModalContent');
+    const lapanganForm = document.getElementById('lapanganForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const submitButton = document.getElementById('submitButton');
+
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+    let lapanganIdToDelete = null;
+
+    const createUrl = "{% url 'admin_lapangan:create_lapangan_ajax' %}";
+    const editUrlTemplate = "{% url 'admin_lapangan:edit_lapangan_ajax' '00000000-0000-0000-0000-000000000000' %}";
+    const getJsonUrlTemplate = "{% url 'admin_lapangan:get_lapangan_json' '00000000-0000-0000-0000-000000000000' %}";
+    const deleteUrlTemplate = "{% url 'admin_lapangan:delete_lapangan_ajax' '00000000-0000-0000-0000-000000000000' %}";
+
+    function showLapanganModal() {
+        lapanganModal.classList.remove('hidden');
+        setTimeout(() => lapanganModalContent.classList.add('opacity-100', 'scale-100'), 50);
+    }
+
+    function hideLapanganModal() {
+        lapanganModalContent.classList.remove('opacity-100', 'scale-100');
+        setTimeout(() => lapanganModal.classList.add('hidden'), 150);
+    }
+
+    function showDeleteModal(lapanganId) {
+        lapanganIdToDelete = lapanganId;
+        deleteModal.classList.remove('hidden');
+    }
+
+    function hideDeleteModal() {
+        lapanganIdToDelete = null;
+        deleteModal.classList.add('hidden');
+    }
+
+    function showCreateModal() {
+        lapanganForm.reset();
+        modalTitle.textContent = 'Tambah Lapangan Baru';
+        modalSubtitle.textContent = 'Isi form untuk menambahkan lapangan';
+        submitButton.textContent = 'Tambah Lapangan';
+        lapanganForm.setAttribute('data-action-url', createUrl);
+        showLapanganModal();
+    }
+
+    async function showEditModal(lapanganId) {
+        lapanganForm.reset();
+        const getUrl = getJsonUrlTemplate.replace('00000000-0000-0000-0000-000000000000', lapanganId);
+        
+        try {
+            const response = await fetch(getUrl);
+            if (!response.ok) throw new Error('Failed to fetch data.');
+            
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message || 'Could not find data.');
+
+            const lapangan = result.data;
+            
+            document.getElementById('name').value = lapangan.name;
+            document.getElementById('location').value = lapangan.location;
+            document.getElementById('description').value = lapangan.description;
+            document.getElementById('price').value = lapangan.price;
+
+            modalTitle.textContent = 'Edit Lapangan';
+            modalSubtitle.textContent = 'Perbarui data lapangan Anda';
+            submitButton.textContent = 'Simpan Perubahan';
+
+            const editUrl = editUrlTemplate.replace('00000000-0000-0000-0000-000000000000', lapanganId);
+            lapanganForm.setAttribute('data-action-url', editUrl);
+
+            showLapanganModal();
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', error.message, 'error');
+        }
+    }
+
+    lapanganForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const url = lapanganForm.getAttribute('data-action-url');
+        if (!url) return;
+
+        const formData = new FormData(lapanganForm);
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": csrftoken }
+            });
+            
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                hideLapanganModal();
+                showToast('Berhasil!', data.message, 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
+                showToast('Error', errorMsg, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', 'Terjadi kesalahan tidak terduga.', 'error');
+        }
+    });
+
+    confirmDeleteButton.addEventListener('click', async () => {
+        if (!lapanganIdToDelete) return;
+
+        const deleteUrl = deleteUrlTemplate.replace('00000000-0000-0000-0000-000000000000', lapanganIdToDelete);
+
+        try {
+            const response = await fetch(deleteUrl, {
+                method: "POST",
+                headers: { 
+                    "X-CSRFToken": csrftoken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showToast('Berhasil!', result.message, 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast('Error', result.message || 'Gagal menghapus lapangan.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error', 'Terjadi kesalahan. Silakan coba lagi.', 'error');
+        } finally {
+            hideDeleteModal();
+        }
+    });
+</script>
+{% endblock javascript %}
