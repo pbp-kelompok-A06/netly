@@ -11,31 +11,32 @@
     </a>
 
     <!-- Menu -->
-    <nav class="hidden md:flex gap-8 text-sm font-medium text-[#2F3F61]">
-      <!-- Homepage -->
-      <a href="{% url 'homepage:homepage' %}" 
-         class="hover:text-[#D7FC64] {% if request.resolver_match.url_name == 'homepage' %}text-[#D7FC64]{% endif %}">
-         Home
-      </a>
+    <nav class="hidden md:flex gap-8 text-sm font-medium text-[#243153]">
+    <!-- Homepage -->
+    <a href="{% url 'homepage:homepage' %}" 
+        class="hover:text-[#b6de3a] {% if request.resolver_match.app_name == 'homepage' %}text-[#b6de3a]{% endif %}">
+        Home
+    </a>
 
-      <!-- My Booking -->
-      <a href="{% url 'booking:show_booking_list' %}" 
-         class="hover:text-[#D7FC64] {% if 'booking' in request.resolver_match.app_name %}text-[#D7FC64]{% endif %}">
-         My Booking
-      </a>
+    <!-- My Booking -->
+    <a href="{% url 'booking:show_booking_list' %}" 
+        class="hover:text-[#b6de3a] {% if 'booking' in request.resolver_match.app_name %}text-[#b6de3a]{% endif %}">
+        My Booking
+    </a>
 
-      <!-- Community -->
-      <a href="{% url 'community:forum' %}" 
-         class="hover:text-[#D7FC64] {% if request.resolver_match.app_name == 'community' %}text-[#D7FC64]{% endif %}">
-         Community
-      </a>
+    <!-- Community -->
+    <a href="{% url 'community:forum' %}" 
+        class="hover:text-[#b6de3a] {% if request.resolver_match.app_name == 'community' %}text-[#b6de3a]{% endif %}">
+        Community
+    </a>
 
-      <!-- Event & Tournament -->
-      <a href="{% url 'event:show_events' %}" 
-         class="hover:text-[#D7FC64] {% if request.resolver_match.app_name == 'event' %}text-[#D7FC64]{% endif %}">
-         Event & Tournament
-      </a>
+    <!-- Event & Tournament -->
+    <a href="{% url 'event:show_events' %}" 
+        class="hover:text-[#b6de3a] {% if request.resolver_match.app_name == 'event' %}text-[#b6de3a]{% endif %}">
+        Event & Tournament
+    </a>
     </nav>
+
 
     <!-- Right Side -->
     {% if user.is_authenticated %}
@@ -66,4 +67,3 @@
 
 <!-- Spacer supaya konten gak ketutupan -->
 <div class="h-16"></div>
-
