@@ -54,15 +54,15 @@
         </div>
     </div>
 </div>
-{% endblock content %}
 
-{% block extra_js %}
+
+
 <script>
     // Configuration
     
     const ALL_BOOKINGS_ENDPOINT = `{% url 'booking:show_json' %}`;
     
-    const DETAIL_PAGE_URL = `{% url 'booking:booking_detail' 'PLACEHOLDER_ID' %}`;
+    const DETAIL_PAGE_URL = `{% url 'booking:booking_detail' '00000000-0000-0000-0000-000000000000' %}`;
 
     // DOM Elements
     const loadingListState = document.getElementById('loading-list-state');
@@ -132,7 +132,7 @@
             let cellDetail = row.insertCell();
             cellDetail.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium';
             const detailLink = document.createElement('a');
-            detailLink.href = DETAIL_PAGE_URL.replace('PLACEHOLDER_ID', booking.id);
+            detailLink.href = DETAIL_PAGE_URL.replace('00000000-0000-0000-0000-000000000000', booking.id);
             detailLink.textContent = 'View Detail';
             detailLink.className = 'text-indigo-600 hover:text-indigo-900';
             cellDetail.appendChild(detailLink);
@@ -144,8 +144,8 @@
     
     async function loadBookings() {
         try {
-            showListState('loading');
             
+            showListState('loading');
             const response = await fetch(ALL_BOOKINGS_ENDPOINT, {
                 headers: { 'Accept': 'application/json' },
             });
@@ -164,6 +164,7 @@
     }
 
     // Initialize page
+    
     document.addEventListener('DOMContentLoaded', loadBookings);
 </script>
-{% endblock extra_js %}
+{% endblock content %}

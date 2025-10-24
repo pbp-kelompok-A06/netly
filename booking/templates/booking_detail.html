@@ -83,7 +83,7 @@
         </article>
     </div>
 </div>
-{% endblock content %}
+
 <script>
 // Configuration
 const BOOKING_ID = "{{ booking_id }}";
@@ -272,6 +272,7 @@ function deleteBooking(bookingId) {
 // Fetch booking detail
 async function loadBookingDetail() {
     try {
+        
         showState('loading');
         const response = await fetch(BOOKING_DETAIL_ENDPOINT, {
             headers: { 'Accept': 'application/json' },
@@ -292,3 +293,4 @@ async function loadBookingDetail() {
 // Initialize page
 loadBookingDetail();
 </script>
+{% endblock content %}
