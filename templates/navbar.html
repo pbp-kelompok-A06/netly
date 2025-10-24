@@ -39,16 +39,25 @@
 
     <!-- Right Side -->
     {% if user.is_authenticated %}
-    <div class="text-sm text-[#243153] font-medium">
-      Hello, {{ user.profile.fullname }} 
-      {% if user.profile.role == "admin" %}
-      <span class="text-xs text-gray-500">(Admin)</span>
-      {% endif %}
+    <div class="flex items-center gap-3 text-sm text-[#243153] font-medium">
+    <!-- Hello -->
+    Hello, {{ user.profile.fullname }}
+    {% if user.profile.role == "admin" %}
+        <span class="text-xs text-gray-500">(Admin)</span>
+    {% endif %}
+
+    <!-- Logout Button -->
+    <form method="post" action="{% url 'authentication_user:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="bg-[#D7FC64] text-[#243153] font-medium px-3 py-1 rounded-lg hover:bg-[#c1f148]">
+        Logout
+        </button>
+    </form>
     </div>
     {% else %}
     <div class="flex gap-3 text-sm">
-      <a href="{% url 'authentication_user:login' %}" class="hover:text-[#D7FC64]">Login</a>
-      <a href="{% url 'authentication_user:register' %}" class="hover:text-[#D7FC64]">Register</a>
+    <a href="{% url 'authentication_user:login' %}" class="hover:text-[#D7FC64]">Login</a>
+    <a href="{% url 'authentication_user:register' %}" class="hover:text-[#D7FC64]">Register</a>
     </div>
     {% endif %}
 
