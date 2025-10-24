@@ -42,7 +42,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://evan-haryo-goalin.pbp.cs.ui.ac.id"
+    "https://evan-haryo-netly.pbp.cs.ui.ac.id"
 ]
 
 # Application definition
