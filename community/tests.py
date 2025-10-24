@@ -83,7 +83,7 @@ class FetchForumByIdTestCase(ForumViewsTestCase):
     def test_fetch_own_forum_success(self):
         self.client.login(username='bambang', password='halo')
         response = self.client.get(
-            reverse('community:fetch_forum_id', self.forum.id)
+            reverse('community:fetch_forum_id', args=[self.forum.id])
         )
         
         self.assertEqual(response.status_code, 200)

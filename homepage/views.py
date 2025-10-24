@@ -66,7 +66,7 @@ def index(request):
     if request.user.is_authenticated:
         profile = getattr(request.user, "profile", None)
         if profile and profile.role == "admin":
-            courts_qs = courts_qs.filter(admin_lapangan=request.user)
+            courts_qs = courts_qs.filter(admin_lapangan=request.user.profile)
 
     # Search & Filter
     if q:

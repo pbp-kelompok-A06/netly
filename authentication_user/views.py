@@ -138,25 +138,9 @@ def make_admin(request):
                     role="admin"
                 )
                 userProfile.save()
-        check_user = User.objects.filter(username=data.get("username"))
-        if check_user:
-            profile = UserProfile.objects.filter(fullname=data.get("fullname"))
-            if profile:
-                continue
-            else:
-                userProfile = UserProfile.objects.create(
-                    user = user,
-                    fullname=data.get("fullname"),
-                    role="admin"
-                )
-                userProfile.save()
         else:
             user = User.objects.create_user(username=data.get("username"), password=data.get("password"))
             userProfile = UserProfile.objects.create(
-                    user = user,
-                    fullname=data.get("fullname"),
-                    role="admin"
-                )
                     user = user,
                     fullname=data.get("fullname"),
                     role="admin"

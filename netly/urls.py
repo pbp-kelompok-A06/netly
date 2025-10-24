@@ -20,18 +20,11 @@ from django.urls import path, include
 urlpatterns = [
     path('', include(('homepage.urls', 'homepage'), namespace='homepage')),
     path('community/', include('community.urls')),
-<<<<<<< HEAD
-    path('booking/', include(('booking.urls', 'booking'), namespace='booking')),           
-    path('admin-lapangan/', include(('admin_lapangan.urls', 'admin_lapangan'), namespace='admin_lapangan')),
-    path('event/', include(('event.urls', 'event'), namespace='event')),
-    path('authentication_user/', include(('authentication_user.urls', 'authentication_user'), namespace='authentication_user')),
-=======
     path('', include('homepage.urls')),
     path('booking/', include('booking.urls')),
     path('event/', include('event.urls')),
     path('', include('authentication_user.urls')),
     path('lapangan/', include('admin_lapangan.urls'))
     # path('', include('authentication_user.urls')) --> uncomment pas udah ada views + urls dari app ini aja yaa
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
 ]
 

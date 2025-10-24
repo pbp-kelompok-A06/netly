@@ -64,7 +64,7 @@
 
     <!-- SEARCH + FILTER -->
     <section id="search" class="relative z-20 mt-8 max-w-5xl mx-auto px-4">
-    <form method="get" action="{% url 'homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative" id="search-form">
+    <form method="get" action="{% url 'homepage:homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative" id="search-form">
         <!-- Search Input -->
         <input 
         type="text" 
@@ -459,5 +459,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-{% endif %}
 {% endblock %}
