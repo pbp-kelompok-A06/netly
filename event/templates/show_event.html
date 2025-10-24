@@ -1,40 +1,80 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block title %}all events{% endblock %}
 
 {% block content %}
-{% include 'navbar.html' %}
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" style="padding-top: 6rem;"> <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            Upcoming Events
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5" style="padding-top: 0rem;">
+    <div class="bg-white rounded-lg shadow-lg pt-6 px-6 pb-4 mb-5 w-full">
+        <h1 class="text-3xl font-bold text-gray-900 mb-1">
+            <span class="text-[#243153]">Badminton</span>
+            <span class="text-[#c0ed3b]">Events</span>
         </h1>
-        
-        {% if user.is_authenticated and user.profile.role == 'admin' %}
-        <button 
-            onclick="showCreateModal()" 
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
-            Add New Event
-        </button>
-        {% endif %}
+        <p class="text-md text-gray-500 mb-2"> {# Styling subtitle #}
+            Join event or tournament and be the champion
+        </p>
+
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6"> 
+            <div class="flex gap-4 items-center">   
+                <div class="relative w-full text-left">
+                    <div>
+                        <button type="button" id="sort-menu-button" class="inline-flex justify-center w-full rounded-full border border-[#243153] shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" aria-expanded="true" aria-haspopup="true">
+                            Sort Date: {{ current_sort_label }}
+                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="sort-menu" class="hidden origin-top-left absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-20" role="menu" aria-orientation="vertical" aria-labelledby="sort-menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <a href="?sort=asc" class="text-gray-700 block px-4 py-2 text-sm {% if current_sort_label == 'Earliest' %}bg-gray-100{% endif %}" role="menuitem" tabindex="-1">
+                                Earliest (Ascending)
+                            </a>
+                            <a href="?sort=desc" class="text-gray-700 block px-4 py-2 text-sm {% if current_sort_label == 'Latest' %}bg-gray-100{% endif %}" role="menuitem" tabindex="-1">
+                                Latest (Descending)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full"> 
+                    {% if user.is_authenticated and user.profile.role == 'admin' %}
+                    <button 
+                        onclick="showCreateModal()" 
+                        class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent font-bold text-sm rounded-full shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                        Add New Event
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
+    <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[50vh]">
         {% if events %}
             {% for event in events %}
                 {% include 'card_event.html' with event=event %}
             {% endfor %} 
         {% else %}
             <p class="col-span-full text-center text-gray-500">No events scheduled right now.</p>
-        {% endif %} </div>
+        {% endif %} 
+    </div>
 </div>
 
 {% include 'event_modal.html' %}
-{% include 'event_delete_modal.html' %}  
+{% include 'event_delete_modal.html' %}
+{% include 'toast.html' %}  
 {% endblock content %}
 
 {% block javascript %}
+<script src="{% static 'js/toast.js' %}"></script>
+
+<!-- default image kala user ga update image -->
+<script>
+    const defaultImageUrl = "{% static 'image/default.jpg' %}"; 
+</script>
+
 <script>
     function getCookie(name) {
         let cookieValue = null;
@@ -110,6 +150,26 @@
         showEventModal(); 
     }
 
+    // untuk dropdown sort 
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortButton = document.getElementById('sort-menu-button');
+        const sortMenu = document.getElementById('sort-menu');
+
+        if (sortButton && sortMenu) {
+            // tampilkan atau sembunyikan menu saat tombol diklik
+            sortButton.addEventListener('click', function() {
+                sortMenu.classList.toggle('hidden');
+            });
+
+            // hide menu saat mengklik di luar
+            document.addEventListener('click', function(event) {
+                if (!sortButton.contains(event.target) && !sortMenu.contains(event.target)) {
+                    sortMenu.classList.add('hidden');
+                }
+            });
+        }
+    });
+
     // untuk edit
     async function showEditModal(eventId) {
         eventForm.reset();
@@ -130,8 +190,8 @@
             document.getElementById('eventId').value = event.id;
             document.getElementById('name').value = event.name;
             document.getElementById('description').value = event.description;
-            document.getElementById('start_date').value = event.start_date;
-            document.getElementById('end_date').value = event.end_date;
+            document.getElementById('start_date').value = event.start_date.slice(0, 10);
+            document.getElementById('end_date').value = event.end_date.slice(0, 10);
             document.getElementById('location').value = event.location;
             document.getElementById('image_url').value = event.image_url;
             document.getElementById('max_participants').value = event.max_participants;
@@ -154,6 +214,13 @@
         }
     }
 
+    // helper function untuk format date
+    function formatDate(isoDateString) {
+        const date = new Date(isoDateString);
+        const options = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+        return date.toLocaleDateString('en-GB', options); // format akhirnya jadi: Wed, 29 Oct 2025
+    }
+
     // listener untuk create atau edit event modal -> modalnya sama, url yang dihandle beda
     // yang diatur di 'data-action-url' oleh showCreateModal atau showEditModal
     eventForm.addEventListener('submit', async function(e) {
@@ -162,7 +229,6 @@
         // ambil url untuk cek user sedang mau create atau edit
         const url = eventForm.getAttribute('data-action-url');
         if (!url) {
-            console.error('No action URL set on form.');
             return;
         }
 
@@ -182,19 +248,46 @@
 
             if (data.status === 'success') {
                 hideEventModal();
-                showToast(data.message); 
-                
-                // refresh halaman untuk lihat perubahan
-                setTimeout(() => {
-                    window.location.reload(); 
-                }, 1000); 
+                showToast('Success!', data.message, 'success');
+
+                // cek apakah ini hasil EDIT (ada data yang diupdate -> 'updated_event')
+                if (data.updated_event) {
+                    const updatedEvent = data.updated_event;
+                    
+                    // cari kartu yang sesuai berdasarkan data-event-id
+                    const cardElement = document.querySelector(`[data-event-id="${updatedEvent.id}"]`);
+
+                    if (cardElement) {
+                        // find elemen di dalam kartu dan update isinya
+                        const nameElement = cardElement.querySelector('.event-name');
+                        if (nameElement) nameElement.textContent = updatedEvent.name;
+
+                        const dateElement = cardElement.querySelector('.event-date');
+                        if (dateElement) dateElement.textContent = formatDate(updatedEvent.start_date); 
+
+                        const locationElement = cardElement.querySelector('.event-location');
+                        if (locationElement) locationElement.textContent = updatedEvent.location;
+                        
+                        const imageElement = cardElement.querySelector('.event-image');
+                        if (imageElement) {
+                           imageElement.src = updatedEvent.image_url || defaultImageUrl; 
+                           imageElement.alt = "Event image for " + updatedEvent.name; 
+                        }
+                    }
+                } else {
+                    // kalau hasil CREATE, reload halaman untuk menampilkan kartu baru
+                    setTimeout(() => {
+                        window.location.reload(); 
+                    }, 1000); 
+                }
+
             } else {
                 const errorMsg = data.errors ? JSON.stringify(data.errors) : data.message;
-                showToast('Error: ' + errorMsg);
+                showToast('Error', errorMsg, 'error');
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            showToast('An unexpected error occurred.');
+            showToast('Error', 'An unexpected error occurred.', 'error');
         }
     });
 
@@ -218,17 +311,17 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                showToast(result.message);
-                // automatically reload kalau berhasil
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                showToast('Success!', result.message, 'success');
+                const cardElement = document.querySelector(`[data-event-id="${eventIdToDelete}"]`);
+                if (cardElement) {
+                    cardElement.remove();
+                }
             } else {
-                showToast(result.message || 'Failed to delete event.');
+                showToast('Error', result.message || 'Failed to delete event.', 'error');
             }
         } catch (error) {
             console.error('Delete error:', error);
-            showToast('An error occurred. Please try again.');
+            showToast('Error', 'An error occurred. Please try again.', 'error');
         } finally {
             hideDeleteModal();
         }

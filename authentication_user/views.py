@@ -11,13 +11,13 @@ import json
 # untuk call register.html
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect('homepage:homepage') # kalau  berhasil login, langsung ke homepage
+        return redirect('homepage') # kalau  berhasil login, langsung ke homepage
     return render(request, "register.html")
 
 # untuk call login.html
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('homepage:homepage') 
+        return redirect('homepage') 
     return render(request, "login.html")
 
 @login_required(login_url='/login') 
@@ -126,17 +126,25 @@ def make_admin(request):
     ]
 
     for data in data_admin:
-        profile = UserProfile.objects.filter(fullname=data.get("fullname"))
-        if profile:
-            continue
+        check_user = User.objects.filter(username=data.get("username"))
+        if check_user:
+            profile = UserProfile.objects.filter(fullname=data.get("fullname"))
+            if profile:
+                continue
+            else:
+                userProfile = UserProfile.objects.create(
+                    user = user,
+                    fullname=data.get("fullname"),
+                    role="admin"
+                )
+                userProfile.save()
         else:
             user = User.objects.create_user(username=data.get("username"), password=data.get("password"))
             userProfile = UserProfile.objects.create(
-                user = user,
-                fullname=data.get("fullname"),
-                role="admin"
-            )
-
+                    user = user,
+                    fullname=data.get("fullname"),
+                    role="admin"
+                )
             user.save()
             userProfile.save()
     return HttpResponse("halo")

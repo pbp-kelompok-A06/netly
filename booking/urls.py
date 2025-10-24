@@ -1,4 +1,4 @@
-from booking.views import booking_detail, create_booking, complete_booking, show_json, show_json_by_id, show_booking_list, test, show_create_booking
+from booking.views import booking_detail, create_booking, complete_booking, show_json, show_json_by_id, show_booking_list, test, show_create_booking, delete_booking
 from django.urls import path
 app_name = 'booking'
 urlpatterns = [
@@ -9,5 +9,6 @@ urlpatterns = [
     path('show_json/', show_json, name='show_json'),
     path('show_json/<uuid:booking_id>/', show_json_by_id, name='show_json_by_id'),
     path('booking_list/', show_booking_list, name='show_booking_list'),
+    path('delete_booking/<uuid:booking_id>/', delete_booking, name='delete_booking'),
     path('test/', test, name='test'),
     ]   

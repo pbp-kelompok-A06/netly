@@ -43,9 +43,6 @@
                     <!-- Dynamic badges will be inserted here -->
                 </div>
                 
-                <div id="badges-container" class="flex flex-wrap gap-2 mb-4">
-                    <!-- Badges will be inserted here --> 
-                </div>
                 <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
                     <!-- Title will be inserted here --> 
                 </h1>
@@ -73,20 +70,18 @@
                         <!-- Content will be inserted here --> 
                     </div>
                 </div>
-                <div id="button-container" class="mt-6"></div>
+                <div id="button-container" class="flex justify-between p-6 sm:p-8"> </div>
             </div>
-
-            
-            <div id="button-container" class="flex justify-between p-6 sm:p-8"> </div>
 
             
         </article>
     </div>
 </div>
-{% endblock content %}
+
 <script>
 // Configuration
 const BOOKING_ID = "{{ booking_id }}";
+const USER_ROLE = "{{ request.user.profile.role }}";
 const BOOKING_DETAIL_ENDPOINT = `{% url 'booking:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', BOOKING_ID);
 
 // DOM Elements
@@ -103,7 +98,7 @@ const buttonContainer = document.getElementById('button-container');
 function showState(state) {
     loadingState.classList.toggle('hidden', state !== 'loading');
     errorState.classList.toggle('hidden', state !== 'error');
-    articleContent.classList.toggle('hidden', state !== 'ready');
+    bookingContent.classList.toggle('hidden', state !== 'ready');
 }
 
 
@@ -168,15 +163,26 @@ function renderBooking(bookingData) {
         Total Harga: Rp ${parseFloat(bookingData.total_price).toLocaleString('id-ID')}
         Status: ${bookingData.status_book}
     `;
-    
-
-
-    
     // Set content
     articleContentText.textContent = bookingDetailText;
+    if (USER_ROLE === 'admin') {
+        // 1. Tombol untuk ADMIN
+        const deleteButton = document.createElement('button');
+        deleteButton.id = 'deleteBookingBtn';
+        deleteButton.textContent = 'Hapus Booking Ini';
+        // Class tombol delete (merah)
+        deleteButton.className = 'w-full md:w-auto mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-300';
+        
+        deleteButton.addEventListener('click', () => {
+            deleteBooking(bookingData.id);
+                
+        });
+        buttonContainer.appendChild(deleteButton);
+
+    }
     
     // ADD BUTTON CONFIRM PAYMENT YANG AKAN UBAH STATUS BOOKING JADI COMPLETED, KALO EXPIRED OR DAH BAYAR JADI GAK MUNCUL
-    if (bookingData.status_book === 'pending') { // Ganti 'Unpaid' sesuai status di model Django kamu
+    else if (bookingData.status_book === 'pending') { // Ganti 'Unpaid' sesuai status di model Django kamu
         
         const confirmButton = document.createElement('button');
         confirmButton.id = 'confirmPaymentBtn';
@@ -228,9 +234,39 @@ function confirmPayment(bookingId) {
         showToast("error", `Konfirmasi gagal: ${error.message}`);
     });
 }
+function deleteBooking(bookingId) {
+    // Tentukan URL untuk view delete admin
+    const url = `{% url 'booking:delete_booking' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', bookingId);
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
+
+    fetch(url, {
+        method: 'POST', 
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            // Jika gagal, ambil pesan error dari JSON
+            return response.json().then(err => { throw new Error(err.message || 'Gagal menghapus booking.') });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showToast("success", data.message || 'Booking berhasil dihapus!');
+        // Redirect kembali ke daftar booking (atau dashboard admin)
+        window.location.href = "{% url 'booking:show_booking_list' %}"; 
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast("error", `Hapus gagal: ${error.message}`);
+    });
+}
+
 // Fetch booking detail
 async function loadBookingDetail() {
     try {
+        
         showState('loading');
         const response = await fetch(BOOKING_DETAIL_ENDPOINT, {
             headers: { 'Accept': 'application/json' },
@@ -251,3 +287,4 @@ async function loadBookingDetail() {
 // Initialize page
 loadBookingDetail();
 </script>
+{% endblock content %}

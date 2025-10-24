@@ -18,7 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', include('homepage.urls', namespace='homepage')),
     path('community/', include('community.urls')),
-    path('admin-lapangan/', include('admin_lapangan.urls'))
+    path('booking/', include('booking.urls')),
+    path('event/', include('event.urls')),
+    path('', include('authentication_user.urls')),
+    path('lapangan/', include('admin_lapangan.urls'))
+    # path('', include('authentication_user.urls')) --> uncomment pas udah ada views + urls dari app ini aja yaa
 ]
+

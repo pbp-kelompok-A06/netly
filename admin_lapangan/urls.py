@@ -2,6 +2,7 @@ from django.urls import path
 from admin_lapangan.views import (
     admin_dashboard,
     show_lapangan_list,
+    lapangan_detail,
     create_lapangan_ajax,
     get_lapangan_json,
     edit_lapangan_ajax,
@@ -11,6 +12,9 @@ from admin_lapangan.views import (
     get_jadwal_json,
     edit_jadwal_ajax,
     delete_jadwal_ajax,
+    fetch_lapangan_list_ajax,  
+    fetch_jadwal_list_ajax, 
+    import_lapangan_data
 )
 
 app_name = 'admin_lapangan'
@@ -20,16 +24,21 @@ urlpatterns = [
     path('', admin_dashboard, name='dashboard'),
     
     # Lapangan URLs
-    path('', show_lapangan_list, name='lapangan_list'),
-    path('ajax/create/', create_lapangan_ajax, name='create_lapangan_ajax'),
-    path('ajax/get/<uuid:pk>/', get_lapangan_json, name='get_lapangan_json'),
-    path('ajax/edit/<uuid:pk>/', edit_lapangan_ajax, name='edit_lapangan_ajax'),
-    path('ajax/delete/<uuid:pk>/', delete_lapangan_ajax, name='delete_lapangan_ajax'),
+    path('lapangan/', show_lapangan_list, name='lapangan_list'),
+    path('lapangan/<uuid:pk>/', lapangan_detail, name='lapangan_detail'), 
+    path('lapangan/ajax/create/', create_lapangan_ajax, name='create_lapangan_ajax'),
+    path('lapangan/ajax/get/<uuid:pk>/', get_lapangan_json, name='get_lapangan_json'),
+    path('lapangan/ajax/edit/<uuid:pk>/', edit_lapangan_ajax, name='edit_lapangan_ajax'),
+    path('lapangan/ajax/delete/<uuid:pk>/', delete_lapangan_ajax, name='delete_lapangan_ajax'),
+    path('lapangan/ajax/fetch/', fetch_lapangan_list_ajax, name='fetch_lapangan_list_ajax'), 
     
     # Jadwal URLs
-    path('<uuid:lapangan_id>/jadwal/', show_jadwal_list, name='jadwal_list'),
-    path('<uuid:lapangan_id>/jadwal/ajax/create/', create_jadwal_ajax, name='create_jadwal_ajax'),
+    path('lapangan/<uuid:lapangan_id>/jadwal/', show_jadwal_list, name='jadwal_list'),
+    path('lapangan/<uuid:lapangan_id>/jadwal/ajax/create/', create_jadwal_ajax, name='create_jadwal_ajax'),
+    path('lapangan/<uuid:lapangan_id>/jadwal/ajax/fetch/', fetch_jadwal_list_ajax, name='fetch_jadwal_list_ajax'),
     path('jadwal/ajax/get/<uuid:pk>/', get_jadwal_json, name='get_jadwal_json'),
     path('jadwal/ajax/edit/<uuid:pk>/', edit_jadwal_ajax, name='edit_jadwal_ajax'),
     path('jadwal/ajax/delete/<uuid:pk>/', delete_jadwal_ajax, name='delete_jadwal_ajax'),
+
+    path('import-data/', import_lapangan_data, name="import_lapangan_data")
 ]

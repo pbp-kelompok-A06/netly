@@ -54,15 +54,15 @@
         </div>
     </div>
 </div>
-{% endblock content %}
 
-{% block extra_js %}
+
+
 <script>
     // Configuration
     
     const ALL_BOOKINGS_ENDPOINT = `{% url 'booking:show_json' %}`;
     
-    const DETAIL_PAGE_URL = `{% url 'booking:booking_detail' 'PLACEHOLDER_ID' %}`;
+    const DETAIL_PAGE_URL = `{% url 'booking:booking_detail' '00000000-0000-0000-0000-000000000000' %}`;
 
     // DOM Elements
     const loadingListState = document.getElementById('loading-list-state');
@@ -93,12 +93,37 @@
         }
     }
 
-    // Render the list of bookings in the table
+    function parseDateString(s) {
+        if (!s) return null;
+        if (s instanceof Date) return s;
+        let str = String(s).trim();
+
+        // Convert "YYYY-MM-DD HH:MM:SS" -> "YYYY-MM-DDTHH:MM:SS"
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(str)) {
+            str = str.replace(' ', 'T');
+        }
+
+        // Try creating a Date
+        let d = new Date(str);
+        if (!isNaN(d)) return d;
+
+        // Try replacing space->T one more time
+        d = new Date(str.replace(' ', 'T'));
+        if (!isNaN(d)) return d;
+
+        // Try numeric timestamp
+        const n = Number(str);
+        if (!isNaN(n)) return new Date(n);
+
+        return null;
+    }
+
+
     function renderBookingsList(bookings) {
-        bookingsTableBody.innerHTML = ''; // Clear previous content
+        bookingsTableBody.innerHTML = ''
 
         if (bookings.length === 0) {
-            showListState('ready'); // Show the "No Bookings" state
+            showListState('ready')
             return;
         }
 
@@ -109,15 +134,16 @@
             // 1. Lapangan (Field Name)
             let cellLapangan = row.insertCell();
             cellLapangan.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
-            // Use 'lapangan.nama' if 'lapangan.name' is undefined
+            
             cellLapangan.textContent = booking.lapangan.name || booking.lapangan.nama; 
 
             // 2. Booking Date (Created At)
             let cellDate = row.insertCell();
             cellDate.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
-            const formattedDate = new Date(booking.created_at).toLocaleDateString('en-US', { 
-                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-            });
+            const parsed = parseDateString(booking.created_at);
+            const formattedDate = parsed
+                ? parsed.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Unknown date';
             cellDate.textContent = formattedDate;
 
             // 3. Status
@@ -132,7 +158,7 @@
             let cellDetail = row.insertCell();
             cellDetail.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium';
             const detailLink = document.createElement('a');
-            detailLink.href = DETAIL_PAGE_URL.replace('PLACEHOLDER_ID', booking.id);
+            detailLink.href = DETAIL_PAGE_URL.replace('00000000-0000-0000-0000-000000000000', booking.id);
             detailLink.textContent = 'View Detail';
             detailLink.className = 'text-indigo-600 hover:text-indigo-900';
             cellDetail.appendChild(detailLink);
@@ -141,11 +167,11 @@
         showListState('ready');
     }
 
-    // Fetch all bookings
+    
     async function loadBookings() {
         try {
-            showListState('loading');
             
+            showListState('loading');
             const response = await fetch(ALL_BOOKINGS_ENDPOINT, {
                 headers: { 'Accept': 'application/json' },
             });
@@ -164,6 +190,7 @@
     }
 
     // Initialize page
+    
     document.addEventListener('DOMContentLoaded', loadBookings);
 </script>
-{% endblock extra_js %}
+{% endblock content %}

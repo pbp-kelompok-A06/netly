@@ -3,20 +3,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from .models import Booking
-from django.utils import timezone  # <-- TAMBAHKAN INI
+from django.utils import timezone  
 from datetime import timedelta
-#dummy
 from admin_lapangan.models import Lapangan
 from admin_lapangan.models import JadwalLapangan as Jadwal
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from datetime import datetime
 
 def test(request):
     
-    return render(request, 'create_book.html')
+    return render(request, 'booking_detail.html')
 
 def show_create_booking(request, lapangan_id):
     
@@ -39,8 +38,7 @@ def show_create_booking(request, lapangan_id):
     return render(request, 'create_book.html', context)
 
 @csrf_exempt  # kalau belum handle CSRF token di JS, tapi idealnya pakai token ya
-# diuncomment kalo dah ada login
-# @login_required
+@login_required(login_url='authentication_user:login')
 def create_booking(request):
     if request.method == 'POST':
         lapangan_id = request.POST.get('lapangan_id')
@@ -58,13 +56,12 @@ def create_booking(request):
         #kalo berhasil
         booking = Booking.objects.create(
             lapangan_id=lapangan,
-            user_id=request.user.profile.id,  # Asumsi ada relasi OneToOne antara User dan UserProfile
+            user_id=request.user.profile,  # Asumsi ada relasi OneToOne antara User dan UserProfile
             status_book='pending'
         )
-        booking.jadwal.update(jadwals)
+        booking.jadwal.set(jadwals)
         jadwals.update(is_available=False)
-        #dummy
-        payment_url = reverse('booking_detail', kwargs={'booking_id': booking.id})
+        payment_url = reverse('booking:booking_detail', kwargs={'booking_id': booking.id})
 
         return JsonResponse({
             'success': True,
@@ -99,14 +96,13 @@ def show_json_by_id(request, booking_id):
     return JsonResponse(data)
 
 
-@login_required(login_url='/login/')
+@login_required(login_url='authentication_user:login')
 def show_json(request):
-    """
-    Mengambil SEMUA booking untuk user yang sedang login dan mengembalikannya sebagai list JSON.
-    Ini adalah view yang dibutuhkan oleh booking_list.html.
-    """
-    # Ambil semua booking milik user yang sedang login
-    all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
+    if request.user.profile.role == 'admin':
+        all_bookings = Booking.objects.filter(lapangan_id__admin_lapangan=request.user.profile).order_by('-created_at')
+    else:
+        # Ambil semua booking milik user yang sedang login
+        all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
 
     data = []
     for booking in all_bookings:
@@ -132,12 +128,13 @@ def show_json(request):
             'status_book': booking.status_book,
             'total_price': booking.total_price(),
             'jadwal': jadwal_list,
+            'created_at': booking.created_at
         })
 
     
     return JsonResponse(data, safe=False)
 
-@login_required
+@login_required(login_url='authentication_user:login')
 def complete_booking(request, booking_id):
     # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
     try:
@@ -158,8 +155,6 @@ def complete_booking(request, booking_id):
 
 # flownya jadi dari create_booking di redirect ke booking_detail
 def booking_detail(request, booking_id):
-    # Pastikan booking_id valid dan user berhak melihatnya
-    # Walaupun data detailnya diambil AJAX, kita tetap validasi ID dan user di sini
     booking = get_object_or_404(Booking, id=booking_id, user_id=request.user.profile.id)
     booking.is_expired()
     return render(request, 'booking_detail.html', {
@@ -169,7 +164,7 @@ def booking_detail(request, booking_id):
     
 # function untuk ngedirect ke booking_list
 
-@login_required
+@login_required(login_url='authentication_user:login')
 def show_booking_list(request):
     return render(request, 'booking_list.html')
 
@@ -199,3 +194,48 @@ def show_booking_list(request):
 #             'jadwal': jadwal_list,
 #         })
 #     return JsonResponse(data, safe=False)
+def delete_booking(request, booking_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        # 1. Ambil booking yang mau dihapus
+        booking = Booking.objects.get(id=booking_id)
+        now = timezone.now()
+        
+        # 3. Siapkan list untuk jadwal yang akan dibuka kembali
+        jadwal_ids_to_reopen = []
+        
+        # 4. Cek setiap jadwal di dalam booking itu
+        #    (Gunakan .all() sebelum booking dihapus)
+        jadwals_in_booking = booking.jadwal.all()
+        
+        for jadwal in jadwals_in_booking:
+            # Gabungkan tanggal dan jam selesai
+            waktu_selesai = datetime.combine(jadwal.tanggal, jadwal.end_main)
+            # Buat jadi 'aware' (sesuai zona waktu di settings.py)
+            waktu_selesai_aware = timezone.make_aware(waktu_selesai)
+            
+            # 5. Cek: Apakah jadwal ini MASIH DI MASA DEPAN?
+            if waktu_selesai_aware > now:
+                # Jika ya (belum expired), masukkan ke list untuk dibuka
+                jadwal_ids_to_reopen.append(jadwal.id)
+            # Jika tidak (sudah expired), kita biarkan saja (is_available=False)
+
+        # 6. Hapus booking-nya
+        booking.delete()
+        
+        # 7. Buka kembali semua jadwal yang belum expired (jika ada)
+        if jadwal_ids_to_reopen:
+            Jadwal.objects.filter(id__in=jadwal_ids_to_reopen).update(is_available=True)
+            
+        return JsonResponse({
+            'success': True, 
+            'message': 'Booking berhasil dihapus dan jadwal yang belum lewat telah dibuka kembali.'
+        }, status=200)
+    
+    except Booking.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Booking tidak ditemukan.'}, status=404)
+    except Exception as e:
+        # Tangkap error lain jika ada
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
