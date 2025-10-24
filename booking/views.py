@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from datetime import datetime
 
 def test(request):
     
@@ -98,9 +99,11 @@ def show_json_by_id(request, booking_id):
 
 @login_required(login_url='/login/')
 def show_json(request):
-
-    # Ambil semua booking milik user yang sedang login
-    all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
+    if request.user.profile.role == 'admin':
+        all_bookings = Booking.objects.filter(lapangan_id__admin=request.user).order_by('-created_at')
+    else:
+        # Ambil semua booking milik user yang sedang login
+        all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
 
     data = []
     for booking in all_bookings:
@@ -193,3 +196,50 @@ def show_booking_list(request):
 #             'jadwal': jadwal_list,
 #         })
 #     return JsonResponse(data, safe=False)
+def delete_booking(request, booking_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        # 1. Ambil booking yang mau dihapus
+        booking = Booking.objects.get(id=booking_id)
+        
+        # 2. Ambil waktu sekarang (yang sudah 'aware')
+        now = timezone.now()
+        
+        # 3. Siapkan list untuk jadwal yang akan dibuka kembali
+        jadwal_ids_to_reopen = []
+        
+        # 4. Cek setiap jadwal di dalam booking itu
+        #    (Gunakan .all() sebelum booking dihapus)
+        jadwals_in_booking = booking.jadwal.all()
+        
+        for jadwal in jadwals_in_booking:
+            # Gabungkan tanggal dan jam selesai
+            waktu_selesai = datetime.combine(jadwal.tanggal, jadwal.end_main)
+            # Buat jadi 'aware' (sesuai zona waktu di settings.py)
+            waktu_selesai_aware = timezone.make_aware(waktu_selesai)
+            
+            # 5. Cek: Apakah jadwal ini MASIH DI MASA DEPAN?
+            if waktu_selesai_aware > now:
+                # Jika ya (belum expired), masukkan ke list untuk dibuka
+                jadwal_ids_to_reopen.append(jadwal.id)
+            # Jika tidak (sudah expired), kita biarkan saja (is_available=False)
+
+        # 6. Hapus booking-nya
+        booking.delete()
+        
+        # 7. Buka kembali semua jadwal yang belum expired (jika ada)
+        if jadwal_ids_to_reopen:
+            Jadwal.objects.filter(id__in=jadwal_ids_to_reopen).update(is_available=True)
+            
+        return JsonResponse({
+            'success': True, 
+            'message': 'Booking berhasil dihapus dan jadwal yang belum lewat telah dibuka kembali.'
+        }, status=200)
+    
+    except Booking.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Booking tidak ditemukan.'}, status=404)
+    except Exception as e:
+        # Tangkap error lain jika ada
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
