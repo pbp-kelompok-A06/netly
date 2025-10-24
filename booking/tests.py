@@ -67,7 +67,7 @@ class ShowJsonViewTest(TestCase):
 
         # 6. Siapkan client dan URL
         self.client = Client()
-        # Pastikan app_name='booking' dan name='show_json' di urls.py
+        
         self.url = reverse('booking:show_json') 
         self.url_create_booking = reverse('booking:create_booking')
         self.today = timezone.now().date()
@@ -216,7 +216,6 @@ class ShowJsonViewTest(TestCase):
         self.assertEqual(booking_data['status_book'], 'pending')
         self.assertEqual(len(booking_data['jadwal']), 1)
         self.assertEqual(booking_data['jadwal'][0]['start_main'], '10:00:00')
-        # Cek apakah total_price() dipanggil (asumsi total_price = 100000)
         self.assertEqual(int(float(booking_data['total_price'])), 100000)
 
     def test_show_json_authenticated_user_no_bookings(self):
@@ -239,7 +238,7 @@ class ShowJsonViewTest(TestCase):
         data = response.json()
         self.assertEqual(data, []) # List harus kosong
     
-    # Tambahkan ini di dalam class ShowJsonViewTest di booking/tests.py
+    
 
     def test_complete_booking_success(self):
         """
@@ -338,9 +337,7 @@ class ShowJsonViewTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['message'], 'Booking has expired and cannot be completed')
     
-    # -----------------------------------------------
-    # TES UNTUK VIEW CREATE_BOOKING
-    # -----------------------------------------------
+
 
     def test_create_booking_success(self):
         """
@@ -442,10 +439,6 @@ class ShowJsonViewTest(TestCase):
         data = response.json()
         self.assertFalse(data['success'])
         self.assertEqual(data['message'], 'Invalid request method.')
-    
-    # -----------------------------------------------
-    # TES UNTUK VIEW CREATE_BOOKING
-    # -----------------------------------------------
 
     def test_create_booking_success(self):
         """

@@ -15,7 +15,7 @@ from datetime import datetime
 
 def test(request):
     
-    return render(request, 'create_book.html')
+    return render(request, 'booking_detail.html')
 
 def show_create_booking(request, lapangan_id):
     
@@ -38,8 +38,7 @@ def show_create_booking(request, lapangan_id):
     return render(request, 'create_book.html', context)
 
 @csrf_exempt  # kalau belum handle CSRF token di JS, tapi idealnya pakai token ya
-# diuncomment kalo dah ada login
-@login_required
+@login_required(login_url='authentication_user:login')
 def create_booking(request):
     if request.method == 'POST':
         lapangan_id = request.POST.get('lapangan_id')
@@ -97,10 +96,10 @@ def show_json_by_id(request, booking_id):
     return JsonResponse(data)
 
 
-@login_required(login_url='/login/')
+@login_required(login_url='authentication_user:login')
 def show_json(request):
     if request.user.profile.role == 'admin':
-        all_bookings = Booking.objects.filter(lapangan_id__admin=request.user).order_by('-created_at')
+        all_bookings = Booking.objects.filter(lapangan_id__admin_lapangan=request.user.profile).order_by('-created_at')
     else:
         # Ambil semua booking milik user yang sedang login
         all_bookings = Booking.objects.filter(user_id=request.user.profile.id).order_by('-created_at')
@@ -134,7 +133,7 @@ def show_json(request):
     
     return JsonResponse(data, safe=False)
 
-@login_required
+@login_required(login_url='authentication_user:login')
 def complete_booking(request, booking_id):
     # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
     try:
@@ -155,8 +154,6 @@ def complete_booking(request, booking_id):
 
 # flownya jadi dari create_booking di redirect ke booking_detail
 def booking_detail(request, booking_id):
-    # Pastikan booking_id valid dan user berhak melihatnya
-    # Walaupun data detailnya diambil AJAX, kita tetap validasi ID dan user di sini
     booking = get_object_or_404(Booking, id=booking_id, user_id=request.user.profile.id)
     booking.is_expired()
     return render(request, 'booking_detail.html', {
@@ -166,7 +163,7 @@ def booking_detail(request, booking_id):
     
 # function untuk ngedirect ke booking_list
 
-@login_required
+@login_required(login_url='authentication_user:login')
 def show_booking_list(request):
     return render(request, 'booking_list.html')
 
@@ -203,8 +200,6 @@ def delete_booking(request, booking_id):
     try:
         # 1. Ambil booking yang mau dihapus
         booking = Booking.objects.get(id=booking_id)
-        
-        # 2. Ambil waktu sekarang (yang sudah 'aware')
         now = timezone.now()
         
         # 3. Siapkan list untuk jadwal yang akan dibuka kembali
