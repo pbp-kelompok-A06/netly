@@ -11,14 +11,17 @@
     {% block meta %} 
     {% endblock %}
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50 flex flex-col min-h-screen">
 
     {% include 'navbar.html' %}
 
-    {% block content %}
-    {% endblock %}
-    
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
     {% include 'toast.html' %}
+    {% include 'footer.html' %}
 
     {% block javascript %}
     {% endblock javascript %}

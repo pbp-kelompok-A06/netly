@@ -52,10 +52,10 @@
                 </div>
                 <div class="flex space-x-2">
                     {% if user.is_authenticated %}
-                    <button onclick="showEditModal('{{ event.id }}')" class="font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5 rounded-full border border-gray-300"> {# Added padding, rounded, and border #}
+                    <button onclick="showEditModal('{{ event.id }}')" class="font-medium text-gray-600 hover:text-[#243153] hover:border-[#243153] transition-colors px-3 py-1.5 rounded-full border border-gray-300"> 
                         Edit
                     </button>
-                    <button onclick="showDeleteModal('{{ event.id }}')" class="font-medium text-red-600 hover:text-red-800 transition-colors px-3 py-1.5 rounded-full border border-red-600"> {# Added padding, rounded, and border #}
+                    <button onclick="showDeleteModal('{{ event.id }}')" class="font-medium text-[#ff5c52] hover:text-[#ab0900] hover:border-[#ab0900] transition-colors px-3 py-1.5 rounded-full border border-[#ff5c52]"> 
                         Delete
                     </button>
                     {% endif %}

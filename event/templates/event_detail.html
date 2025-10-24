@@ -294,14 +294,14 @@
                                 {% csrf_token %}
                                 <p class="text-green-600 font-semibold mb-2">You are registered.</p>
                                 <button id="join-leave-btn" data-url="${ajaxUrl}" 
-                                        class="block w-full py-3 px-6 rounded-md text-white bg-red-600 hover:bg-red-700 font-semibold">
+                                        class="block w-full py-3 px-6 rounded-full text-white bg-red-600 hover:bg-red-700 font-semibold">
                                     Cancel Join
                                 </button>`;
                         } else {
                             joinContainer.innerHTML = `
                         {% csrf_token %}
                         <button id="join-leave-btn" data-url="${ajaxUrl}" 
-                                class="block w-full py-3 px-6 rounded-md text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 font-semibold">
+                                class="block w-full py-3 px-6 rounded-full text-[#D7FC64] bg-[#243153] hover:bg-opacity-90 font-semibold">
                             Join
                         </button>`;
                         }

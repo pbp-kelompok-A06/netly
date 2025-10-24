@@ -19,7 +19,7 @@
             <div class="flex gap-4 items-center">   
                 <div class="relative w-full text-left">
                     <div>
-                        <button type="button" id="sort-menu-button" class="inline-flex justify-center w-full rounded-full border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" aria-expanded="true" aria-haspopup="true">
+                        <button type="button" id="sort-menu-button" class="inline-flex justify-center w-full rounded-full border border-[#243153] shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" aria-expanded="true" aria-haspopup="true">
                             Sort Date: {{ current_sort_label }}
                             <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -27,7 +27,7 @@
                         </button>
                     </div>
 
-                    <div id="sort-menu" class="hidden origin-top-left absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10" role="menu" aria-orientation="vertical" aria-labelledby="sort-menu-button" tabindex="-1">
+                    <div id="sort-menu" class="hidden origin-top-left absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-20" role="menu" aria-orientation="vertical" aria-labelledby="sort-menu-button" tabindex="-1">
                         <div class="py-1" role="none">
                             <a href="?sort=asc" class="text-gray-700 block px-4 py-2 text-sm {% if current_sort_label == 'Earliest' %}bg-gray-100{% endif %}" role="menuitem" tabindex="-1">
                                 Earliest (Ascending)
@@ -43,7 +43,7 @@
                     {% if user.is_authenticated and user.profile.role == 'admin' %}
                     <button 
                         onclick="showCreateModal()" 
-                        class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                        class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent font-bold text-sm rounded-full shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
                         Add New Event
                     </button>
                     {% endif %}
