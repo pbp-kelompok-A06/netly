@@ -1,0 +1,137 @@
+<div id="forumModalEdit" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-lg overflow-hidden relative">
+    <!-- Header -->
+    <div class="bg-indigo-900 text-white text-center py-6 relative">
+      <h2 class="text-2xl font-semibold">Edit a Forum</h2>
+      <button id="closeModalBtnEdit" class="absolute right-5 top-5 text-white hover:text-gray-200 text-xl font-bold">×</button>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" action="#" class="px-8 pt-8 pb-10 space-y-6" id="editForumForm">
+      {% csrf_token %}
+      <!-- Title -->
+      <div>
+        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <input 
+          type="text" 
+          name="title" 
+          id="title"
+          class="w-full border-b border-gray-300 focus:border-indigo-500 focus:ring-0 text-gray-800 outline-none py-2"
+          placeholder="Enter forum title" 
+          required
+        />
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea 
+          name="description" 
+          id="description"
+          rows="4"
+          class="w-full border-b border-gray-300 focus:border-indigo-500 focus:ring-0 text-gray-800 outline-none py-2 resize-none"
+          placeholder="Write a short description..."
+          required
+        ></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-center pt-4">
+        <button type="submit"
+          class="bg-indigo-900 hover:bg-indigo-800 text-white font-semibold px-10 py-3 rounded-full shadow-md transition duration-200">
+          Update Forum
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById('forumModalEdit')
+        const closeModalBtnEdit = document.getElementById('closeModalBtnEdit')
+        let currentForumId = null;
+
+        const editBtns = document.querySelectorAll(".editForm")
+
+        editBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                fetchDataForum(btn.dataset.url)
+            })
+        })
+        
+        const fetchDataForum = async (url) => {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+
+                const data = await response.json()
+                if(data.success) {
+                    currentForumId = data.data[0].id
+                    document.querySelector('#forumModalEdit #title').value = data.data[0].title
+                    document.querySelector('#forumModalEdit #description').value = data.data[0].description
+                    openModalFuncEdit()
+                } else {
+                    showToast('Error!', data.msg, 'error')
+                }
+            } catch(err) {
+                console.error(err)
+                showToast('Error!', 'Failed to fetch forum data.', 'error')
+            }
+        }
+
+        const editForum = async (e) => {
+            e.preventDefault()
+            
+            const formData = new FormData()
+            formData.append('title', document.querySelector('#forumModalEdit #title').value)
+            formData.append('description', document.querySelector('#forumModalEdit #description').value)
+            formData.append('csrfmiddlewaretoken', document.querySelector('#forumModalEdit [name=csrfmiddlewaretoken]').value)
+
+            try {
+                const url = "{% url 'community:update_forum' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', `${currentForumId}`)
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: formData
+                })
+
+                const data = await response.json()
+                if(data.success) {
+                    showToast('Success!', 'Forum updated successfully.', 'success')
+                    closeModalFuncEdit()
+                    setTimeout(() => window.location.href = "{% url 'community:forum' %}", 1000)
+                } else {
+                    showToast('Error!', data.msg || 'Failed to update forum.', 'error')
+                }
+            } catch(err) {
+                console.error(err)
+                showToast('Error!', 'An error occurred while updating the forum.', 'error')
+            }
+        }
+
+        const closeModalFuncEdit = () => {
+            modal.classList.add("hidden")
+            modal.classList.remove("flex")
+        }
+
+        const openModalFuncEdit = () => {
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+        }
+
+        closeModalBtnEdit.addEventListener('click', closeModalFuncEdit)
+        document.querySelector('#forumModalEdit form').addEventListener('submit', editForum)
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModalFuncEdit()
+            }
+        })
+    })
+</script>

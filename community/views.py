@@ -1,11 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from community.models import Forum, Forum_Comment, Forum_Post
-from community.forms import ForumForm, ForumCommentForm, ForumPostForm
-from django.http import JsonResponse
-from django.contrib.auth.models import User
-from authentication_user.models import UserProfile
+from community.models import Forum, Forum_Post
+from community.forms import ForumForm, ForumPostForm
+from django.http import JsonResponse, HttpResponse
 
-# fetch forum
+# fetch forum (done)
 def fetch_forum(request):
     forum_list = Forum.objects.all().prefetch_related('member')
 
@@ -17,24 +15,72 @@ def fetch_forum(request):
     }
     return render(request, "forum.html", context)
 
+# fetch forum by id (done)
+def fetch_forum_id(request, id_forum):
+    forum_list = Forum.objects.filter(pk=id_forum, creator_id=request.user.profile).values('id', 'title', 'description')
+    if forum_list:
+        return JsonResponse({
+            "success": True,
+            "msg": "successfully fetched",
+            "data": list(forum_list)
+        })
+    else:
+        return JsonResponse({
+            "success": True,
+            "msg": "Failed to fetch",
+            "data": []
+        })
 
-# fetch post by id forum
+
+# fetch post by id forum (done)
 def fetch_post_id(request, id_forum):
-    post_list = Forum_Post.objects.filter(forum_id=id_forum)
+    forum_data = get_object_or_404(Forum, id=id_forum)
+    post_list = Forum_Post.objects.filter(forum_id=forum_data).select_related('user_id').order_by('-created_at')
+    
+    if request.user.profile not in forum_data.member.all():
+        return HttpResponse("<script>alert('You are not a member of this forum.'); window.location.href='/community/forum/';</script>")
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    
+        data = []
+        for post in post_list:
+            try:
+                username = post.user_id.user.username
+            except Exception:
+                username = "None"
+
+            data.append({
+                "id": str(post.id),
+                "header": post.header,
+                "content": post.content,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "user": {
+                    "id": str(post.user_id.id),
+                    "username": username
+                }
+            })
+        if len(data) != 0:
+            return JsonResponse({
+                "success": True,
+                "msg": "successfully fetched posts.",
+                "data": data,
+                "current_user_id": str(request.user.profile.id)
+            })
+        return JsonResponse({
+            "success": False,
+            "msg": "data is empty",
+            "data": data
+        })
+    
+
     context = {
-        "data": post_list
+        "id_forum": id_forum,
+        "forum_name": forum_data.title
     }
-    # return render
+    return render(request, "forum_post.html", context)
 
 
-# fetch comment by id post
-def fetch_comment_id(request, id_forum, id_forum_post):
-    post_list = Forum_Comment.objects.filter(forum_id=id_forum, forum_post_id=id_forum_post)
-    context = {
-        "data": post_list
-    }
-    return 0
-# create forum
+
+# create forum (done)
 def create_forum(request):
     form = ForumForm()
     if request.method == "POST":
@@ -56,7 +102,7 @@ def create_forum(request):
                     "msg": "failed created."
                 })
 
-# join forum
+# join forum (done)
 def join_forum(request):
     if request.method == "POST":
         forum = get_object_or_404(Forum, pk = request.POST.get('id_forum'))
@@ -71,89 +117,88 @@ def join_forum(request):
                 "success": False,
                 "msg": "You are already joined."
             })
+# unjoin forum (done)
+def unjoin_forum(request):
+    if request.method == "POST":
+        forum = get_object_or_404(Forum, pk = request.POST.get('id_forum'))
+        if request.user.profile in forum.member.all():
+            if forum.creator_id == request.user.profile:
+                forum.delete()
+            else:
+                forum.member.remove(request.user.profile)
+            return JsonResponse({
+                "success": True,
+                "msg": f"Successfully unjoined forum {forum.title}"
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "msg": "You are already not part of the forum."
+            })
 
 
 
 
-# create post
-
+# create post (done)
 def create_post(request, id_forum):
     form = ForumPostForm()
     if request.method == "POST":
         form = ForumPostForm(request.POST)
         if form.is_valid():
             forum_entry = form.save(commit=False)
-            forum_entry.user_id = request.user.profile.id
-            forum_entry.forum_id = id_forum
+            forum_entry.user_id = request.user.profile
+            forum = get_object_or_404(Forum, id=id_forum)
+            forum_entry.forum_id = forum
             forum_entry.save()
-
-    
-    context = {
-        "form": form
-    }
-
-    return 0
-
-# create_comment
-
-def create_comment(request, id_forum, id_forum_post):
-    form = ForumCommentForm()
-    if request.method == "POST":
-        form = ForumCommentForm(request.POST)
-        if form.is_valid():
-            forum_entry = form.save(commit=False)
-            forum_entry.user_id = request.user.profile.id
-            forum_entry.forum_id = id_forum
-            forum_entry.forum_post_id = id_forum_post
-            forum_entry.save()
-    
-    context = {
-        "form": form
-    }
-
-    return 0
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    "success": True,
+                    "msg": "Post created."
+                })
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    "success": False,
+                    "msg": "failed to create a post."
+                })
 
 
-# update forum by id creator
-def update_forum(request, id_creator):
-    forum_data = get_object_or_404(Forum, creator_id=id_creator)
-    form = ForumForm()
+# update forum by id creator (done)
+def update_forum(request, id_forum):
+    forum_data = get_object_or_404(Forum, id=id_forum, creator_id=request.user.profile)
     if request.method == "POST":
         form = ForumForm(request.POST, instance=forum_data)
         if form.is_valid():
             form.save()
-    context = {
-        "form": form,
-        "data": forum_data
-    }
+            return JsonResponse({
+                "success": True,
+                "msg": "Successfully updated!"
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "msg": "Failed to update"
+            })
+    
 
-    return 0
-
-# delete forum by id creator
+# delete forum by id creator (done)
 def delete_forum(request, id_forum):
     forum_data = get_object_or_404(Forum, creator_id=request.user.profile, pk=id_forum)
     forum_data.delete()
     return redirect("community:forum")
 
-# delete post by id user and id_forum
-def delete_forum_post(request, id_forum):
-    forum_post_data = get_object_or_404(Forum_Post, forum_id=id_forum, )
+# delete post by id user and id_post (done)
+def delete_forum_post(request, id_post):
+    forum_post_data = get_object_or_404(Forum_Post, id=id_post, user_id=request.user.profile)
     if request.method == "POST":
         forum_post_data.delete()
+        return JsonResponse({
+            "success": True,
+            "msg": "Successfully deleted."
+        })
     
-    return 0
-
-# delete comment
-def delete_forum_comment(request, id_forum, id_post):
-    forum_post_data = get_object_or_404(Forum_Post, forum_id=id_forum, )
-    if request.method == "POST":
-        forum_post_data.delete()
-    
-    return 0
-
-
-
-def test(request):
-    print(request.user.profile)
-    return render(request,"index.html")
+    return JsonResponse({
+        "success": False,
+        "msg": "Failed to delete"
+    })
 
