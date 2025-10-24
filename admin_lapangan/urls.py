@@ -14,6 +14,7 @@ from admin_lapangan.views import (
     delete_jadwal_ajax,
     fetch_lapangan_list_ajax,  
     fetch_jadwal_list_ajax, 
+    import_lapangan_data
 )
 
 app_name = 'admin_lapangan'
@@ -38,4 +39,6 @@ urlpatterns = [
     path('jadwal/ajax/get/<uuid:pk>/', get_jadwal_json, name='get_jadwal_json'),
     path('jadwal/ajax/edit/<uuid:pk>/', edit_jadwal_ajax, name='edit_jadwal_ajax'),
     path('jadwal/ajax/delete/<uuid:pk>/', delete_jadwal_ajax, name='delete_jadwal_ajax'),
+
+    path('import-data/', import_lapangan_data, name="import_lapangan_data")
 ]

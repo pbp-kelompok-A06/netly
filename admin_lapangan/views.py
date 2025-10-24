@@ -6,6 +6,8 @@ from django.db.models import Q
 from .models import Lapangan, JadwalLapangan
 from .forms import LapanganForm, JadwalLapanganForm
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+import os, json
 
 def is_admin(user):
     return hasattr(user, 'profile') and user.profile.role == 'admin'
@@ -370,3 +372,74 @@ def fetch_jadwal_list_ajax(request, lapangan_id):
             'status': 'error',
             'message': 'Lapangan tidak ditemukan'
         }, status=404)
+
+
+@login_required(login_url='/login/')
+@admin_required
+def import_lapangan_data(request):
+    
+    try:
+        json_file_path = os.path.join(os.path.dirname(__file__), 'badminton_final.json')
+        
+        with open(json_file_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        
+        default_admin = request.user.profile
+        
+        created_count = 0
+        skipped_count = 0
+        error_count = 0
+        errors = []
+        
+
+        for item in data:
+            try:
+                if Lapangan.objects.filter(name=item['nama_tempat']).exists():
+                    skipped_count += 1
+                    continue
+                
+                lapangan = Lapangan.objects.create(
+                    admin_lapangan=default_admin,
+                    name=item['nama_tempat'],
+                    location=item['lokasi_tempat'],
+                    description=f"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+                    price=Decimal(item['harga_tempat']),
+                    image=item['link_gambar']
+                )
+                
+                created_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                errors.append({
+                    'nama_tempat': item.get('nama_tempat', 'Unknown'),
+                    'error': str(e)
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Import completed successfully',
+            'stats': {
+                'total_records': len(data),
+                'created': created_count,
+                'skipped': skipped_count,
+                'errors': error_count
+            },
+            'errors': errors if errors else None
+        })
+        
+    except FileNotFoundError:
+        return JsonResponse({
+            'success': False,
+            'message': 'JSON file not found. Please ensure badminton_final.json is in the correct location.'
+        })
+    except json.JSONDecodeError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Invalid JSON format: {str(e)}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Unexpected error: {str(e)}'
+        })
