@@ -1,9 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from community.models import Forum, Forum_Comment, Forum_Post
-from community.forms import ForumForm, ForumCommentForm, ForumPostForm
+from community.models import Forum, Forum_Post
+from community.forms import ForumForm, ForumPostForm
 from django.http import JsonResponse
-from django.contrib.auth.models import User
-from authentication_user.models import UserProfile
 
 # fetch forum (done)
 def fetch_forum(request):
@@ -17,6 +15,7 @@ def fetch_forum(request):
     }
     return render(request, "forum.html", context)
 
+# fetch forum by id (done)
 def fetch_forum_id(request, id_forum):
     forum_list = Forum.objects.filter(pk=id_forum, creator_id=request.user.profile).values('id', 'title', 'description')
     if forum_list:
@@ -33,33 +32,42 @@ def fetch_forum_id(request, id_forum):
         })
 
 
-# fetch post by id forum
+# fetch post by id forum (done)
 def fetch_post_id(request, id_forum):
-    post_list = Forum_Post.objects.filter(forum_id=id_forum)
-    if post_list:
+    forum_data = get_object_or_404(Forum, id=id_forum)
+    post_list = Forum_Post.objects.filter(forum_id=forum_data).select_related('user_id').order_by('-created_at')
 
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                "success": True,
-                "msg": "successfully fetch posts.",
-                "data": post_list
-            
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        data = []
+        for post in post_list:
+            try:
+                username = post.user_id.user.username
+            except Exception:
+                username = "None"
+
+            data.append({
+                "id": str(post.id),
+                "header": post.header,
+                "content": post.content,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "user": {
+                    "id": str(post.user_id.id),
+                    "username": username
+                }
             })
-    
+
+        return JsonResponse({
+            "success": True,
+            "msg": "successfully fetched posts.",
+            "data": data
+        })
+
     context = {
-        "id_forum": id_forum,
-        "data_post": post_list
+        "id_forum": id_forum
     }
     return render(request, "forum_post.html", context)
 
 
-# fetch comment by id post
-def fetch_comment_id(request, id_forum, id_forum_post):
-    post_list = Forum_Comment.objects.filter(forum_id=id_forum, forum_post_id=id_forum_post)
-    context = {
-        "data": post_list
-    }
-    return 0
 
 # create forum (done)
 def create_forum(request):
@@ -102,8 +110,7 @@ def join_forum(request):
 
 
 
-# create post
-
+# create post (done)
 def create_post(request, id_forum):
     form = ForumPostForm()
     if request.method == "POST":
@@ -127,29 +134,27 @@ def create_post(request, id_forum):
                 })
 
 
-# create_comment
-
-# def create_comment(request, id_forum, id_forum_post):
-#     form = ForumCommentForm()
-#     if request.method == "POST":
-#         form = ForumCommentForm(request.POST)
-#         if form.is_valid():
-#             forum_entry = form.save(commit=False)
-#             forum_entry.user_id = request.user.profile.id
-#             forum_entry.forum_id = id_forum
-#             forum_entry.forum_post_id = id_forum_post
-#             forum_entry.save()
-    
-#     context = {
-#         "form": form
-#     }
-
-#     return 0
-
-
-# update forum by id creator
+# update forum by id creator (done)
 def update_forum(request, id_forum):
     forum_data = get_object_or_404(Forum, id=id_forum, creator_id=request.user.profile)
+    if request.method == "POST":
+        form = ForumForm(request.POST, instance=forum_data)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({
+                "success": True,
+                "msg": "Successfully updated!"
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "msg": "Failed to update"
+            })
+    
+# update forum by id creator (done)
+def update_post(request, id_forum):
+    forum_data = get_object_or_404(Forum, id=id_forum)
+
     if request.method == "POST":
         form = ForumForm(request.POST, instance=forum_data)
         if form.is_valid():
@@ -173,19 +178,12 @@ def delete_forum(request, id_forum):
 
 # delete post by id user and id_forum
 def delete_forum_post(request, id_forum):
-    forum_post_data = get_object_or_404(Forum_Post, forum_id=id_forum, )
+    forum_data = get_object_or_404(Forum, id=id_forum)
+    forum_post_data = get_object_or_404(Forum_Post, forum_id=forum_data, user_id=request.user.profile)
     if request.method == "POST":
         forum_post_data.delete()
     
     return 0
-
-# delete comment
-# def delete_forum_comment(request, id_forum, id_post):
-#     forum_post_data = get_object_or_404(Forum_Post, forum_id=id_forum, )
-#     if request.method == "POST":
-#         forum_post_data.delete()
-    
-#     return 0
 
 
 

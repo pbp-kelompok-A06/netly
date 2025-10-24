@@ -10,7 +10,7 @@ Forum Post
     <div class="max-w-2xl mx-auto px-4">
         
         <div class="flex items-center justify-between mb-6">
-            <!-- Back Button -->
+
             <a 
                 href="{% url 'community:forum' %}"
                 class="flex items-center gap-2 text-gray-400 hover:text-black transition">
@@ -20,9 +20,9 @@ Forum Post
                 <span class="font-medium">Back</span>
             </a>
 
-            <!-- Refresh Button -->
+
             <button 
-                onclick="window.location.reload()"
+                id="refreshBtn"
                 class="flex items-center gap-2 text-gray-400 hover:text-black transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -31,7 +31,6 @@ Forum Post
             </button>
         </div>
 
-        <!-- Create Post Form -->
         <div class="border-b border-gray-800 pb-6 mb-6">
             <div class="flex items-start gap-3">
                 <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&size=40&background=random" 
@@ -65,54 +64,11 @@ Forum Post
             </div>
         </div>
 
-        <!-- Threads Feed Header -->
+
         <h2 class="text-2xl font-bold mb-6">Threads Feed</h2>
 
-        <!-- Threads Feed Content -->
         <div class="space-y-6" id="threadsList">
-            {% if data_post %}
-            {% for data in data_post %}
-            <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
-                <!-- User Avatar -->
-                <img src="https://ui-avatars.com/api/?name={{ data.user_id.user.username }}&size=40&background=random" 
-                     class="w-10 h-10 rounded-full flex-shrink-0" />
-                
-                <!-- Thread Content -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="font-semibold">{{ data.user_id.user.username }}</span>
-                        <span class="text-gray-500 text-sm">2 days ago</span>
-                    </div>
-                    
-                    <!-- Thread Title/Header -->
-                    <h3 class="text-lg font-bold mb-2">{{ data.header }}</h3>
-                    
-                    <!-- Thread Content -->
-                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">{{ data.content }}</p>
-                </div>
-            </div>
-            {% endfor %}
-            {% endif %}
             
-            <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
-                <!-- User Avatar -->
-                <img src="https://ui-avatars.com/api/?name=evan&size=40&background=random" 
-                     class="w-10 h-10 rounded-full flex-shrink-0" />
-                
-                <!-- Thread Content -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="font-semibold">Evan</span>
-                        <span class="text-gray-500 text-sm">2 days ago</span>
-                    </div>
-                    
-                    <!-- Thread Title/Header -->
-                    <h3 class="text-lg font-bold mb-2">HALO DUNIA</h3>
-                    
-                    <!-- Thread Content -->
-                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">APA KABARRRRRRR? Lorem ipsum dolor, sit amet consectetur adipisicing elit. Odit, ullam blanditiis officia beatae mollitia necessitatibus sapiente neque id culpa laboriosam aut eligendi quam in, iure quis ex?</p>
-                </div>
-            </div>
         </div>
 
     </div>
@@ -130,11 +86,10 @@ Forum Post
                 this.style.height = (this.scrollHeight) + 'px'
             })
         }
-
+        const refreshBtn = document.getElementById("refreshBtn")
         const postForm = document.getElementById("postForm")
         const threadsList = document.getElementById("threadsList")
         async function fetchPost(e){
-            e.preventDefault()
             try{
                 const url = "{% url 'community:fetch_post_id' id_forum %}"
                 const response = await fetch(url, {
@@ -142,33 +97,24 @@ Forum Post
                         "X-Requested-With": "XMLHttpRequest"
                     }
                 })
-
+                threadsList.innerHTML = ''
                 const data = await response.json()
                 if(data.success){
-                    data.data.forEach(el => {
-                        threadsList.appendChild(
+                    data.data.forEach(post => {
+                        threadsList.insertAdjacentHTML('beforeend',
                             `
                             <div class="flex items-start gap-3 border-b border-gray-800 pb-6">
-                                <!-- User Avatar -->
-                                <img src="https://ui-avatars.com/api/?name=${ el.user_id.username }&size=40&background=random" 
+                                <img src="https://ui-avatars.com/api/?name=${ post.user.username }&size=40&background=random" 
                                     class="w-10 h-10 rounded-full flex-shrink-0" />
-                                
-                                <!-- Thread Content -->
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-2">
-                                        <span class="font-semibold">${ el.user_id.username }</span>
-                                        <span class="text-gray-500 text-sm">2 days ago</span>
+                                        <span class="font-semibold">${ post.user.username }</span>
+                                        <span class="text-gray-500 text-sm">${ new Date(post.created_at).toLocaleString() }</span>
                                     </div>
-                                    
-                                    <!-- Thread Title/Header -->
-                                    <h3 class="text-lg font-bold mb-2">${ el.title }</h3>
-                                    
-                                    <!-- Thread Content -->
-                                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">${ el.content }</p>
+                                    <h3 class="text-lg font-bold mb-2">${ post.header }</h3>
+                                    <p class="text-base leading-relaxed whitespace-pre-wrap text-gray-700">${ post.content }</p>
                                 </div>
                             </div>
-                                
-                            
                             `
                         )
                     })
@@ -202,10 +148,8 @@ Forum Post
 
                 const data = await response.json()
                 if(data.success){
-                    setTimeout(() => window.location.href = "{% url 'community:fetch_post_id' id_forum %}", 1000)
-                    console.log(data.msg)
-                }else{
-                    console.log(data.msg)
+                    postForm.reset()
+                    fetchPost()
                 }
 
             }catch(err){
@@ -213,7 +157,8 @@ Forum Post
             }
             
         }
-
+        fetchPost()
+        refreshBtn.addEventListener("click", fetchPost)
         postForm.addEventListener("submit", createPost)
 
 
