@@ -1,10 +1,7 @@
 <div id="jadwalModal" class="hidden fixed inset-0 z-50 w-full flex items-center justify-center bg-gray-800 bg-opacity-50">
   <div id="jadwalModalContent" class="bg-white rounded-lg shadow-lg w-5/6 sm:w-3/5 md:w-1/2 lg:w-2/5 xl:w-1/3 max-h-screen overflow-y-auto transform transition-all duration-300 opacity-0 scale-95">
     
-<<<<<<< HEAD
-=======
     <!-- Modal Header -->
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
     <div class="flex items-center justify-between p-4 border-b">
       <div>
         <h3 id="jadwalModalTitle" class="text-xl font-semibold text-gray-900">
@@ -20,64 +17,43 @@
       </button>
     </div>
 
-<<<<<<< HEAD
-=======
     <!-- Modal Body -->
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
     <div class="px-6 py-4 space-y-4 form-style">
       <form id="jadwalForm">
           {% csrf_token %}
           
-<<<<<<< HEAD
-          <div class="mb-4">
-            <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-2">Tanggal *</label>
-=======
           <!-- Tanggal -->
           <div class="mb-4">
             <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-2">
               Tanggal *
             </label>
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
             <input type="date" id="tanggal" name="tanggal" 
                    class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                    required>
             <p class="mt-1 text-xs text-gray-500">Pilih tanggal untuk slot booking</p>
           </div>
           
-<<<<<<< HEAD
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label for="start_main" class="block text-sm font-medium text-gray-700 mb-2">Jam Mulai *</label>
-=======
           <!-- Waktu Mulai dan Selesai -->
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label for="start_main" class="block text-sm font-medium text-gray-700 mb-2">
                 Jam Mulai *
               </label>
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
               <input type="time" id="start_main" name="start_main" 
                      class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                      required>
             </div>
             <div>
-<<<<<<< HEAD
-              <label for="end_main" class="block text-sm font-medium text-gray-700 mb-2">Jam Selesai *</label>
-=======
               <label for="end_main" class="block text-sm font-medium text-gray-700 mb-2">
                 Jam Selesai *
               </label>
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
               <input type="time" id="end_main" name="end_main" 
                      class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                      required>
             </div>
           </div>
 
-<<<<<<< HEAD
-=======
           <!-- Status Ketersediaan -->
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
           <div class="mb-4">
             <label class="flex items-center">
               <input type="checkbox" id="is_available" name="is_available" value="true" checked
@@ -89,13 +65,6 @@
       </form>
     </div>
 
-<<<<<<< HEAD
-    <div class="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-200 rounded-b">
-      <button type="button" class="order-2 sm:order-1 flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors text-center" onclick="hideJadwalModal()">
-        Batal
-      </button>
-      <button type="submit" id="jadwalSubmitButton" form="jadwalForm" class="order-1 sm:order-2 flex-1 bg-[#243153] text-[#D7FC64] px-6 py-3 rounded-md font-medium hover:bg-opacity-80 transition-colors">
-=======
     <!-- Modal Footer -->
     <div class="flex flex-col sm:flex-row gap-4 p-6 border-t border-gray-200 rounded-b">
       <button type="button" 
@@ -107,7 +76,6 @@
               id="jadwalSubmitButton" 
               form="jadwalForm" 
               class="order-1 sm:order-2 flex-1 bg-[#243153] text-[#D7FC64] px-6 py-3 rounded-md font-medium hover:bg-opacity-80 transition-colors">
->>>>>>> b0e7c14c596c2fc59cab014026bfe81c955e47e5
         Tambah Jadwal
       </button>
     </div>
