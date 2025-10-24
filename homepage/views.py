@@ -1,204 +1,160 @@
-from django.shortcuts import render, redirect
-from datetime import datetime
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from datetime import datetime, date
+from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 
-# Dummy data untuk lapangan (lebih lengkap sesuai template)
-COURT_LIST = [
-    {
-        "id": 1,
-        "name": "Smash Arena",
-        "price": 75000,
-        "location": "Jakarta Selatan",
-        "rating": 4.8,
-        "status": "Available",
-        "image": "https://cdn.myactivesg.com/Sports/Badminton/Facilities/ActiveSG-Badminton-Hall.jpg",
-        "description": (
-            "Smash Arena adalah GOR badminton modern dengan 4 lapangan berkarpet vinyl, "
-            "penerangan LED terang, dan fasilitas ruang tunggu nyaman. "
-            "Cocok untuk latihan harian maupun turnamen kecil."
-        ),
-    },
-    {
-        "id": 2,
-        "name": "NetPro Court",
-        "price": 65000,
-        "location": "Bandung",
-        "rating": 4.6,
-        "status": "Available",
-        "image": "https://img.olympics.com/images/image/private/t_s_16_9_g_auto/t_s_w960/f_auto/primary/kfsyzuaoipfhm4qonqci",
-        "description": (
-            "NetPro Court menyediakan 3 lapangan badminton indoor dengan sistem booking online. "
-            "Setiap lapangan memiliki ventilasi baik dan area parkir luas."
-        ),
-    },
-    {
-        "id": 3,
-        "name": "SkyBird Badminton",
-        "price": 80000,
-        "location": "Surabaya",
-        "rating": 4.9,
-        "status": "Available",
-        "image": "https://blog.khelomore.com/wp-content/uploads/2022/02/MC44MjUxMzYwMCAxNDY4MjI1Njg3.jpeg",
-        "description": (
-            "SkyBird Badminton adalah fasilitas premium dengan 6 lapangan full AC dan karpet Yonex. "
-            "Tersedia juga kafe dan ruang ganti modern untuk pemain."
-        ),
-    },
-    {
-        "id": 4,
-        "name": "Ace Court",
-        "price": 55000,
-        "location": "Yogyakarta",
-        "rating": 4.5,
-        "status": "Available",
-        "image": "https://cdn.mos.cms.futurecdn.net/T94A6VdniJsaCYaUFsCPWk.jpg",
-        "description": (
-            "Ace Court berlokasi strategis di pusat kota Yogyakarta dengan 5 lapangan indoor. "
-            "Tersedia penyewaan raket dan layanan minuman ringan."
-        ),
-    },
-    {
-        "id": 5,
-        "name": "Baseline Indoor",
-        "price": 70000,
-        "location": "Depok",
-        "rating": 4.7,
-        "status": "Available",
-        "image": "https://www.activefitnessstore.com/media/catalog/product/cache/2/image/1800x/040ec09b1e35df139433887a97daa66f/b/a/badminton-court-flooring.jpg",
-        "description": (
-            "Baseline Indoor adalah GOR serbaguna dengan 4 lapangan badminton yang dilengkapi "
-            "dengan sistem pencahayaan standar turnamen dan area lounge modern."
-        ),
-    },
-]
+# from modul lain
+from admin_lapangan.models import Lapangan, JadwalLapangan
+from authentication_user.models import UserProfile
+from booking.models import Booking
+from community.models import Forum
+
+try:
+    from event.models import Event
+except Exception:
+    Event = None
+
+def _format_price(price):
+    """Return string representation of price that JS/template can use safely."""
+    try:
+        # price mungkin Decimal -> tampilkan sebagai int jika .00, else as string
+        if float(price).is_integer():
+            return str(int(price))
+        return str(price)
+    except Exception:
+        return str(price or "")
 
 
-# Dummy data untuk event (lebih lengkap)
-EVENT_LIST = [
-    {
-        "id": 1,
-        "name": "Netly Open 2025",
-        "image": "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
-        "description": "Join the biggest amateur badminton tournament in Indonesia!",
-        "date": "2025-11-20",
-        "location": "Jakarta",
-    },
-    {
-        "id": 2,
-        "name": "Smash & Rally Festival",
-        "image": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf",
-        "description": "Friendly matches, workshops, and live coaching.",
-        "date": "2025-12-05",
-        "location": "Bandung",
-    },
-    {
-        "id": 3,
-        "name": "Junior Badminton Cup",
-        "image": "https://images.unsplash.com/photo-1574672280600-4f27d49aa0d0",
-        "description": "Youth-exclusive championship!",
-        "date": "2025-12-28",
-        "location": "Surabaya",
-    },
-]
+def _next_availability_status(lapangan):
+    """
+    Sederhanakan: kalau ada jadwal masa depan dengan is_available=True => 'Available'
+    else 'Full' (atau kosong). Menggunakan model JadwalLapangan relation (related_name='jadwal').
+    """
+    try:
+        today = date.today()
+        next_jadwal = lapangan.jadwal.filter(tanggal__gte=today, is_available=True).order_by('tanggal', 'start_main').first()
+        if next_jadwal:
+            # bisa kembalikan tanggal juga, tapi sebelumnya template cuma menampilkan 'Available'
+            return "Available"
+        return "Full"
+    except Exception:
+        return ""
+    
+# Helper buat ubah object ke dict JSON
+def serialize_lapangan(obj):
+    return {
+        "id": str(obj.id),
+        "name": obj.name,
+        "price": float(obj.price),
+        "location": obj.location,
+        "rating": getattr(obj, "rating", 4.5),  # fallback kalau belum ada kolom rating
+        "status": "Available",
+        "image": obj.image.url if getattr(obj, "image", None) else "",
+        "description": obj.description,
+    }
 
+# homepage
+@login_required(login_url='authentication_user:login')
 def index(request):
-    """
-    View untuk homepage.
-    Menerima optional GET params: q, city, date, time
-    dan memfilter dummy data supaya search/filters berfungsi pada level UI.
-    """
-    q = request.GET.get("q", "").strip().lower()
-    city = request.GET.get("city", "").strip().lower()
-    date = request.GET.get("date", "").strip() 
-    time = request.GET.get("time", "").strip() 
+    q = request.GET.get("q", "").strip()
+    city = request.GET.get("city", "").strip()
 
-    # Filter courts (copy original list)
-    courts = COURT_LIST.copy()
+    courts_qs = Lapangan.objects.all()
+
+    # Jika user login dan dia admin -> tampilkan hanya lapangan miliknya
+    if request.user.is_authenticated:
+        profile = getattr(request.user, "profile", None)
+        if profile and profile.role == "admin":
+            courts_qs = courts_qs.filter(admin_lapangan=request.user.profile)
+
+    # Search & Filter
     if q:
-        courts = [c for c in courts if q in c["name"].lower() or q in c["location"].lower()]
+        courts_qs = courts_qs.filter(Q(name__icontains=q) | Q(location__icontains=q))
     if city:
-        courts = [c for c in courts if city in c["location"].lower()]
+        courts_qs = courts_qs.filter(location__icontains=city)
 
-    # (Simple) Filter events by city/date
-    events = EVENT_LIST.copy()
-    if city:
-        events = [e for e in events if city in e.get("location", "").lower()]
-    if date:
-        try:
-            # validate date format; if invalid, ignore
-            _ = datetime.strptime(date, "%Y-%m-%d")
-            events = [e for e in events if e.get("date") == date]
-        except ValueError:
-            pass
+    # Ambil semua lapangan
+    court_list = [serialize_lapangan(c) for c in courts_qs]
 
+    # Event
+    event_list = []
+    if Event:
+        event_qs = Event.objects.all()
+        if city:
+            event_qs = event_qs.filter(location__icontains=city)
+        event_list = [
+            {
+                "id": e.id,
+                "name": e.name,
+                "image": e.image.url if getattr(e, "image", None) else "",
+                "description": e.description,
+                "date": getattr(e, "date", ""),
+                "location": e.location,
+            }
+            for e in event_qs[:5]
+        ]
+
+    # Jika user sedang search → sembunyikan carousel event
     if q:
-        events = []  # kosongin supaya section carousel gak ditampilkan
+        event_list = []
 
-    # Context untuk template (sesuai fields yang template akses)
     context = {
-        "court_list": courts,
-        "event_list": events,
-        # kembalikan param ke template agar form tetap terisi
+        "court_list": court_list,
+        "event_list": event_list,
         "search_query": request.GET,
+        "user_profile": getattr(request.user, "profile", None)
+        if request.user.is_authenticated
+        else None,
     }
     return render(request, "homepage/index.html", context)
 
-# =======================
-#  COURT DETAIL PAGE
-# =======================
+#  court detail page
 def court_detail(request, court_id):
     """
-    Menampilkan detail lapangan dan jadwal dummy.
+    Menampilkan detail lapangan berdasarkan data nyata.
     """
-    court = next((c for c in COURT_LIST if c["id"] == int(court_id)), None)
-    if not court:
-        return redirect("homepage")
+    court = get_object_or_404(Lapangan, id=court_id)
 
+    # buat tombol Book mengarah ke modul booking
     return render(request, "homepage/court_detail.html", {"court": court})
 
-# contoh view placeholder untuk booking (akan dipanggil ketika user meneruskan ke booking)
+# booking redirect
 def booking_placeholder(request, court_id=None):
-    """
-    Placeholder: ketika user klik Book Now nanti diarahkan ke form booking nyata.
-    Untuk sekarang, hanya menampilkan ringkasan dummy atau redirect.
-    Tambahkan routing di urls.py: path('booking/<int:court_id>/', views.booking_placeholder, name='booking-placeholder')
-    """
-    # get court info by id (fallback ke first court)
-    court = next((c for c in COURT_LIST if c["id"] == int(court_id)) , COURT_LIST[0] if COURT_LIST else None)
-    if request.method == "POST":
-        # nanti proses booking: validasi tanggal/waktu, simpan ke DB, redirect ke success page
-        # sekarang redirect kembali ke homepage
-        return redirect("homepage")
-    return render(request, "homepage/booking_placeholder.html", {"court": court})
+    if not request.user.is_authenticated:
+        return redirect("authentication_user:login")
+    return redirect("booking:show_create_booking", lapangan_id=court_id)
 
+# search & filter ajax
 def search_courts_ajax(request):
-    """
-    Mengembalikan hasil search court dalam bentuk JSON (tanpa reload halaman).
-    """
-    q = request.GET.get("q", "").strip().lower()
-    courts = [c for c in COURT_LIST if q in c["name"].lower() or q in c["location"].lower()] if q else []
+    q = request.GET.get("q", "").strip()
+    qs = Lapangan.objects.all()
 
-    return JsonResponse({"results": courts})
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(location__icontains=q))
+
+    results = [serialize_lapangan(c) for c in qs[:20]]
+    return JsonResponse({"results": results})
+
 
 def filter_courts(request):
-    location = request.GET.get("location", "").lower()
+    location = request.GET.get("location", "").strip()
     min_price = request.GET.get("min_price")
     max_price = request.GET.get("max_price")
-    query = request.GET.get("q", "").lower()
+    q = request.GET.get("q", "").strip()
 
-    filtered = []
-    for c in COURT_LIST:
-        if query and query not in c["name"].lower() and query not in c["location"].lower():
-            continue
-        if location and location not in c["location"].lower():
-            continue
-        if min_price and c["price"] < int(min_price):
-            continue
-        if max_price and c["price"] > int(max_price):
-            continue
-        filtered.append(c)
+    qs = Lapangan.objects.all()
 
-    return JsonResponse({"results": filtered})
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(location__icontains=q))
+    if location:
+        qs = qs.filter(location__icontains=location)
+    if min_price:
+        qs = qs.filter(price__gte=min_price)
+    if max_price:
+        qs = qs.filter(price__lte=max_price)
 
+    results = [serialize_lapangan(c) for c in qs]
+    return JsonResponse({"results": results})
 
 

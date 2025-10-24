@@ -64,7 +64,7 @@
 
     <!-- SEARCH + FILTER -->
     <section id="search" class="relative z-20 mt-8 max-w-5xl mx-auto px-4">
-    <form method="get" action="{% url 'homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative" id="search-form">
+    <form method="get" action="{% url 'homepage:homepage' %}" class="bg-white shadow-md rounded-xl flex flex-col sm:flex-row items-center gap-3 p-4 md:p-5 relative" id="search-form">
         <!-- Search Input -->
         <input 
         type="text" 
@@ -132,42 +132,40 @@
     </div>
     </section>
 
-    {% if not search_query.q %}
-    <!-- SMALL CAROUSEL -->
-    <section class="max-w-5xl mx-auto px-4 mt-6 carousel-wrapper">
-    <div class="relative w-full h-56 md:h-64">
-        <div id="carousel" class="relative w-full h-full overflow-hidden">
-        {% for event in event_list %}
-            <div class="carousel-item absolute inset-0 {% if forloop.first %}active{% endif %} flex items-center justify-center">
-            <img src="{{ event.image }}" alt="{{ event.name|default:'Event' }}" class="w-full h-full object-cover carousel-img">
-            <div class="gradient-overlay"></div>
+{% if not search_query.q %}
+<!-- SMALL CAROUSEL -->
+<section class="max-w-5xl mx-auto px-4 mt-6 carousel-wrapper">
+  <div class="relative w-full h-56 md:h-64">
+    <div id="carousel" class="relative w-full h-full overflow-hidden">
+      {% for event in event_list %}
+        <div class="carousel-item absolute inset-0 {% if forloop.first %}active{% endif %} flex items-center justify-center">
+          <img src="{{ event.image }}" alt="{{ event.name|default:'Event' }}" class="w-full h-full object-cover carousel-img">
+          <div class="gradient-overlay"></div>
 
-            <div class="absolute left-6 bottom-6 text-white z-10">
-                <h3 class="text-lg md:text-xl font-bold">{{ event.name|default:'Event' }}</h3>
-                <p class="text-sm md:text-base text-gray-100/90 mt-1 max-w-md">{{ event.description|default:"Join the biggest badminton events near you." }}</p>
-            </div>
-            </div>
-        {% empty %}
-            <div class="carousel-item active absolute inset-0 flex items-center justify-center">
-            <img src="{% static 'img/default-banner.jpg' %}" alt="Welcome" class="w-full h-full object-cover carousel-img">
-            <div class="gradient-overlay"></div>
-            <div class="absolute left-6 bottom-6 text-white z-10">
-                <h3 class="text-lg md:text-xl font-bold">Temukan event badminton terdekat</h3>
-                <p class="text-sm md:text-base text-gray-100/90 mt-1">Cepat, mudah, dan terintegrasi dengan jadwal real-time.</p>
-            </div>
-            </div>
-        {% endfor %}
+          <div class="absolute left-6 bottom-6 text-white z-10">
+            <h3 class="text-lg md:text-xl font-bold">{{ event.name|default:'Event' }}</h3>
+            <p class="text-sm md:text-base text-gray-100/90 mt-1 max-w-md">{{ event.description|default:"Join the biggest badminton events near you." }}</p>
+          </div>
         </div>
+      {% empty %}
+        <div class="carousel-item active absolute inset-0 flex items-center justify-center">
+          <img src="{% static 'img/default-banner.jpg' %}" alt="Welcome" class="w-full h-full object-cover carousel-img">
+          <div class="gradient-overlay"></div>
+          <div class="absolute left-6 bottom-6 text-white z-10">
+            <h3 class="text-lg md:text-xl font-bold">Temukan event badminton terdekat</h3>
+            <p class="text-sm md:text-base text-gray-100/90 mt-1">Cepat, mudah, dan terintegrasi dengan jadwal real-time.</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
 
-      <!-- Arrows (smaller) -->
+    <!-- Arrows (smaller) -->
     <div id="prev" class="arrow left-4">&#10094;</div>
     <div id="next" class="arrow right-4">&#10095;</div>
+    <!-- Dots under the carousel (centered) -->
     <div id="carousel-dots" class="absolute bottom-3 left-0 right-0 flex justify-center z-20"></div>
-
-      <!-- Dots under the carousel (centered) -->
-      <div id="carousel-dots" class="absolute bottom-3 left-0 right-0 flex justify-center z-20"></div>
-    </div>
-  </section>
+  </div>
+</section>
 {% endif %}
 
   <section class="max-w-5xl mx-auto px-4 mt-8 pb-20">
@@ -189,33 +187,16 @@
             <span class="text-sm font-semibold text-[#243153]">Rp{{ court.price }}</span>
             <span class="text-xs text-gray-400">⭐ {{ court.rating }}</span>
             </div>
+
         </div>
 
         </a>
 
 
       {% empty %}
-        {% for i in "1234"|make_list %}
-          <article class="court-card bg-white rounded-2xl shadow-md overflow-hidden relative">
-            <span class="badge">Available</span>
-            <div class="h-44 w-full overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1549187774-b4e9b0445b66?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="placeholder" class="w-full h-full object-cover">
-            </div>
-            <div class="p-4">
-              <h3 class="text-lg font-semibold text-slate-800">Smash Arena</h3>
-              <p class="text-sm text-gray-500 mt-1">Jakarta Selatan</p>
-              <div class="mt-4 flex items-center justify-between">
-                <div>
-                  <div class="text-sm text-gray-700 font-medium">
-                    Mulai <span class="font-semibold">Rp75.000 / sesi</span>
-                  </div>
-                  <div class="text-xs text-gray-400 mt-1">⭐ 4.8</div>
-                </div>
-                <a href="#" class="btn-primary px-3 py-2 rounded-full text-sm">Book</a>
-              </div>
-            </div>
-          </article>
-        {% endfor %}
+        <p class="text-center text-gray-500 col-span-full">
+          Tidak ada lapangan tersedia.
+        </p>
       {% endfor %}
     </div>
 

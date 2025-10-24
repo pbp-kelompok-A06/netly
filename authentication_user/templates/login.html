@@ -103,7 +103,7 @@
             if (responseData.status === 'success') {
               errorDiv.classList.add('hidden');
               setTimeout(() => {
-                  window.location.href = "{% url 'homepage' %}";
+                  window.location.href = "{% url 'homepage:homepage' %}";
               }, 1500); 
             } else {
                 errorDiv.textContent = responseData.message;
