@@ -14,7 +14,7 @@
     <!-- Menu -->
     <nav class="hidden md:flex gap-8 text-sm font-medium text-[#243153]">
       <a href="{% url 'homepage:homepage' %}" 
-         class="hover:text-[#b6de3a] {% if request.resolver_match.app_name == 'homepage' %}text-[#b6de3a]{% endif %}">
+         class="hover:text-[#b6de3a] {% if request.resolver_match.url_name == 'homepage' %}text-[#b6de3a]{% endif %}">
         Home
       </a>
       <a href="{% url 'booking:show_booking_list' %}" 
@@ -28,6 +28,10 @@
       <a href="{% url 'event:show_events' %}" 
          class="hover:text-[#b6de3a] {% if request.resolver_match.app_name == 'event' %}text-[#b6de3a]{% endif %}">
         Event & Tournament
+      </a>
+      <a href="{% url 'homepage:favorite-list' %}" 
+         class="hover:text-[#b6de3a] {% if request.resolver_match.url_name == 'favorite-list' %}text-[#b6de3a]{% endif %}">
+        Favorites
       </a>
     </nav>
 
