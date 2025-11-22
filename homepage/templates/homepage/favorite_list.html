@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Favorites - Netly{% endblock %}
+
+{% block meta %}
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html { overflow-y: scroll; }
+
+    /* Style Cards */
+    .court-card { transition: all 0.28s ease-in-out; }
+    .court-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 14px 30px rgba(2,6,23,0.06); }
+    
+    /* Filter Buttons */
+    .btn-active { background-color: #243153; color: #D7FC64; border-color: #243153; }
+    .btn-inactive { background-color: white; color: #4b5563; border-color: #e5e7eb; }
+    .btn-inactive:hover { border-color: #243153; color: #243153; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-5xl mx-auto px-4 py-10">
+    
+    <div class="w-full flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-gray-100 pb-4">
+        <h1 class="text-3xl font-bold text-[#243153] w-full md:w-auto text-center md:text-left">
+            My Favorite Courts
+        </h1>
+        
+        <div class="flex flex-wrap gap-2 justify-center md:justify-end w-full md:w-auto" id="filter-group">
+            <button onclick="filterFavorites('')" id="btn-all" class="btn-active px-5 py-2 rounded-full text-sm font-semibold border transition-all shadow-sm">
+                All
+            </button>
+            <button onclick="filterFavorites('Rumah')" id="btn-Rumah" class="btn-inactive px-5 py-2 rounded-full text-sm font-semibold border transition-all shadow-sm">
+                🏠 Near Home
+            </button>
+            <button onclick="filterFavorites('Kantor')" id="btn-Kantor" class="btn-inactive px-5 py-2 rounded-full text-sm font-semibold border transition-all shadow-sm">
+                🏢 Near Office
+            </button>
+            <button onclick="filterFavorites('Lainnya')" id="btn-Lainnya" class="btn-inactive px-5 py-2 rounded-full text-sm font-semibold border transition-all shadow-sm">
+                📍 Others
+            </button>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-300 translate-y-10 opacity-0">
+        <div id="toast-message" class="px-6 py-3 rounded-full text-sm font-bold shadow-lg border flex items-center gap-3 bg-white">
+        </div>
+    </div>
+
+    <div id="favorites-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 min-h-[300px]">
+        <div class="col-span-full flex flex-col items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#243153]"></div>
+            <p class="text-gray-500 mt-3">Loading your favorites...</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API_LIST_URL = "{% url 'homepage:api-favorites-list' %}";
+    const API_REMOVE_URL = "/api/favorites/remove/";
+
+    const formatRupiah = (num) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    };
+
+    let currentLabel = '';
+
+    async function filterFavorites(label) {
+        currentLabel = label;
+        updateButtonStyles(label);
+
+        const container = document.getElementById('favorites-container');
+        
+        // Loading indicator
+        container.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#243153]"></div>
+            </div>`;
+
+        try {
+            let url = API_LIST_URL;
+            if (label) url += `?label=${label}`;
+
+            const response = await fetch(url);
+            const json = await response.json();
+            const data = json.results;
+
+            container.innerHTML = ""; 
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        <p class="text-gray-500 mb-4 font-medium">No favorites found.</p>
+                        <a href="{% url 'homepage:homepage' %}" class="text-[#243153] font-bold hover:underline">Browse Courts</a>
+                    </div>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const court = item.lapangan;
+                const detailUrl = `/court/${court.id}/`; // URL Detail
+                
+                // Label Style
+                let labelText = "📍 Other";
+                let labelClass = "bg-gray-100 text-gray-600";
+
+                if (item.label === 'Rumah') {
+                    labelText = "🏠 Near Home";
+                    labelClass = "bg-blue-50 text-[#243153] border border-blue-100";
+                } else if (item.label === 'Kantor') {
+                    labelText = "🏢 Near Office";
+                    labelClass = "bg-purple-50 text-purple-800 border border-purple-100";
+                } else {
+                    labelClass = "bg-gray-50 text-gray-600 border border-gray-200";
+                }
+                
+                const cardHTML = `
+                <div onclick="window.location.href='${detailUrl}'" class="cursor-pointer block bg-white rounded-2xl shadow-md overflow-hidden relative court-card flex flex-col h-full border border-gray-100 group-card" id="card-${item.id}">
+                    
+                    <div class="h-44 w-full overflow-hidden relative group">
+                        <img src="${court.image}" alt="${court.name}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        
+                        <button onclick="event.stopPropagation(); removeFavorite('${item.id}')" class="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full text-red-500 hover:text-red-700 hover:bg-white shadow-sm z-10 transition transform hover:scale-110" title="Remove">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+
+                    <div class="p-4 flex flex-col flex-grow">
+                        <h3 class="text-lg font-semibold text-slate-800 leading-tight group-hover:text-[#243153] transition">${court.name}</h3>
+
+                        <div class="flex items-center gap-1 mt-2 text-gray-500 text-sm mb-4">
+                            <span class="truncate">${court.location || 'Location info unavailable'}</span>
+                        </div>
+
+                        <div class="mt-auto flex items-center justify-between border-t border-gray-100 pt-3">
+                            <span class="text-lg font-bold text-[#243153]">${formatRupiah(court.price)}</span>
+                            
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${labelClass}">
+                                ${labelText}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    function updateButtonStyles(activeLabel) {
+        const buttons = ['all', 'Rumah', 'Kantor', 'Lainnya'];
+        buttons.forEach(lbl => {
+            const btnId = lbl === 'all' ? 'btn-all' : `btn-${lbl}`;
+            const btn = document.getElementById(btnId);
+            let isActive = (activeLabel === '' && lbl === 'all') || (activeLabel === lbl);
+
+            if (isActive) {
+                btn.className = "btn-active px-5 py-2 rounded-full text-sm font-semibold border transition-all shadow-sm";
+            } else {
+                btn.className = "btn-inactive px-5 py-2 rounded-full text-sm font-semibold border transition-all shadow-sm";
+            }
+        });
+    }
+
+    async function removeFavorite(favId) {
+        if(!confirm("Are you sure you want to remove this favorite?")) return;
+        const card = document.getElementById(`card-${favId}`);
+        if(card) card.style.opacity = '0.5';
+
+        try {
+            const response = await fetch(`${API_REMOVE_URL}${favId}/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            });
+            if(response.ok) {
+                showToast("✅ Successfully removed.");
+                filterFavorites(currentLabel);
+            } else {
+                alert("Failed to remove.");
+                if(card) card.style.opacity = '1';
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function showToast(msg) {
+        const container = document.getElementById('toast-container');
+        const message = document.getElementById('toast-message');
+        
+        message.className = "px-6 py-3 rounded-full text-sm font-bold shadow-lg border flex items-center gap-3 bg-white text-gray-800 border-gray-200";
+        message.textContent = msg;
+        
+        container.classList.remove('hidden', 'translate-y-10', 'opacity-0');
+        
+        setTimeout(() => {
+            container.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 300);
+        }, 3000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        filterFavorites('');
+    });
+</script>
+{% endblock %}

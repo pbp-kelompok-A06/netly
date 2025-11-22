@@ -1,37 +1,223 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{{ court.name }} - Detail{% endblock %}
+
 {% block content %}
-<section class="max-w-5xl mx-auto px-4 mt-10 mb-24">
+<main class="max-w-7xl mx-auto px-4 pt-6 pb-32 relative">
 
-    <!-- Gambar Court -->
-    <div class="w-full max-w-5xl mx-auto mb-6 overflow-hidden rounded-lg shadow-md">
-        <img src="{{ court.image }}" alt="{{ court.name }}" class="w-full h-96 md:h-[28rem] object-cover rounded-lg">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        
+        <div class="lg:col-span-7 w-full">
+            <div class="rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative group">
+                <div class="aspect-[4/3] w-full">
+                    <img src="{{ court.image }}" alt="{{ court.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-in-out">
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-6">
+            
+            <div class="flex justify-between items-start gap-4">
+                
+                <div class="flex-grow">
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-[#243153] leading-tight mb-2">{{ court.name }}</h1>
+                    <div class="flex items-center text-gray-500 font-medium gap-2 text-sm">
+                        <svg class="w-5 h-5 text-[#243153]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{ court.location }}
+                    </div>
+                </div>
+
+                <div class="relative flex-shrink-0 flex flex-col items-center mt-2">
+                    
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Save to Favorites</label>
+                    
+                    <div class="flex items-center bg-white border border-gray-200 rounded-full px-1 py-1 shadow-sm hover:shadow-md transition-shadow">
+                        
+                        <button onclick="toggleFavoriteAJAX()" id="favBtn" class="p-2 rounded-full transition-all flex items-center justify-center group transform active:scale-90" title="Toggle Favorite">
+                            {% if is_favorited %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 fill-current" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                                </svg>
+                            {% else %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            {% endif %}
+                        </button>
+
+                        <div class="h-4 w-px bg-gray-200 mx-1"></div>
+
+                        <div class="relative">
+                            <select id="favLabel" onchange="handleDropdownChange()" class="appearance-none bg-transparent text-xs font-bold text-[#243153] py-1 pl-3 pr-5 cursor-pointer focus:outline-none">
+                                <option value="Rumah" {% if existing_label == 'Rumah' %}selected{% endif %}>Home</option>
+                                <option value="Kantor" {% if existing_label == 'Kantor' %}selected{% endif %}>Office</option>
+                                <option value="Lainnya" {% if existing_label == 'Lainnya' %}selected{% endif %}>Other</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1 text-gray-400">
+                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="local-toast" class="absolute top-full right-0 mt-2 w-max max-w-[200px] z-50 hidden transition-all duration-300 opacity-0 transform -translate-y-2">
+                        <div id="toast-content" class="px-3 py-2 rounded-lg text-xs font-bold shadow-lg border bg-white flex items-center gap-2">
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <div>
+                <h3 class="text-lg font-bold text-[#243153] mb-2">About Venue</h3>
+                <div class="text-gray-600 leading-relaxed text-sm md:text-base max-h-64 overflow-y-auto pr-2 custom-scrollbar text-justify">
+                    {{ court.description }}
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- Nama dan Lokasi -->
-    <div class="max-w-5xl mx-auto mb-6 text-left">
-        <h2 class="text-2xl md:text-3xl font-bold text-[#243153] mb-1">{{ court.name }}</h2>
-        <p class="text-gray-500 text-sm flex items-center gap-2">
-            {{ court.location }}
-        </p>
+</main>
+
+<div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 py-4 px-6 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-40">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex flex-col">
+            <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider">Start from</span>
+            <div class="flex items-baseline gap-1">
+                <span class="text-2xl font-extrabold text-[#243153]">Rp {{ formatted_price }}</span>
+                <span class="text-sm text-gray-500 font-medium">/ hour</span>
+            </div>
+        </div>
+        
+        <a href="{% url 'booking:show_create_booking' court.id %}" 
+        class="bg-[#243153] text-[#D7FC64] font-bold text-lg px-8 py-3 rounded-full shadow-lg shadow-blue-900/10 hover:bg-[#2F3F61] hover:scale-105 transition transform active:scale-95 flex items-center gap-2">
+            <span>Book Now</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
     </div>
-
-    <hr class="my-6 border-gray-200">
-
-    <!-- Deskripsi -->
-    <div class="max-w-5xl mx-auto mb-24 text-left">
-        <h3 class="text-lg font-semibold text-[#243153] mb-2">Deskription</h3>
-        <p class="text-gray-600 leading-relaxed">{{ court.description }}</p>
-    </div>
-
-</section>
-
-<!-- Tombol Booking -->
-<div class="fixed bottom-0 left-0 right-0 bg-[#243153] py-4 text-center shadow-lg">
-    <a href="{% url 'booking:show_create_booking' court.id %}" 
-    class="bg-[#243153] text-[#D7FC64] font-semibold text-lg tracking-wide px-10 py-3 rounded-full shadow-md hover:bg-[#2F3F61] transition">
-    Booking
-    </a>
 </div>
+
+<style>
+    html { overflow-y: scroll; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+
+<script>
+    let isFavorited = {{ is_favorited|yesno:"true,false" }}; 
+
+    async function toggleFavoriteAJAX() {
+        const btn = document.getElementById('favBtn');
+        const labelValue = document.getElementById('favLabel').value;
+        const originalIcon = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = `<div class="animate-spin h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>`;
+
+        try {
+            const response = await fetch("{% url 'homepage:api-toggle-favorite' court.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}" 
+                },
+                body: JSON.stringify({ label: labelValue })
+            });
+
+            const data = await response.json();
+
+            if (data.status === "added") {
+                isFavorited = true;
+                showToast("Saved", "success");
+                renderHeart(true);
+            } 
+            else if (data.status === "removed") {
+                isFavorited = false;
+                showToast("Removed", "default");
+                renderHeart(false);
+            } 
+            else {
+                btn.innerHTML = originalIcon;
+            }
+
+        } catch (error) {
+            console.error(error);
+            btn.innerHTML = originalIcon;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function handleDropdownChange() {
+        if (!isFavorited) return; 
+
+        const labelValue = document.getElementById('favLabel').value;
+        
+        try {
+            await fetch("{% url 'homepage:api-toggle-favorite' court.id %}", {
+                method: "POST",
+                headers: {"X-CSRFToken": "{{ csrf_token }}"}
+            });
+
+            const response = await fetch("{% url 'homepage:api-toggle-favorite' court.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}" 
+                },
+                body: JSON.stringify({ label: labelValue })
+            });
+            
+            if (response.ok) {
+                showToast("Updated", "success");
+            }
+
+        } catch (e) {
+            console.error("Update error", e);
+        }
+    }
+
+    function renderHeart(active) {
+        const btn = document.getElementById('favBtn');
+        if (active) {
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 fill-current transform scale-110 transition-transform duration-200" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>`;
+        } else {
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`;
+        }
+    }
+
+    function showToast(message, type) {
+        const toast = document.getElementById('local-toast');
+        const content = document.getElementById('toast-content');
+
+        let textColor = "text-gray-600";
+        let icon = "";
+        
+        if (type === "success") {
+            textColor = "text-green-700";
+            icon = "✓";
+        } else if (type === "default") {
+            textColor = "text-gray-600";
+            icon = "🗑️";
+        }
+
+        content.className = `px-3 py-2 rounded-lg text-xs font-bold shadow-lg border bg-white flex items-center gap-2 ${textColor}`;
+        content.innerHTML = `<span>${icon}</span> ${message}`;
+
+        toast.classList.remove('hidden', '-translate-y-2', 'opacity-0');
+        
+        setTimeout(() => {
+            toast.classList.add('-translate-y-2', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }, 2000);
+    }
+</script>
 {% endblock %}
