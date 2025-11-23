@@ -171,7 +171,7 @@ def join_leave_event(request, pk):
         event = get_object_or_404(Event, pk=pk)
         user_profile = request.user.profile
 
-        # cek apakah dia participat (sudah join) dari eventnya atau bukan
+        # cek apakah participat udah join dari eventnya
         is_participant = event.participant.filter(id=user_profile.id).exists()
 
         if is_participant:
@@ -192,7 +192,7 @@ def join_leave_event(request, pk):
 @login_required(login_url='/login/')
 @require_POST # 
 def join_event_ajax(request, pk):
-    # fungsi ini mirip join_leave_event, tapi balasannya dalam bentuk JSON
+    # fungsi ini mirip join_leave_event, tapi returnnya dalam bentuk JSON
     try:
         event = get_object_or_404(Event, pk=pk)
         user_profile = request.user.profile
