@@ -38,15 +38,15 @@
                     </div>
                 </div>
 
-                <div class="w-full"> 
-                    {% if user.is_authenticated and user.profile.role == 'admin' %}
-                    <button 
-                        onclick="showCreateModal()" 
-                        class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent font-bold text-sm rounded-full shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
-                        Add New Event
-                    </button>
-                    {% endif %}
-                </div>
+                {% if user.is_authenticated and user.profile.role == 'admin' %}
+                    <div class="w-full"> 
+                        <button 
+                            onclick="showCreateModal()" 
+                            class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent font-bold text-sm rounded-full shadow-sm text-[#D7FC64] bg-[#243153] hover:bg-opacity-90">
+                            Add New Event
+                        </button>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
