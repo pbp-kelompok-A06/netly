@@ -51,7 +51,7 @@
                     {% endif %}
                 </div>
                 <div class="flex space-x-2">
-                    {% if user.is_authenticated %}
+                    {% if user.is_authenticated and user.profile.role == 'admin' %}
                     <button onclick="showEditModal('{{ event.id }}')" class="font-medium text-gray-600 hover:text-[#243153] hover:border-[#243153] transition-colors px-3 py-1.5 rounded-full border border-gray-300"> 
                         Edit
                     </button>

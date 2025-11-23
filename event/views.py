@@ -9,6 +9,7 @@ from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
 from django.forms.models import model_to_dict
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 def is_admin(user):
     return hasattr(user, 'profile') and user.profile.role == 'admin'
@@ -224,3 +225,105 @@ def join_event_ajax(request, pk):
 
     except Event.DoesNotExist:
         return JsonResponse({'status': 'fail', 'message': 'Event tidak ditemukan.'}, status=404)
+    
+@login_required(login_url='/login/')
+def show_events_flutter(request):
+    events = Event.objects.all().order_by('start_date')
+    data = []
+    
+    for event in events:
+        data.append({
+            "pk": str(event.id),
+            "fields": {
+                "name": event.name,
+                "description": event.description,
+                "start_date": event.start_date.isoformat(),
+                "end_date": event.end_date.isoformat(),
+                "location": event.location,
+                "image_url": event.image_url,
+                "max_participants": event.max_participants,
+                "participant_count": event.participant.count(),
+                "is_active": event.start_date > date.today(),
+                "is_full": event.participant.count() >= event.max_participants,
+                # cek apakah user yang login sudah join
+                "is_joined": event.participant.filter(id=request.user.profile.id).exists()
+            }
+        })
+        
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt
+@login_required
+def create_event_flutter(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_profile = request.user.profile
+
+            new_event = Event.objects.create(
+                admin=user_profile,
+                name=data["name"],
+                description=data["description"],
+                start_date=data["start_date"], 
+                end_date=data["end_date"],
+                location=data["location"],
+                max_participants=int(data["max_participants"]),
+                image_url=data.get("image_url", "") 
+            )
+            
+            new_event.save()
+            return JsonResponse({"status": "success"}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
+
+@csrf_exempt
+@login_required
+def edit_event_flutter(request, pk):
+    try:
+        event = Event.objects.get(pk=pk)
+    except Event.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Event tidak ditemukan'}, status=404)
+
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        # validasi Admin
+        if request.user.profile != event.admin:
+             return JsonResponse({'status': 'error', 'message': 'Bukan admin'}, status=403)
+
+        event.name = data["name"]
+        event.description = data["description"]
+        event.start_date = data["start_date"]
+        event.end_date = data["end_date"]
+        event.location = data["location"]
+        event.max_participants = int(data["max_participants"])
+        event.image_url = data.get("image_url", event.image_url)
+        
+        event.save()
+        return JsonResponse({"status": "success", "message": "Event berhasil diupdate"}, status=200)
+
+    return JsonResponse({"status": "error"}, status=401)
+
+@csrf_exempt
+@login_required
+
+def join_event_flutter(request, pk):
+    try:
+        event = Event.objects.get(pk=pk)
+        user_profile = request.user.profile
+        
+        if event.participant.filter(id=user_profile.id).exists():
+            event.participant.remove(user_profile)
+            return JsonResponse({'status': 'success', 'action': 'leave', 'message': 'Left event'})
+        else:
+            if event.participant.count() >= event.max_participants:
+                return JsonResponse({'status': 'fail', 'message': 'Full'}, status=400)
+            
+            event.participant.add(user_profile)
+            return JsonResponse({'status': 'success', 'action': 'join', 'message': 'Joined event'})
+            
+    except Event.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+    
