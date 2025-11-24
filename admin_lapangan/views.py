@@ -45,7 +45,6 @@ def show_lapangan_list(request):
         admin_lapangan=request.user.profile
     )
     
-    # FIXED: Apply search filter properly using Q objects
     if search_query:
         lapangan_list = lapangan_list.filter(
             Q(name__icontains=search_query) | Q(location__icontains=search_query)
@@ -127,7 +126,7 @@ def get_lapangan_json(request, pk):
             'location': lapangan.location,
             'description': lapangan.description,
             'price': str(lapangan.price),
-            'image': lapangan.image or ''  # CHANGED: direct value, no .url
+            'image': lapangan.image or ''  
         }
         return JsonResponse({'status': 'success', 'data': data})
     except Lapangan.DoesNotExist:
@@ -443,3 +442,53 @@ def import_lapangan_data(request):
             'success': False,
             'message': f'Unexpected error: {str(e)}'
         })
+    
+@login_required(login_url='/login/')
+def get_all_lapangan_json(request):
+    search_query = request.GET.get('search', '').strip()
+    
+    lapangan_list = Lapangan.objects.all()
+    
+    if search_query:
+        lapangan_list = lapangan_list.filter(
+            Q(name__icontains=search_query) | Q(location__icontains=search_query)
+        )
+    
+    lapangan_list = lapangan_list.order_by('-created_at')
+    
+    data = []
+    for lapangan in lapangan_list:
+        data.append({
+            'id': str(lapangan.id),
+            'name': lapangan.name,
+            'location': lapangan.location,
+            'description': lapangan.description,
+            'price': float(lapangan.price),
+            'image': lapangan.image or '',
+            'admin_name': lapangan.admin_lapangan.fullname if lapangan.admin_lapangan else 'Unknown',
+        })
+    
+    return JsonResponse({'status': 'success', 'data': data})
+
+@login_required(login_url='/login/')
+def get_lapangan_detail_json(request, pk):
+    try:
+        lapangan = Lapangan.objects.get(pk=pk)
+        
+        data = {
+            'id': str(lapangan.id),
+            'name': lapangan.name,
+            'location': lapangan.location,
+            'description': lapangan.description,
+            'price': float(lapangan.price),
+            'image': lapangan.image or '',
+            'admin_name': lapangan.admin_lapangan.fullname if lapangan.admin_lapangan else 'Unknown',
+            'created_at': lapangan.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': lapangan.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        return JsonResponse({'status': 'success', 'data': data})
+    except Lapangan.DoesNotExist:
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan'
+        }, status=404)
