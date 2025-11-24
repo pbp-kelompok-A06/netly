@@ -239,8 +239,6 @@ def delete_booking(request, booking_id):
     except Exception as e:
         # Tangkap error lain jika ada
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-# booking/views.py
 
 @login_required
 def get_booking_data_flutter(request, lapangan_id):
