@@ -239,3 +239,45 @@ def delete_booking(request, booking_id):
     except Exception as e:
         # Tangkap error lain jika ada
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required
+def get_booking_data_flutter(request, lapangan_id):
+    # 1. Ambil Logika Waktu (Sama seperti di show_create_booking)
+    today = timezone.now().date() 
+    limit_date = today + timedelta(days=2)
+    
+    # 2. Ambil Lapangan
+    try:
+        lapangan = Lapangan.objects.get(id=lapangan_id)
+    except Lapangan.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Lapangan not found'}, status=404)
+
+    # 3. Ambil Jadwal Available
+    jadwals = Jadwal.objects.filter(
+        lapangan_id=lapangan_id, 
+        is_available=True,
+        tanggal__gte=today,
+        tanggal__lte=limit_date
+    ).order_by('tanggal', 'start_main')
+
+    # 4. Serialize Data Jadwal
+    jadwal_data = []
+    for j in jadwals:
+        jadwal_data.append({
+            "id": str(j.id),
+            "tanggal": j.tanggal.strftime("%Y-%m-%d"),
+            "start_main": j.start_main.strftime("%H:%M"),
+            "end_main": j.end_main.strftime("%H:%M"),
+            "is_available": j.is_available,
+        })
+
+    # 5. Return JSON
+    return JsonResponse({
+        "status": "success",
+        "lapangan": {
+            "id": str(lapangan.id),
+            "name": lapangan.name,
+            "price": lapangan.price, # Pastikan tipe datanya sesuai (float/int)
+        },
+        "jadwal_list": jadwal_data
+    })
