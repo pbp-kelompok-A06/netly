@@ -15,6 +15,7 @@ import uuid
 # asumsi setiap booking hanya untuk 1 lapangan dan bisa lebih dari 1 jadwal
 class Booking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # many to many karena 1 booking bisa untuk banyak jadwal. ga many to one 
     lapangan_id = models.ForeignKey(Lapangan, on_delete=models.CASCADE)
     jadwal = models.ManyToManyField(Jadwal)
     user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
