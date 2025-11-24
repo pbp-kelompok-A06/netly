@@ -12,6 +12,15 @@ def fetch_forum(request):
     for forum in forum_list:
         forum.is_member = forum.member.filter(id=request.user.profile.id).exists()
 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if len(forum_list) != 0:
+
+            return JsonResponse({
+                "sucesss": True,
+                "msg": "Successfully fetched",
+                "data": list(forum_list.values())
+            }, safe=False)
+
     context = {
         "data": forum_list
     }
@@ -35,16 +44,109 @@ def fetch_forum_id(request, id_forum):
         })
 
 
+# fetch forum by creator (done)
+@login_required(login_url="authentication_user:login")
+def fetch_forum_creator(request):
+    forum_list = Forum.objects.filter(creator_id=request.user.profile).values('id', 'title', 'description')
+    if forum_list:
+        return JsonResponse({
+            "success": True,
+            "msg": "successfully fetched",
+            "data": list(forum_list)
+        })
+    else:
+        return JsonResponse({
+            "success": False,
+            "msg": "Failed to fetch",
+            "data": []
+        })
+
+# fetch forum that user joins (done)
+@login_required(login_url="authentication_user:login")
+def fetch_forum_joined(request):
+    forum_list = Forum.objects.filter(member=request.user.profile).values('id', 'title', 'description')
+    if forum_list:
+        return JsonResponse({
+            "success": True,
+            "msg": "successfully fetched",
+            "data": list(forum_list)
+        })
+    else:
+        return JsonResponse({
+            "success": False,
+            "msg": "Failed to fetch",
+            "data": []
+        })
+
+
 # fetch post by id forum (done)
 @login_required(login_url="authentication_user:login")
 def fetch_post_id(request, id_forum):
     forum_data = get_object_or_404(Forum, id=id_forum)
     post_list = Forum_Post.objects.filter(forum_id=forum_data).select_related('user_id').order_by('-created_at')
     
-    if request.user.profile not in forum_data.member.all():
+    if request.user.profile not in forum_data.member.all() and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         return HttpResponse("<script>alert('You are not a member of this forum.'); window.location.href='/community/';</script>")
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.user.profile not in forum_data.member.all():
+            return JsonResponse({
+                "success": False,
+                "msg": "Not a member",
+                "data": []
+            })
+        data = []
+        for post in post_list:
+            try:
+                username = post.user_id.user.username
+            except Exception:
+                username = "None"
+
+            data.append({
+                "id": str(post.id),
+                "header": post.header,
+                "content": post.content,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "user": {
+                    "id": str(post.user_id.id),
+                    "username": username
+                }
+            })
+        if len(data) != 0:
+            return JsonResponse({
+                "success": True,
+                "msg": "successfully fetched posts.",
+                "data": data,
+                "current_user_id": str(request.user.profile.id)
+            })
+        return JsonResponse({
+            "success": False,
+            "msg": "data is empty",
+            "data": data
+        })
     
+
+    context = {
+        "id_forum": id_forum,
+        "forum_name": forum_data.title
+    }
+    return render(request, "forum_post.html", context)
+
+
+# fetch post by id forum and user created (done)
+@login_required(login_url="authentication_user:login")
+def fetch_post_id_user(request, id_forum):
+    forum_data = get_object_or_404(Forum, id=id_forum)
+    post_list = Forum_Post.objects.filter(forum_id=forum_data, user_id=request.user.profile).select_related('user_id').order_by('-created_at')
+    
+    if request.user.profile not in forum_data.member.all() and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return HttpResponse("<script>alert('You are not a member of this forum.'); window.location.href='/community/';</script>")
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.user.profile not in forum_data.member.all():
+            return JsonResponse({
+                "success": False,
+                "msg": "Not a member",
+                "data": []
+            })
         data = []
         for post in post_list:
             try:

@@ -5,6 +5,7 @@ from authentication_user.models import UserProfile
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 import json
 
@@ -27,6 +28,7 @@ def logout_view(request):
     return redirect('authentication_user:login')    # redirect ke home page
 
 @require_POST 
+@csrf_exempt
 def register_ajax(request):
     # handle register with ajax
     try:
@@ -76,6 +78,7 @@ def register_ajax(request):
 
 
 @require_POST 
+@csrf_exempt
 def login_ajax(request):
     # handle login user via ajax
     try:

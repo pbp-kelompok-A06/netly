@@ -111,15 +111,6 @@ class AdminDashboardTest(AdminLapanganTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('/login/', response.url)
     
-    # def test_dashboard_shows_recent_lapangan(self):
-    #     """Test dashboard menampilkan lapangan terbaru"""
-    #     self.client.login(username='admin_test', password='testpass123')
-    #     response = self.client.get(reverse('admin_lapangan:dashboard'))
-        
-    #     recent_lapangan = response.context['recent_lapangan']
-    #     self.assertEqual(len(recent_lapangan), 2)
-    #     # Harus urut dari yang terbaru
-    #     self.assertEqual(recent_lapangan[0].name, 'Lapangan B')
 
 class LapanganListTest(AdminLapanganTestCase):
     """Test untuk show_lapangan_list view"""

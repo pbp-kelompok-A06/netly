@@ -119,6 +119,7 @@ class EventViewTest(TransactionTestCase):
 
     def test_show_events_page(self):
         # tes halaman utama event (show_events)
+        self.client.login(username='userbiasa', password='123')
         response = self.client.get(reverse('event:show_events'))
         self.assertEqual(response.status_code, 200) # 200 berarti oke
         
@@ -128,12 +129,14 @@ class EventViewTest(TransactionTestCase):
 
     def test_show_events_sort_descending(self):
         # tes halaman utama kalo di-sort 'desc'
+        self.client.login(username='userbiasa', password='123')
         response = self.client.get(reverse('event:show_events') + "?sort=desc")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Sort Date: Latest") # cek label sorting
     
     def test_event_detail_page(self):
         # tes halaman detail
+        self.client.login(username='userbiasa', password='123')
         url = reverse('event:event_detail', args=[self.event1.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -142,7 +145,7 @@ class EventViewTest(TransactionTestCase):
 
     def test_event_detail_logic(self):
         # tes logika di halaman detail (event penuh, event lewat)
-        
+        self.client.login(username='userbiasa', password='123')
         # bikin event penuh
         event_penuh = Event.objects.create(
             admin=self.admin_profile, name="Event Penuh", start_date=date.today() + timedelta(days=1),

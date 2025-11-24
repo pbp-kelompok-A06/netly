@@ -18,9 +18,12 @@
     {% endblock navbar %}
 
     {% include 'toast.html' %}
-    {% block content %}
-    {% endblock %}
-    
+
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
+    </main>
+
     {% include 'footer.html' %}
 
     {% block javascript %}
