@@ -69,7 +69,19 @@ def register_ajax(request):
         login(request, user)
 
         # success
-        return JsonResponse({'status': 'success', 'message': 'Registrasi berhasil!'})
+        return JsonResponse(
+            {
+                'status': 'success', 
+                'message': 'Registrasi berhasil!',
+                'data': {
+                    'username': username,
+                    'fullname': request.user.profile.fullname,
+                    'role': request.user.profile.role,
+                    'location': request.user.profile.location,
+                    'profile_picture': request.user.profile.profile_picture
+                }
+            }, status=200
+        )
 
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Format data tidak valid.'}, status=400)
@@ -98,7 +110,19 @@ def login_ajax(request):
             # if usernya valid, bisa login
             login(request, user)
             # success response
-            return JsonResponse({'status': 'success', 'message': 'Login berhasil!'})
+            return JsonResponse(
+                {
+                    'status': 'success', 
+                    'message': 'Login berhasil!',
+                    'data': {
+                        'username': username,
+                        'fullname': request.user.profile.fullname,
+                        'role': request.user.profile.role,
+                        'location': request.user.profile.location,
+                        'profile_picture': request.user.profile.profile_picture
+                    }
+                }, status=200
+            )
         else:
             # kalau user ga valid
             return JsonResponse({'status': 'error', 'message': 'Username atau password salah.'}, status=400)
@@ -108,6 +132,22 @@ def login_ajax(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan: {str(e)}'}, status=500)
 
+@require_POST 
+@csrf_exempt
+def logout_ajax(request):
+    username = request.user.username
+    try:
+        logout(request)
+        return JsonResponse({
+            "username": username,
+            "status": "success",
+            "message": "Logged out successfully!"
+        }, status=200)
+    except:
+        return JsonResponse({
+            "status": "failed",
+            "message": "Logout failed."
+        }, status=401)
 
 def make_admin(request):
     data_admin = [
