@@ -69,7 +69,19 @@ def register_ajax(request):
         login(request, user)
 
         # success
-        return JsonResponse({'status': 'success', 'message': 'Registrasi berhasil!'})
+        return JsonResponse(
+            {
+                'status': 'success', 
+                'message': 'Registrasi berhasil!',
+                'data': {
+                    'username': username,
+                    'fullname': request.user.profile.fullname,
+                    'role': request.user.profile.role,
+                    'location': request.user.profile.location,
+                    'profile_picture': request.user.profile.profile_picture
+                }
+            }, status=200
+        )
 
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Format data tidak valid.'}, status=400)
@@ -98,7 +110,19 @@ def login_ajax(request):
             # if usernya valid, bisa login
             login(request, user)
             # success response
-            return JsonResponse({'status': 'success', 'message': 'Login berhasil!'})
+            return JsonResponse(
+                {
+                    'status': 'success', 
+                    'message': 'Login berhasil!',
+                    'data': {
+                        'username': username,
+                        'fullname': request.user.profile.fullname,
+                        'role': request.user.profile.role,
+                        'location': request.user.profile.location,
+                        'profile_picture': request.user.profile.profile_picture
+                    }
+                }, status=200
+            )
         else:
             # kalau user ga valid
             return JsonResponse({'status': 'error', 'message': 'Username atau password salah.'}, status=400)
