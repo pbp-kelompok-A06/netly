@@ -132,6 +132,22 @@ def login_ajax(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'Terjadi kesalahan: {str(e)}'}, status=500)
 
+@require_POST 
+@csrf_exempt
+def logout_ajax(request):
+    username = request.user.username
+    try:
+        logout(request)
+        return JsonResponse({
+            "username": username,
+            "status": "success",
+            "message": "Logged out successfully!"
+        }, status=200)
+    except:
+        return JsonResponse({
+            "status": "failed",
+            "message": "Logout failed."
+        }, status=401)
 
 def make_admin(request):
     data_admin = [
