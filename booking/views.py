@@ -5,7 +5,7 @@ from django.urls import reverse
 from .models import Booking
 from django.utils import timezone  
 from datetime import timedelta
-from admin_lapangan.models import Lapangan
+from admin_lapangan.models import JadwalLapangan, Lapangan
 from admin_lapangan.models import JadwalLapangan as Jadwal
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -75,7 +75,7 @@ def create_booking(request):
 def show_json_by_id(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     booking.is_expired()  # cek apakah booking sudah expired
-    jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main', 'is_available'))
+    jadwal_list = list(booking.jadwal.values('id','tanggal', 'start_main', 'end_main', 'is_available'))
     data = {
         'id': str(booking.id),
         'lapangan': {
@@ -110,7 +110,7 @@ def show_json(request):
         booking.is_expired() 
 
         # Ambil jadwal
-        jadwal_list = list(booking.jadwal.values('tanggal', 'start_main', 'end_main'))
+        jadwal_list = list(booking.jadwal.values('id','tanggal', 'start_main', 'end_main'))
 
         # 2. Susun data untuk setiap booking
         data.append({
@@ -134,10 +134,14 @@ def show_json(request):
     
     return JsonResponse(data, safe=False)
 
+@csrf_exempt
 @login_required(login_url='authentication_user:login')
 def complete_booking(request, booking_id):
     # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
     try:
+        print("Request User:", request.user)
+        print("booking_id:", booking_id)
+        
         booking = Booking.objects.get(id=booking_id, user_id=request.user.profile.id)
     except Booking.DoesNotExist:
         return JsonResponse({'message': 'Booking not found or not authorized'}, status=404)
@@ -153,6 +157,7 @@ def complete_booking(request, booking_id):
 
     return JsonResponse({'message': f'Booking is already {booking.status_book}'}, status=200)
 
+# ga kepake lagi 
 # flownya jadi dari create_booking di redirect ke booking_detail
 def booking_detail(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -194,7 +199,9 @@ def show_booking_list(request):
 #             'jadwal': jadwal_list,
 #         })
 #     return JsonResponse(data, safe=False)
+@csrf_exempt
 def delete_booking(request, booking_id):
+    print("attempting to delete booking: django", booking_id)
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
@@ -275,9 +282,87 @@ def get_booking_data_flutter(request, lapangan_id):
     return JsonResponse({
         "status": "success",
         "lapangan": {
-            "id": str(lapangan.id),
-            "name": lapangan.name,
-            "price": lapangan.price, # Pastikan tipe datanya sesuai (float/int)
+             'id': str(lapangan.id),
+            'name': lapangan.name,
+            'location': lapangan.location,
+            'description': lapangan.description,
+            'price': float(lapangan.price),
+            'image': lapangan.image or '',
+            'admin_name': lapangan.admin_lapangan.fullname if lapangan.admin_lapangan else 'Unknown',
+            'created_at': lapangan.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': lapangan.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
         },
         "jadwal_list": jadwal_data
+    })
+    
+def get_jadwal_detail_json(request, pk):
+    try:
+        jadwal = JadwalLapangan.objects.get(
+            pk=pk, 
+            
+        )   
+        data = {
+            'id': str(jadwal.id),
+            'tanggal': jadwal.tanggal.strftime('%Y-%m-%d'),
+            'start_main': jadwal.start_main.strftime('%H:%M'),
+            'end_main': jadwal.end_main.strftime('%H:%M'),
+            'is_available': jadwal.is_available
+        }
+        return JsonResponse({'status': 'success', 'data': data})
+    except JadwalLapangan.DoesNotExist:
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Jadwal tidak ditemukan'
+        }, status=404)
+
+import json
+
+@csrf_exempt
+@login_required(login_url='authentication_user:login')
+def create_booking_flutter(request):
+    if request.method == 'POST':
+        print(request.user)
+        # PARSE JSON
+        data = json.loads(request.body)
+
+        lapangan_id = data.get('lapangan_id')
+        jadwal_ids = data.get('jadwal_id', [])  # <-- ini LIST, BENER!
+
+        lapangan = get_object_or_404(Lapangan, id=lapangan_id)
+        jadwals = Jadwal.objects.filter(id__in=jadwal_ids, is_available=True)
+
+        if not jadwals.exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'Selected schedules are already booked or invalid.'
+            }, status=400)
+
+        booking = Booking.objects.create(
+            lapangan_id=lapangan,
+            user_id=request.user.profile,
+            status_book='pending'
+        )
+
+        booking.jadwal.set(jadwals)
+        jadwals.update(is_available=False)
+
+        payment_url = reverse('booking:booking_detail', kwargs={'booking_id': booking.id})
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking created successfully!',
+            'booking_id': str(booking.id),
+            'payment_url': payment_url
+        })
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+@login_required
+def check_admin(request):
+    user = request.user
+
+    return JsonResponse({
+        'is_admin': user.profile.role == 'admin',
+        'username': user.username,
+        'role': user.profile.role if hasattr(user, 'profile') else None
     })
