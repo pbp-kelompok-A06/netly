@@ -139,8 +139,6 @@ def show_json(request):
 def complete_booking(request, booking_id):
     # Ambil objek booking, pastikan hanya user yang bersangkutan yang bisa melakukannya
     try:
-        print("Request User:", request.user)
-        print("booking_id:", booking_id)
         
         booking = Booking.objects.get(id=booking_id, user_id=request.user.profile.id)
     except Booking.DoesNotExist:
@@ -201,7 +199,7 @@ def show_booking_list(request):
 #     return JsonResponse(data, safe=False)
 @csrf_exempt
 def delete_booking(request, booking_id):
-    print("attempting to delete booking: django", booking_id)
+    
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
@@ -321,7 +319,7 @@ import json
 @login_required(login_url='authentication_user:login')
 def create_booking_flutter(request):
     if request.method == 'POST':
-        print(request.user)
+        
         # PARSE JSON
         data = json.loads(request.body)
 
