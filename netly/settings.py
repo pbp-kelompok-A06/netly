@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'homepage',
     'authentication_user',
     'admin_lapangan',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
