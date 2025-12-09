@@ -69,9 +69,11 @@ INSTALLED_APPS = [
     'homepage',
     'authentication_user',
     'admin_lapangan',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+import requests
+from django.http import HttpResponse
 
 from .models import LapanganFavorit
 from admin_lapangan.models import Lapangan
@@ -33,21 +35,13 @@ def serialize_lapangan(obj):
     }
 
 def serialize_favorite_item(fav):
-    image_url = ""
-    if fav.lapangan.image:
-        image_url = fav.lapangan.image.url if hasattr(fav.lapangan.image, 'url') else str(fav.lapangan.image)
-
+    lapangan_data = serialize_lapangan(fav.lapangan)
+    
     return {
         "id": str(fav.id),
         "user_id": fav.user.id,
         "label": fav.label, 
-        "lapangan": {
-            "id": str(fav.lapangan.id),
-            "name": fav.lapangan.name,
-            "location": fav.lapangan.location,
-            "price": float(fav.lapangan.price),
-            "image": image_url,
-        }
+        "lapangan": lapangan_data, 
     }
 
 @login_required(login_url='authentication_user:login')
@@ -269,3 +263,15 @@ def filter_courts(request):
 
 def search_courts_ajax(request):
     return api_get_all_courts(request)
+
+def proxy_image(request):
+    image_url = request.GET.get('url')
+    if not image_url:
+        return HttpResponse('No URL provided', status=400)
+
+    try:
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        return HttpResponse(response.content, content_type=response.headers.get('Content-Type', 'image/jpeg'))
+    except requests.RequestException as e:
+        return HttpResponse(f'Error fetching image: {str(e)}', status=500)
