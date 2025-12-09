@@ -3,22 +3,34 @@ from community.models import Forum, Forum_Post
 from community.forms import ForumForm, ForumPostForm
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
 # fetch forum (done)
 @login_required(login_url="authentication_user:login")
 def fetch_forum(request):
     forum_list = Forum.objects.all().prefetch_related('member')
 
+    json_data = []
     for forum in forum_list:
         forum.is_member = forum.member.filter(id=request.user.profile.id).exists()
-
+        json_data.append({
+            "id": forum.id,
+            "creator_name": forum.creator_id.user.username,
+            "creator_id": forum.creator_id.id,
+            "title": forum.title,
+            "description": forum.description,
+            "member_count": forum.member.count(),
+            "is_member": forum.is_member,
+            "created_at": forum.created_at,
+            "updated_at": forum.updated_at
+        })
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if len(forum_list) != 0:
 
             return JsonResponse({
-                "sucesss": True,
+                "success": True,
                 "msg": "Successfully fetched",
-                "data": list(forum_list.values())
+                "data": json_data
             }, safe=False)
 
     context = {
@@ -29,7 +41,7 @@ def fetch_forum(request):
 # fetch forum by id (done)
 @login_required(login_url="authentication_user:login")
 def fetch_forum_id(request, id_forum):
-    forum_list = Forum.objects.filter(pk=id_forum, creator_id=request.user.profile).values('id', 'title', 'description')
+    forum_list = Forum.objects.filter(pk=id_forum, creator_id=request.user.profile).values('id', 'creator_id', 'title', 'description', 'created_at', 'updated_at')
     if forum_list:
         return JsonResponse({
             "success": True,
@@ -47,7 +59,7 @@ def fetch_forum_id(request, id_forum):
 # fetch forum by creator (done)
 @login_required(login_url="authentication_user:login")
 def fetch_forum_creator(request):
-    forum_list = Forum.objects.filter(creator_id=request.user.profile).values('id', 'title', 'description')
+    forum_list = Forum.objects.filter(creator_id=request.user.profile).values('id', 'creator_id', 'title', 'description', 'created_at', 'updated_at')
     if forum_list:
         return JsonResponse({
             "success": True,
@@ -64,7 +76,7 @@ def fetch_forum_creator(request):
 # fetch forum that user joins (done)
 @login_required(login_url="authentication_user:login")
 def fetch_forum_joined(request):
-    forum_list = Forum.objects.filter(member=request.user.profile).values('id', 'title', 'description')
+    forum_list = Forum.objects.filter(member=request.user.profile).values('id', 'creator_id', 'title', 'description', 'created_at', 'updated_at')
     if forum_list:
         return JsonResponse({
             "success": True,
@@ -77,6 +89,36 @@ def fetch_forum_joined(request):
             "msg": "Failed to fetch",
             "data": []
         })
+
+# fetch post recently that user joined (done)
+@login_required(login_url="authentication_user:login")
+def fetch_post_recently(request, limit=1):
+    if limit <= 0:
+        limit = 1
+    recent_posts = Forum_Post.objects.filter(forum_id__member = request.user.profile).select_related('user_id', 'forum_id').order_by('-created_at')[:limit]
+
+    json_data = []
+
+    for post in recent_posts:
+        json_data.append({
+            "id": str(post.id),
+            "header": post.header,
+            "content": post.content,
+            "created_at": post.created_at,
+            "forum_name": post.forum_id.title,
+            "user": {
+                "id": str(post.user_id.id),
+                "username": post.user_id.user.username 
+            }
+        })
+
+    return JsonResponse({
+        "success": True,
+        "msg": "Successfully fetched recent posts",
+        "data": json_data
+    }, safe=False)
+    
+
 
 
 # fetch post by id forum (done)
@@ -187,6 +229,7 @@ def fetch_post_id_user(request, id_forum):
 
 
 # create forum (done)
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def create_forum(request):
     form = ForumForm()
@@ -249,6 +292,7 @@ def unjoin_forum(request):
 
 
 # create post (done)
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def create_post(request, id_forum):
     form = ForumPostForm()
@@ -293,11 +337,20 @@ def update_forum(request, id_forum):
     
 
 # delete forum by id creator (done)
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def delete_forum(request, id_forum):
+    
     forum_data = get_object_or_404(Forum, creator_id=request.user.profile, pk=id_forum)
     forum_data.delete()
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            "success": True,
+            "msg": "Successfully deleted."
+        }) 
     return redirect("community:forum")
+
 
 # delete post by id user and id_post (done)
 @login_required(login_url="authentication_user:login")

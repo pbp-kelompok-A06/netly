@@ -74,6 +74,7 @@ def register_ajax(request):
                 'status': 'success', 
                 'message': 'Registrasi berhasil!',
                 'data': {
+                    'id': request.user.profile.id,
                     'username': username,
                     'fullname': request.user.profile.fullname,
                     'role': request.user.profile.role,
@@ -115,6 +116,7 @@ def login_ajax(request):
                     'status': 'success', 
                     'message': 'Login berhasil!',
                     'data': {
+                        'id': request.user.profile.id,
                         'username': username,
                         'fullname': request.user.profile.fullname,
                         'role': request.user.profile.role,
