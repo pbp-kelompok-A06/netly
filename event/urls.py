@@ -12,6 +12,7 @@ from event.views import (
     edit_event_flutter,
     create_event_flutter,
     join_event_flutter,
+    delete_event_flutter,
 )
 
 app_name = 'event'
@@ -30,5 +31,6 @@ urlpatterns = [
     path('show-events-flutter/', show_events_flutter, name='show_events_flutter'),
     path('create-flutter/', create_event_flutter, name='create_event_flutter'),
     path('edit-flutter/<uuid:pk>/', edit_event_flutter, name='edit_event_flutter'),
+    path('delete-flutter/<uuid:pk>/', delete_event_flutter, name='delete_event_flutter'),
     path('join-flutter/<uuid:pk>/', join_event_flutter, name='join_event_flutter'),
 ]

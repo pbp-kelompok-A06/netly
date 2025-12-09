@@ -190,7 +190,7 @@ def join_leave_event(request, pk):
 
 # buat versi ajax
 @login_required(login_url='/login/')
-@require_POST # 
+@require_POST 
 def join_event_ajax(request, pk):
     # fungsi ini mirip join_leave_event, tapi returnnya dalam bentuk JSON
     try:
@@ -226,12 +226,16 @@ def join_event_ajax(request, pk):
     except Event.DoesNotExist:
         return JsonResponse({'status': 'fail', 'message': 'Event tidak ditemukan.'}, status=404)
     
-@login_required(login_url='/login/')
 def show_events_flutter(request):
     events = Event.objects.all().order_by('start_date')
     data = []
     
     for event in events:
+        is_joined_status = False 
+        
+        # apakah user sedang login dan punya profile?
+        if request.user.is_authenticated and hasattr(request.user, 'profile'):
+            is_joined_status = event.participant.filter(id=request.user.profile.id).exists()
         data.append({
             "pk": str(event.id),
             "fields": {
@@ -246,14 +250,13 @@ def show_events_flutter(request):
                 "is_active": event.start_date > date.today(),
                 "is_full": event.participant.count() >= event.max_participants,
                 # cek apakah user yang login sudah join
-                "is_joined": event.participant.filter(id=request.user.profile.id).exists()
+                "is_joined": is_joined_status
             }
         })
         
     return JsonResponse(data, safe=False)
 
 @csrf_exempt
-@login_required
 def create_event_flutter(request):
     if request.method == 'POST':
         try:
@@ -279,7 +282,6 @@ def create_event_flutter(request):
     return JsonResponse({"status": "error", "message": "Invalid method"}, status=401)
 
 @csrf_exempt
-@login_required
 def edit_event_flutter(request, pk):
     try:
         event = Event.objects.get(pk=pk)
@@ -307,8 +309,7 @@ def edit_event_flutter(request, pk):
     return JsonResponse({"status": "error"}, status=401)
 
 @csrf_exempt
-@login_required
-
+@require_POST
 def join_event_flutter(request, pk):
     try:
         event = Event.objects.get(pk=pk)
@@ -326,4 +327,21 @@ def join_event_flutter(request, pk):
             
     except Event.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
-    
+
+
+@csrf_exempt
+def delete_event_flutter(request, pk):
+    if request.method == 'POST':
+        try:
+            event = Event.objects.get(pk=pk)
+            # cek apakah user adalah admin dari event tersebut
+            if request.user.profile != event.admin:
+                return JsonResponse({'status': 'error', 'message': 'Bukan admin'}, status=403)
+            
+            event.delete()
+            return JsonResponse({'status': 'success', 'message': 'Event berhasil dihapus'})
+        except Event.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Event tidak ditemukan'}, status=404)
+            
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=401)
+
