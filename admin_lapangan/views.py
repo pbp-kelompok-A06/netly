@@ -247,7 +247,7 @@ def get_jadwal_json(request, pk):
         jadwal = JadwalLapangan.objects.get(
             pk=pk, 
             lapangan__admin_lapangan=request.user.profile
-        )
+        )   
         data = {
             'id': str(jadwal.id),
             'tanggal': jadwal.tanggal.strftime('%Y-%m-%d'),
