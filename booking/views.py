@@ -364,3 +364,26 @@ def check_admin(request):
         'username': user.username,
         'role': user.profile.role if hasattr(user, 'profile') else None
     })
+
+
+def get_lapangan_detail_json(request, pk):
+    try:
+        lapangan = Lapangan.objects.get(pk=pk)
+        print(lapangan)
+        data = {
+            'id': str(lapangan.id),
+            'name': lapangan.name,
+            'location': lapangan.location,
+            'description': lapangan.description,
+            'price': float(lapangan.price),
+            'image': lapangan.image or '',
+            'admin_name': lapangan.admin_lapangan.fullname if lapangan.admin_lapangan else 'Unknown',
+            'created_at': lapangan.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': lapangan.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        return JsonResponse({'status': 'success', 'data': data})
+    except Lapangan.DoesNotExist:
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan atau Anda tidak memiliki akses'
+        }, status=404)
