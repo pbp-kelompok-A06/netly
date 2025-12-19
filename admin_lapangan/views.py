@@ -510,9 +510,10 @@ def get_lapangan_detail_json(request, pk):
             'message': 'Lapangan tidak ditemukan atau Anda tidak memiliki akses'
         }, status=404)
 
+
 @require_POST
-@admin_required
 @csrf_exempt
+@admin_required
 def create_lapangan_flutter(request):
     try:
         # Check authentication
@@ -541,6 +542,7 @@ def create_lapangan_flutter(request):
         description = strip_tags(request.POST.get("description", ""))
         price = request.POST.get("price", 0)
         image = request.POST.get("image", "")
+
 
         # Validate required fields
         if not name or not location:

@@ -313,6 +313,34 @@ def get_jadwal_detail_json(request, pk):
             'message': 'Jadwal tidak ditemukan'
         }, status=404)
 
+def get_lapangan_detail_json(request, pk):
+    try:
+        # Build query based on user role
+        if hasattr(request.user, 'profile') and request.user.profile.role == 'admin':
+            # Admin: hanya bisa lihat lapangan milik mereka
+            lapangan = Lapangan.objects.get(
+                pk=pk,
+                admin_lapangan=request.user.profile
+            )
+        
+        data = {
+            'id': str(lapangan.id),
+            'name': lapangan.name,
+            'location': lapangan.location,
+            'description': lapangan.description,
+            'price': float(lapangan.price),
+            'image': lapangan.image or '',
+            'admin_name': lapangan.admin_lapangan.fullname if lapangan.admin_lapangan else 'Unknown',
+            'created_at': lapangan.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': lapangan.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        return JsonResponse({'status': 'success', 'data': data})
+    except Lapangan.DoesNotExist:
+        return JsonResponse({
+            'status': 'error', 
+            'message': 'Lapangan tidak ditemukan atau Anda tidak memiliki akses'
+        }, status=404)
+
 import json
 
 @csrf_exempt
