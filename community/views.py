@@ -253,6 +253,7 @@ def create_forum(request):
                 })
 
 # join forum (done)
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def join_forum(request):
     if request.method == "POST":
@@ -269,6 +270,7 @@ def join_forum(request):
                 "msg": "You are already joined."
             })
 # unjoin forum (done)
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def unjoin_forum(request):
     if request.method == "POST":
@@ -317,7 +319,8 @@ def create_post(request, id_forum):
                 })
 
 
-# update forum by id creator (done)
+# update forum by id creator (done)]
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def update_forum(request, id_forum):
     forum_data = get_object_or_404(Forum, id=id_forum, creator_id=request.user.profile)
@@ -353,6 +356,7 @@ def delete_forum(request, id_forum):
 
 
 # delete post by id user and id_post (done)
+@csrf_exempt
 @login_required(login_url="authentication_user:login")
 def delete_forum_post(request, id_post):
     forum_post_data = get_object_or_404(Forum_Post, id=id_post, user_id=request.user.profile)
