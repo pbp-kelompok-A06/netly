@@ -17,6 +17,18 @@ from admin_lapangan.views import (
     import_lapangan_data,
     get_all_lapangan_json,
     get_lapangan_detail_json,
+    create_lapangan_flutter,
+    create_lapangan_flutter,
+    edit_lapangan_flutter,
+    delete_lapangan_flutter,
+    # Jadwal imports
+    get_jadwal_by_lapangan,
+    get_jadwal_detail,
+    create_jadwal_flutter,
+    edit_jadwal_flutter,
+    delete_jadwal_flutter,
+    toggle_availability_flutter,
+
 )
 
 app_name = 'admin_lapangan'
@@ -45,4 +57,17 @@ urlpatterns = [
     path('import-data/', import_lapangan_data, name="import_lapangan_data"),
     path('api/lapangan/', get_all_lapangan_json, name='get_all_lapangan_json'),
     path('api/lapangan/<uuid:pk>/', get_lapangan_detail_json, name='get_lapangan_detail_json'),
+    path('create-flutter/', create_lapangan_flutter, name='create_lapangan_flutter'),
+    path('edit-flutter/<uuid:lapangan_id>/', edit_lapangan_flutter, name='edit_lapangan_flutter'),
+    path('delete-flutter/<uuid:lapangan_id>/', delete_lapangan_flutter, name='delete_lapangan_flutter'),
+
+    # Jadwal API endpoints
+    path('api/jadwal/<uuid:lapangan_id>/', get_jadwal_by_lapangan, name='get_jadwal_by_lapangan'),
+    path('api/jadwal/detail/<uuid:jadwal_id>/', get_jadwal_detail, name='get_jadwal_detail'),
+    
+    # Jadwal Flutter endpoints
+    path('jadwal/create-flutter/', create_jadwal_flutter, name='create_jadwal_flutter'),
+    path('jadwal/edit-flutter/<uuid:jadwal_id>/', edit_jadwal_flutter, name='edit_jadwal_flutter'),
+    path('jadwal/delete-flutter/<uuid:jadwal_id>/', delete_jadwal_flutter, name='delete_jadwal_flutter'),
+    path('jadwal/toggle-availability/<uuid:jadwal_id>/', toggle_availability_flutter, name='toggle_availability_flutter'),
 ]
