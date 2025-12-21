@@ -236,6 +236,7 @@ def show_events_flutter(request):
         # apakah user sedang login dan punya profile?
         if request.user.is_authenticated and hasattr(request.user, 'profile'):
             is_joined_status = event.participant.filter(id=request.user.profile.id).exists()
+
         data.append({
             "pk": str(event.id),
             "fields": {
@@ -248,6 +249,7 @@ def show_events_flutter(request):
                 "max_participants": event.max_participants,
                 "participant_count": event.participant.count(),
                 "is_active": event.start_date > date.today(),
+                # apakah event udah full? detect pake jumlah participant dan max participantsnya
                 "is_full": event.participant.count() >= event.max_participants,
                 # cek apakah user yang login sudah join
                 "is_joined": is_joined_status
@@ -260,11 +262,11 @@ def show_events_flutter(request):
 def create_event_flutter(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            user_profile = request.user.profile
+            data = json.loads(request.body) # decode JSON body req
+            user_profile = request.user.profile # ini harusnya admin karena create cuma bisa dilakuin sama admin
 
             new_event = Event.objects.create(
-                admin=user_profile,
+                admin=user_profile,     # assign pemilik atau pembuat event
                 name=data["name"],
                 description=data["description"],
                 start_date=data["start_date"], 
@@ -284,6 +286,7 @@ def create_event_flutter(request):
 @csrf_exempt
 def edit_event_flutter(request, pk):
     try:
+        # ambil objek event dulu
         event = Event.objects.get(pk=pk)
     except Event.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Event tidak ditemukan'}, status=404)
@@ -295,6 +298,7 @@ def edit_event_flutter(request, pk):
         if request.user.profile != event.admin:
              return JsonResponse({'status': 'error', 'message': 'Bukan admin'}, status=403)
 
+        # update attribute event yang udah kita get sebelumnya
         event.name = data["name"]
         event.description = data["description"]
         event.start_date = data["start_date"]
@@ -315,10 +319,12 @@ def join_event_flutter(request, pk):
         event = Event.objects.get(pk=pk)
         user_profile = request.user.profile
         
+        # kalau user exists, berarti user sudah join dan mau leave, jadi harus kita remove
         if event.participant.filter(id=user_profile.id).exists():
             event.participant.remove(user_profile)
             return JsonResponse({'status': 'success', 'action': 'leave', 'message': 'Left event'})
         else:
+            # kalau belum join, maka dia mau join event dan kita harus cek kuota dulu
             if event.participant.count() >= event.max_participants:
                 return JsonResponse({'status': 'fail', 'message': 'Full'}, status=400)
             
