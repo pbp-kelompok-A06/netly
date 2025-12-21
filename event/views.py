@@ -317,8 +317,16 @@ def edit_event_flutter(request, pk):
 def join_event_flutter(request, pk):
     try:
         event = Event.objects.get(pk=pk)
+
+        if not request.user.is_authenticated:
+             return JsonResponse({'status': 'fail', 'message': 'Please login first'}, status=401)
+     
         user_profile = request.user.profile
-        
+
+        # cek apakah event udah lewat
+        if event.end_date < date.today():
+             return JsonResponse({'status': 'fail', 'message': 'Event has ended'}, status=400)
+
         # kalau user exists, berarti user sudah join dan mau leave, jadi harus kita remove
         if event.participant.filter(id=user_profile.id).exists():
             event.participant.remove(user_profile)
