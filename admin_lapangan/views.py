@@ -447,16 +447,14 @@ def import_lapangan_data(request):
             'message': f'Unexpected error: {str(e)}'
         })
     
-@login_required(login_url='/login/')
+@csrf_exempt
 @admin_required
 def get_all_lapangan_json(request):
     search_query = request.GET.get('search', '').strip()
     
-    if hasattr(request.user, 'profile') and request.user.profile.role == 'admin':
-        # Admin: hanya tampilkan lapangan milik mereka
-        lapangan_list = Lapangan.objects.filter(
-            admin_lapangan=request.user.profile
-        )
+    lapangan_list = Lapangan.objects.filter(
+        admin_lapangan=request.user.profile
+    )
     
     # Apply search filter
     if search_query:
@@ -475,7 +473,7 @@ def get_all_lapangan_json(request):
             'description': lapangan.description,
             'price': float(lapangan.price),
             'image': lapangan.image or '',
-            'admin_name': lapangan.admin_lapangan.fullname if lapangan.admin_lapangan else 'Unknown',
+            'admin_name': lapangan.admin_lapangan.fullname,
         })
     
     return JsonResponse({'status': 'success', 'data': data})
@@ -797,10 +795,8 @@ def get_jadwal_detail(request, jadwal_id):
             'message': f'Terjadi kesalahan: {str(e)}'
         }, status=500)
 
-
 @csrf_exempt
 @admin_required
-@require_POST
 def create_jadwal_flutter(request):
     try:
         # Get data from POST
