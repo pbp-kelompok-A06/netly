@@ -70,4 +70,5 @@ urlpatterns = [
     path('jadwal/edit-flutter/<uuid:jadwal_id>/', edit_jadwal_flutter, name='edit_jadwal_flutter'),
     path('jadwal/delete-flutter/<uuid:jadwal_id>/', delete_jadwal_flutter, name='delete_jadwal_flutter'),
     path('jadwal/toggle-availability/<uuid:jadwal_id>/', toggle_availability_flutter, name='toggle_availability_flutter'),
+    path('api/my-lapangan/', get_all_lapangan_json, name='get_my_lapangan_json'),
 ]
