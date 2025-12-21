@@ -12,7 +12,6 @@ import os, json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
-from functools import wraps
 
 def is_admin(user):
     return hasattr(user, 'profile') and user.profile.role == 'admin'
