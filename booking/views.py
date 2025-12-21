@@ -261,7 +261,6 @@ def get_booking_data_flutter(request, lapangan_id):
     jadwals = Jadwal.objects.filter(
         lapangan_id=lapangan_id, 
         is_available=True,
-        start_main__gt=datetime.now().time(),
         tanggal__gte=today,
         tanggal__lte=limit_date
     ).order_by('tanggal', 'start_main')
